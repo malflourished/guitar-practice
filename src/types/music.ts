@@ -21,7 +21,45 @@ export interface FretPosition {
   finger?: number;
 }
 
-export type StudyMode = 'notes' | 'chords' | 'scales' | 'arpeggios';
+export type StudyMode =
+  | 'notes'
+  | 'chords'
+  | 'scales'
+  | 'arpeggios'
+  | 'progressions';
+
+/** Major or natural minor — the key context for a progression. */
+export type KeyMode = 'major' | 'minor';
+
+/** Educational copy attached to a practice item (progression, scale, etc.). */
+export interface TheoryContent {
+  title: string;
+  /** One or two sentences shown below the fretboard. */
+  summary: string;
+  /** Longer explanation paragraphs for the sidebar panel. */
+  body: string[];
+  examples?: { label: string; chords: string }[];
+  functions?: { numeral: string; role: string }[];
+}
+
+/** One chord in a progression formula (Roman numeral + quality). */
+export interface ProgressionStepDef {
+  /** Scale degree 1–7 in the active key. */
+  degree: number;
+  quality: ChordQuality;
+  /** Display numeral, e.g. "I", "vi", "ii⁷". */
+  numeral: string;
+}
+
+export interface ProgressionDef {
+  id: string;
+  label: string;
+  nickname?: string;
+  keyMode: KeyMode;
+  category: string;
+  steps: ProgressionStepDef[];
+  theory: TheoryContent;
+}
 
 /**
  * Position layout system for diatonic scales.

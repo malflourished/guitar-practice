@@ -6,9 +6,11 @@ import type {
 } from '../types/music';
 import {
   CHORD_QUALITY_GROUPS,
+  PROGRESSION_GROUPS,
   SCALE_QUALITY_GROUPS,
   getChordQualityLabel,
   getQualityLabel,
+  type ResolvedProgressionStep,
 } from '../lib/music';
 import { SettingsRow } from './SettingsList';
 import styles from './StudyModeControls.module.css';
@@ -18,6 +20,7 @@ const STUDY_MODES: { id: StudyMode; label: string }[] = [
   { id: 'chords', label: 'Chords' },
   { id: 'scales', label: 'Scales' },
   { id: 'arpeggios', label: 'Arpeggios' },
+  { id: 'progressions', label: 'Progressions' },
 ];
 
 interface StudyModeSelectorProps {
@@ -59,9 +62,14 @@ interface StudyModeControlsProps {
   scaleQuality: ScaleQuality;
   scaleSystem: ScaleSystem;
   showSystemToggle: boolean;
+  progressionId: string;
+  progressionStepIndex: number;
+  resolvedSteps: ResolvedProgressionStep[];
   onChordQualityChange: (quality: ChordQuality) => void;
   onScaleQualityChange: (quality: ScaleQuality) => void;
   onScaleSystemChange: (system: ScaleSystem) => void;
+  onProgressionChange: (id: string) => void;
+  onProgressionStepChange: (index: number) => void;
 }
 
 export function StudyModeControls({
@@ -70,15 +78,82 @@ export function StudyModeControls({
   scaleQuality,
   scaleSystem,
   showSystemToggle,
+  progressionId,
+  progressionStepIndex,
+  resolvedSteps,
   onChordQualityChange,
   onScaleQualityChange,
   onScaleSystemChange,
+  onProgressionChange,
+  onProgressionStepChange,
 }: StudyModeControlsProps) {
   const isChordMode = studyMode === 'chords' || studyMode === 'arpeggios';
   const isScaleMode = studyMode === 'scales';
+  const isProgressionMode = studyMode === 'progressions';
+  const activeStep = resolvedSteps[progressionStepIndex];
 
   return (
     <>
+      {isProgressionMode && (
+        <SettingsRow label="Progression">
+          <select
+            className={styles.select}
+            aria-label="Chord progression"
+            value={progressionId}
+            onChange={(event) => onProgressionChange(event.target.value)}
+          >
+            {PROGRESSION_GROUPS.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.progressions.map((progression) => (
+                  <option key={progression.id} value={progression.id}>
+                    {progression.nickname
+                      ? `${progression.label} (${progression.nickname})`
+                      : progression.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </SettingsRow>
+      )}
+
+      {isProgressionMode && resolvedSteps.length > 0 && (
+        <SettingsRow label="Chord">
+          <div className={styles.stepNav}>
+            <button
+              type="button"
+              className={styles.stepButton}
+              aria-label="Previous chord"
+              disabled={progressionStepIndex === 0}
+              onClick={() =>
+                onProgressionStepChange(progressionStepIndex - 1)
+              }
+            >
+              ‹
+            </button>
+            <span className={styles.stepLabel}>
+              {activeStep
+                ? `${activeStep.chordName} (${activeStep.numeral})`
+                : '—'}
+            </span>
+            <button
+              type="button"
+              className={styles.stepButton}
+              aria-label="Next chord"
+              disabled={progressionStepIndex >= resolvedSteps.length - 1}
+              onClick={() =>
+                onProgressionStepChange(progressionStepIndex + 1)
+              }
+            >
+              ›
+            </button>
+            <span className={styles.stepCounter} aria-hidden="true">
+              {progressionStepIndex + 1} / {resolvedSteps.length}
+            </span>
+          </div>
+        </SettingsRow>
+      )}
+
       {isChordMode && (
         <SettingsRow label="Type">
           <select

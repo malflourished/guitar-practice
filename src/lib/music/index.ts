@@ -8,6 +8,22 @@ export {
   getChordQualityLabel,
 } from './chords';
 export {
+  getDiatonicQuality,
+  getDiatonicRoot,
+  getScaleIntervalsForKeyMode,
+} from './diatonic';
+export {
+  PROGRESSION_GROUPS,
+  PROGRESSIONS,
+  formatChordName,
+  formatProgressionChords,
+  getProgressionById,
+  getProgressionStepPositionScope,
+  resolveProgression,
+  resolveProgressionStep,
+  type ResolvedProgressionStep,
+} from './progressions';
+export {
   buildArpeggioPositions,
   buildChordPositions,
   buildScalePositions,

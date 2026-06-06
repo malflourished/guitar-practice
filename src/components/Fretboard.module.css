@@ -29,6 +29,17 @@
   margin: 0;
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;
+  line-height: 1.5;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+.subtitleTheory {
+  composes: subtitle;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
 }
 
 .scroll {

@@ -17,6 +17,45 @@
   composes: select from '../styles/glass.module.css';
 }
 
+.stepNav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.stepButton {
+  composes: pill from '../styles/glass.module.css';
+  min-width: 2rem;
+  padding: 0.35rem 0.55rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.stepButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepLabel {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 5rem;
+  text-align: center;
+}
+
+.stepCounter {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  letter-spacing: var(--label-tracking);
+  width: 100%;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .modes {
     justify-content: flex-start;

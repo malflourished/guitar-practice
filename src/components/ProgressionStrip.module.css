@@ -1,0 +1,89 @@
+.strip {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 var(--fretboard-padding) 0.5rem;
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2rem;
+  min-width: min-content;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+  width: 8.5rem;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  order: -1;
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+}
+
+.item:hover .label,
+.itemActive .label {
+  opacity: 1;
+}
+
+.diagram {
+  width: 100%;
+  filter: drop-shadow(var(--fretboard-shadow));
+}
+
+.chordName {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.numeral {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.itemActive .chordName {
+  color: var(--text-primary);
+}
+
+.itemActive {
+  composes: item;
+}
+
+@media (max-width: 768px) {
+  .row {
+    justify-content: flex-start;
+    gap: 1.5rem;
+  }
+
+  .item {
+    width: 7.7rem;
+  }
+}

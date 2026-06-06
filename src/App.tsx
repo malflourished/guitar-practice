@@ -8,7 +8,11 @@ import { KeySelector } from './components/KeySelector';
 import { useInstrument } from './hooks/useInstrument';
 import { orderScalePositions, type ScaleDirection } from './lib/audio/pitch';
 import { ALL_NOTES, NOTE_COLORS } from './lib/colors';
-import { getFretboardTitle, getRootNote } from './lib/displayTitle';
+import {
+  getFretboardSubtitle,
+  getFretboardTitle,
+  getRootNote,
+} from './lib/displayTitle';
 import {
   getBackgroundKeyForMode,
   getKeyBackgroundStyle,
@@ -22,8 +26,12 @@ import {
   getChordQualityLabel,
   getPositionsForNotes,
   getQualityLabel,
+  getProgressionById,
+  getProgressionStepPositionScope,
   getSpelledChordNotes,
   getSpelledScaleNotes,
+  PROGRESSIONS,
+  resolveProgression,
   spelledRootFromNoteName,
   type NotationPreference,
 } from './lib/music';
@@ -43,12 +51,19 @@ import {
   SettingsSection,
   SettingsRow,
 } from './components/SettingsList';
+import { ProgressionStrip } from './components/ProgressionStrip';
+import { TheoryPanel } from './components/TheoryPanel';
 import glass from './styles/glass.module.css';
 import { useColorBoundary } from './hooks/useColorBoundary';
 import './App.css';
 
 function isSingleRootMode(mode: StudyMode): boolean {
-  return mode === 'chords' || mode === 'scales' || mode === 'arpeggios';
+  return (
+    mode === 'chords' ||
+    mode === 'scales' ||
+    mode === 'arpeggios' ||
+    mode === 'progressions'
+  );
 }
 
 function toSingleRoot(notes: Set<NoteName>): Set<NoteName> {
@@ -79,6 +94,8 @@ function App() {
   const [scaleQuality, setScaleQuality] =
     useState<ScaleQuality>('minorPentatonic');
   const [chordQuality, setChordQuality] = useState<ChordQuality>('major');
+  const [progressionId, setProgressionId] = useState(PROGRESSIONS[0].id);
+  const [progressionStepIndex, setProgressionStepIndex] = useState(0);
   const [scaleSystem, setScaleSystem] = useState<ScaleSystem>('3nps');
   const [showFingers, setShowFingers] = useState(false);
   const [noteColors, setNoteColors] = useState<Record<NoteName, string>>(
@@ -103,11 +120,76 @@ function App() {
 
   const rootNote = useMemo(() => getRootNote(activeNotes), [activeNotes]);
 
-  const qualityKey = studyMode === 'scales' ? scaleQuality : chordQuality;
+  const activeProgression = useMemo(
+    () => getProgressionById(progressionId) ?? PROGRESSIONS[0],
+    [progressionId],
+  );
+
+  const resolvedProgressionSteps = useMemo(
+    () => resolveProgression(rootNote, activeProgression, notation),
+    [rootNote, activeProgression, notation],
+  );
+
+  const progressionChordViews = useMemo(() => {
+    if (studyMode !== 'progressions') return [];
+    return resolvedProgressionSteps.map((step, stepIndex) => {
+      const regions = buildChordPositions(step.root, step.quality);
+      const scope = getProgressionStepPositionScope(
+        progressionId,
+        stepIndex,
+        step.quality,
+      );
+      const regionIndex = Math.min(
+        positionByScope[scope] ?? 0,
+        Math.max(0, regions.length - 1),
+      );
+      const region = regions[regionIndex];
+      const spelledRoot = spelledRootFromNoteName(step.root, notation);
+      const spelled = getSpelledChordNotes(spelledRoot, step.quality);
+      return {
+        step,
+        positions: region?.positions ?? [],
+        mutedStrings: region?.mutedStrings ?? [],
+        startFret: region?.startFret ?? 0,
+        endFret: region?.endFret ?? 4,
+        noteLabels: buildSpellingMap(spelled),
+      };
+    });
+  }, [
+    studyMode,
+    resolvedProgressionSteps,
+    notation,
+    progressionId,
+    positionByScope,
+  ]);
+
+  const activeProgressionStep =
+    resolvedProgressionSteps[
+      Math.min(progressionStepIndex, resolvedProgressionSteps.length - 1)
+    ];
+
+  const activeChordRoot =
+    studyMode === 'progressions'
+      ? (activeProgressionStep?.root ?? rootNote)
+      : rootNote;
+
+  const activeChordQuality =
+    studyMode === 'progressions'
+      ? (activeProgressionStep?.quality ?? chordQuality)
+      : chordQuality;
+
+  const qualityKey =
+    studyMode === 'scales'
+      ? scaleQuality
+      : studyMode === 'progressions'
+        ? `${progressionId}-${progressionStepIndex}-${activeChordQuality}`
+        : chordQuality;
   const qualityLabel =
     studyMode === 'scales'
       ? getQualityLabel(scaleQuality)
-      : getChordQualityLabel(chordQuality);
+      : studyMode === 'progressions'
+        ? (activeProgressionStep?.qualityLabel ?? getChordQualityLabel(chordQuality))
+        : getChordQualityLabel(chordQuality);
 
   const supportsSystemToggle =
     studyMode === 'scales' &&
@@ -118,8 +200,8 @@ function App() {
   }`;
 
   const positionRegions = useMemo(() => {
-    if (studyMode === 'chords') {
-      return buildChordPositions(rootNote, chordQuality);
+    if (studyMode === 'chords' || studyMode === 'progressions') {
+      return buildChordPositions(activeChordRoot, activeChordQuality);
     }
     if (studyMode === 'arpeggios') {
       return buildArpeggioPositions(rootNote, chordQuality);
@@ -128,7 +210,15 @@ function App() {
       return buildScalePositions(rootNote, scaleQuality, scaleSystem);
     }
     return [];
-  }, [studyMode, rootNote, chordQuality, scaleQuality, scaleSystem]);
+  }, [
+    studyMode,
+    rootNote,
+    activeChordRoot,
+    activeChordQuality,
+    chordQuality,
+    scaleQuality,
+    scaleSystem,
+  ]);
 
   const positionIndex = Math.min(
     positionByScope[positionScope] ?? 0,
@@ -152,7 +242,7 @@ function App() {
 
   const audio = useInstrument();
   const [tempo, setTempo] = useState(90);
-  const strumMode = studyMode === 'chords';
+  const strumMode = studyMode === 'chords' || studyMode === 'progressions';
   const handleStrum = () => audio.strum(positions);
   const handlePlayScale = (direction: ScaleDirection) => {
     if (audio.playingId === direction) {
@@ -168,13 +258,28 @@ function App() {
 
   const spellingMap = useMemo(() => {
     if (studyMode === 'notes') return null;
-    const spelledRoot = spelledRootFromNoteName(rootNote, notation);
+    const spellingRoot =
+      studyMode === 'progressions' ? activeChordRoot : rootNote;
+    const spelledRoot = spelledRootFromNoteName(spellingRoot, notation);
     const spelled =
       studyMode === 'scales'
         ? getSpelledScaleNotes(spelledRoot, scaleQuality)
-        : getSpelledChordNotes(spelledRoot, chordQuality);
+        : getSpelledChordNotes(
+            spelledRoot,
+            studyMode === 'progressions'
+              ? activeChordQuality
+              : chordQuality,
+          );
     return buildSpellingMap(spelled);
-  }, [studyMode, rootNote, scaleQuality, chordQuality, notation]);
+  }, [
+    studyMode,
+    rootNote,
+    activeChordRoot,
+    scaleQuality,
+    chordQuality,
+    activeChordQuality,
+    notation,
+  ]);
 
   const title = useMemo(
     () =>
@@ -184,9 +289,42 @@ function App() {
         qualityLabel,
         notation,
         activePositionRegion,
+        studyMode === 'progressions' && activeProgressionStep
+          ? {
+              progressionId,
+              stepIndex: progressionStepIndex,
+              chordName: activeProgressionStep.chordName,
+              numeral: activeProgressionStep.numeral,
+            }
+          : undefined,
       ),
-    [activeNotes, studyMode, qualityLabel, notation, activePositionRegion],
+    [
+      activeNotes,
+      studyMode,
+      qualityLabel,
+      notation,
+      activePositionRegion,
+      progressionId,
+      progressionStepIndex,
+      activeProgressionStep,
+    ],
   );
+
+  const subtitle = useMemo(
+    () =>
+      getFretboardSubtitle(
+        studyMode,
+        studyMode === 'progressions' ? activeProgression.theory : null,
+      ),
+    [studyMode, activeProgression],
+  );
+
+  const currentStepRole = useMemo(() => {
+    if (studyMode !== 'progressions' || !activeProgressionStep) return undefined;
+    return activeProgression.theory.functions?.find(
+      (fn) => fn.numeral === activeProgressionStep.numeral,
+    )?.role;
+  }, [studyMode, activeProgression, activeProgressionStep]);
 
   const backgroundKey = useMemo(
     () => getBackgroundKeyForMode(studyMode, activeNotes, rootNote),
@@ -197,10 +335,21 @@ function App() {
     () =>
       getKeyBackgroundStyle(
         backgroundKey,
-        studyMode === 'scales' ? scaleQuality : chordQuality,
+        studyMode === 'scales'
+          ? scaleQuality
+          : studyMode === 'progressions'
+            ? activeChordQuality
+            : chordQuality,
         noteColors,
       ),
-    [backgroundKey, studyMode, scaleQuality, chordQuality, noteColors],
+    [
+      backgroundKey,
+      studyMode,
+      scaleQuality,
+      chordQuality,
+      activeChordQuality,
+      noteColors,
+    ],
   );
 
   const contrastMode = useMemo(
@@ -239,6 +388,14 @@ function App() {
     if (isSingleRootMode(mode)) {
       setActiveNotes((prev) => toSingleRoot(prev));
     }
+    if (mode === 'progressions') {
+      setProgressionStepIndex(0);
+    }
+  };
+
+  const handleProgressionChange = (id: string) => {
+    setProgressionId(id);
+    setProgressionStepIndex(0);
   };
 
   const handleSelectAll = () => {
@@ -291,9 +448,14 @@ function App() {
                 scaleQuality={scaleQuality}
                 scaleSystem={scaleSystem}
                 showSystemToggle={supportsSystemToggle}
+                progressionId={progressionId}
+                progressionStepIndex={progressionStepIndex}
+                resolvedSteps={resolvedProgressionSteps}
                 onChordQualityChange={setChordQuality}
                 onScaleQualityChange={setScaleQuality}
                 onScaleSystemChange={setScaleSystem}
+                onProgressionChange={handleProgressionChange}
+                onProgressionStepChange={setProgressionStepIndex}
               />
 
               {!singleRootMode && (
@@ -317,6 +479,23 @@ function App() {
                 </SettingsRow>
               )}
             </SettingsSection>
+
+            {studyMode === 'progressions' && (
+              <SettingsSection title="About">
+                <TheoryPanel
+                  theory={activeProgression.theory}
+                  currentStepLabel={
+                    activeProgressionStep
+                      ? `${activeProgressionStep.chordName} (${activeProgressionStep.numeral})`
+                      : undefined
+                  }
+                  currentStepRole={currentStepRole}
+                  resolvedChords={resolvedProgressionSteps
+                    .map((step) => step.chordName)
+                    .join(' – ')}
+                />
+              </SettingsSection>
+            )}
 
             <SettingsSection title="Sound">
               <AudioControls
@@ -343,6 +522,10 @@ function App() {
           <Fretboard
             positions={positions}
             title={title}
+            subtitle={subtitle}
+            subtitleVariant={
+              studyMode === 'progressions' ? 'theory' : 'default'
+            }
             notation={notation}
             noteLabels={spellingMap}
             mutedStrings={mutedStrings}
@@ -359,6 +542,15 @@ function App() {
               onChange={setPositionIndex}
               showFingers={showFingers}
               onFingersToggle={() => setShowFingers((prev) => !prev)}
+            />
+          )}
+          {studyMode === 'progressions' && progressionChordViews.length > 0 && (
+            <ProgressionStrip
+              chords={progressionChordViews}
+              activeIndex={progressionStepIndex}
+              notation={notation}
+              showFingers={showFingers}
+              onSelectStep={setProgressionStepIndex}
             />
           )}
         </div>

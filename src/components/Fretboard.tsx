@@ -25,6 +25,8 @@ const OPEN_NOTE_RADIUS = 13;
 interface FretboardProps {
   positions: FretPosition[];
   title: string;
+  subtitle?: string;
+  subtitleVariant?: 'default' | 'theory';
   notation: NotationPreference;
   noteLabels?: Map<NoteName, string> | null;
   mutedStrings?: number[];
@@ -38,6 +40,8 @@ interface FretboardProps {
 export function Fretboard({
   positions,
   title,
+  subtitle = 'Standard tuning • Frets 0–24',
+  subtitleVariant = 'default',
   notation,
   noteLabels = null,
   mutedStrings = [],
@@ -128,7 +132,15 @@ export function Fretboard({
     <div className={styles.wrapper}>
       <header className={styles.header}>
         <h1 className={styles.title}>{title}</h1>
-        <p className={styles.subtitle}>Standard tuning • Frets 0–24</p>
+        <p
+          className={
+            subtitleVariant === 'theory'
+              ? styles.subtitleTheory
+              : styles.subtitle
+          }
+        >
+          {subtitle}
+        </p>
       </header>
 
       <div ref={containerRef} className={styles.scroll} data-fretboard-grid>

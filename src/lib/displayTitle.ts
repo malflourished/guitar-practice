@@ -1,9 +1,17 @@
-import type { NoteName, StudyMode } from '../types/music';
+import type {
+  NoteName,
+  ProgressionDef,
+  StudyMode,
+  TheoryContent,
+} from '../types/music';
 import { ALL_NOTES } from './colors';
 import {
   formatNoteDisplay,
+  formatProgressionChords,
   formatSpelled,
+  getProgressionById,
   ordinalPosition,
+  resolveProgression,
   spelledRootFromNoteName,
   type NotationPreference,
   type Position,
@@ -20,7 +28,25 @@ export function getFretboardTitle(
   qualityLabel: string,
   notation: NotationPreference,
   positionRegion?: Position,
+  progressionOptions?: {
+    progressionId: string;
+    stepIndex: number;
+    chordName: string;
+    numeral: string;
+  },
 ): string {
+  if (studyMode === 'progressions' && progressionOptions) {
+    const progression = getProgressionById(progressionOptions.progressionId);
+    const positionSuffix = positionRegion
+      ? ` — ${ordinalPosition(positionRegion.number)} Position`
+      : '';
+    const stepLabel = `${progressionOptions.chordName} (${progressionOptions.numeral})`;
+    const progressionLabel = progression?.label ?? 'Progression';
+    const stepNumber = progressionOptions.stepIndex + 1;
+    const stepTotal = progression?.steps.length ?? 1;
+    return `${stepLabel} — ${stepNumber} of ${stepTotal} in ${progressionLabel}${positionSuffix}`;
+  }
+
   if (studyMode !== 'notes') {
     const root = formatSpelled(
       spelledRootFromNoteName(getRootNote(activeNotes), notation),
@@ -53,4 +79,26 @@ export function getFretboardTitle(
     return 'Every Note on the Guitar Fretboard';
   }
   return `${labels.join(', ')} on the Guitar Fretboard`;
+}
+
+export function getFretboardSubtitle(
+  studyMode: StudyMode,
+  theory?: TheoryContent | null,
+  progression?: ProgressionDef | null,
+  keyRoot?: NoteName,
+  notation?: NotationPreference,
+): string {
+  if (studyMode === 'progressions' && theory) {
+    return theory.summary;
+  }
+  if (
+    studyMode === 'progressions' &&
+    progression &&
+    keyRoot &&
+    notation
+  ) {
+    const resolved = resolveProgression(keyRoot, progression, notation);
+    return formatProgressionChords(resolved);
+  }
+  return 'Standard tuning • Frets 0–24';
 }
