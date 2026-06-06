@@ -132,7 +132,7 @@
   text-transform: uppercase;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='rgba(255,255,255,0.55)' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-image: var(--select-chevron-url);
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   transition:

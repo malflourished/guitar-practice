@@ -8,6 +8,11 @@ export {
   getChordQualityLabel,
 } from './chords';
 export {
+  getChordToneForNote,
+  type ChordToneInfo,
+  type ChordToneShape,
+} from './chordTones';
+export {
   getDiatonicQuality,
   getDiatonicRoot,
   getScaleIntervalsForKeyMode,

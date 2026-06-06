@@ -1,0 +1,54 @@
+.dock {
+  position: fixed;
+  right: clamp(1rem, 2.5vw, 1.5rem);
+  bottom: clamp(1rem, 2.5vw, 1.5rem);
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.themes {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+}
+
+.themeButton {
+  composes: pill from '../styles/glass.module.css';
+}
+
+.themeButtonSelected {
+  composes: pillSelected from '../styles/glass.module.css';
+}
+
+/* Dark vibrato — white controls over the colorful stage */
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='dark']) .themeButton {
+  border-color: var(--fretboard-control-border);
+  color: rgba(255, 255, 255, 0.72);
+  background: transparent;
+}
+
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='dark'])
+  .themeButton:hover {
+  background: var(--fretboard-control-bg-hover);
+  border-color: var(--fretboard-control-border-active);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='dark'])
+  .themeButtonSelected {
+  background: var(--fretboard-control-bg-active);
+  border-color: var(--fretboard-control-border-active);
+  color: rgba(255, 255, 255, 0.96);
+}
+
+@media (max-width: 768px) {
+  .dock {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+
+  .themeButton,
+  .themeButtonSelected {
+    padding: 0.38rem 0.7rem;
+  }
+}

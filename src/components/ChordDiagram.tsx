@@ -1,11 +1,13 @@
-import type { FretPosition, NoteName } from '../types/music';
+import type { ChordQuality, FretPosition, NoteName } from '../types/music';
 import {
   FRET_COUNT,
   STRING_COUNT,
   formatNoteDisplay,
+  getChordToneForNote,
   samePitchClass,
   type NotationPreference,
 } from '../lib/music';
+import { NoteMarker } from './NoteMarker';
 import styles from './ChordDiagram.module.css';
 
 const L = {
@@ -41,7 +43,10 @@ interface ChordDiagramProps {
   noteLabels?: Map<NoteName, string> | null;
   showFingers?: boolean;
   showNoteLabels?: boolean;
+  fullDotOpacity?: boolean;
+  showChordTones?: boolean;
   rootNote?: NoteName | null;
+  chordQuality?: ChordQuality | null;
 }
 
 function fretRowsForRegion(startFret: number, endFret: number): number {
@@ -180,7 +185,10 @@ export function ChordDiagram({
   noteLabels = null,
   showFingers = false,
   showNoteLabels = true,
+  fullDotOpacity = false,
+  showChordTones = false,
   rootNote = null,
+  chordQuality = null,
 }: ChordDiagramProps) {
   const isOpenPosition = startFret === 0;
   const fretRows = fretRowsForRegion(startFret, endFret);
@@ -190,16 +198,56 @@ export function ChordDiagram({
     : Math.min(startFret + fretRows - 1, FRET_COUNT);
   const endsAtNeckEnd = lastVisibleFret === FRET_COUNT;
 
-  const dotClass = (note: NoteName) =>
-    rootNote && samePitchClass(note, rootNote)
+  const chordToneContext =
+    showChordTones && rootNote && chordQuality
+      ? { root: rootNote, quality: chordQuality }
+      : null;
+
+  const dotClass = (note: NoteName) => {
+    if (fullDotOpacity) return styles.noteDotRoot;
+    return rootNote && samePitchClass(note, rootNote)
       ? styles.noteDotRoot
       : styles.noteDot;
+  };
 
   const dotLabelText = (note: NoteName, finger?: number) => {
     if (showFingers && finger !== undefined && finger > 0) {
       return String(finger);
     }
+    if (chordToneContext) {
+      const tone = getChordToneForNote(
+        chordToneContext.root,
+        note,
+        chordToneContext.quality,
+      );
+      if (tone) return tone.label;
+    }
     return noteLabels?.get(note) ?? formatNoteDisplay(note, notation);
+  };
+
+  const renderNoteMarker = (note: NoteName, cx: number, cy: number) => {
+    if (chordToneContext) {
+      const tone = getChordToneForNote(
+        chordToneContext.root,
+        note,
+        chordToneContext.quality,
+      );
+      return (
+        <NoteMarker
+          cx={cx}
+          cy={cy}
+          radius={DOT_RADIUS}
+          shape={tone?.shape ?? 'circle'}
+          isRoot={tone?.isRoot ?? false}
+          fullOpacity={fullDotOpacity}
+          variant="diagram"
+        />
+      );
+    }
+
+    return (
+      <circle cx={cx} cy={cy} r={DOT_RADIUS} className={dotClass(note)} />
+    );
   };
 
   const openByString = new Map(
@@ -218,6 +266,24 @@ export function ChordDiagram({
   const markerY =
     nutY - NUT_HEIGHT - DOT_RADIUS - MARKER_GAP_ABOVE_NUT;
 
+  const isRingMarker = (note: NoteName) => {
+    if (!chordToneContext) return false;
+    const tone = getChordToneForNote(
+      chordToneContext.root,
+      note,
+      chordToneContext.quality,
+    );
+    return tone?.shape === 'ring';
+  };
+
+  const dotLabelClass = (note: NoteName, label: string) => {
+    const small = label.length > 1;
+    if (isRingMarker(note)) {
+      return small ? styles.dotLabelOnRingSmall : styles.dotLabelOnRing;
+    }
+    return small ? styles.dotLabelSmall : styles.dotLabel;
+  };
+
   const renderDotLabel = (
     note: NoteName,
     finger: number | undefined,
@@ -233,7 +299,7 @@ export function ChordDiagram({
         y={cy}
         textAnchor="middle"
         dominantBaseline="central"
-        className={label.length > 1 ? styles.dotLabelSmall : styles.dotLabel}
+        className={dotLabelClass(note, label)}
       >
         {label}
       </text>
@@ -339,12 +405,7 @@ export function ChordDiagram({
           const cx = stringX(stringIndex);
           return (
             <g key={`open-${stringIndex}`}>
-              <circle
-                cx={cx}
-                cy={markerY}
-                r={DOT_RADIUS}
-                className={dotClass(position.note)}
-              />
+              {renderNoteMarker(position.note, cx, markerY)}
               {renderDotLabel(position.note, position.finger, cx, markerY)}
             </g>
           );
@@ -373,7 +434,7 @@ export function ChordDiagram({
 
         return (
           <g key={`note-${string}-${fret}`}>
-            <circle cx={cx} cy={cy} r={DOT_RADIUS} className={dotClass(note)} />
+            {renderNoteMarker(note, cx, cy)}
             {renderDotLabel(note, finger, cx, cy)}
           </g>
         );

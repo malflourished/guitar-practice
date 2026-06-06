@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
-const STORAGE_WHITE_BG = 'guitar-practice:debug-white-background';
-const STORAGE_WHITE_TEXT = 'guitar-practice:debug-white-text';
+const STORAGE_WHITE_BG = 'vibrato:debug-white-background';
+const STORAGE_WHITE_TEXT = 'vibrato:debug-white-text';
 
 export interface DebugSettings {
   enabled: boolean;

@@ -3,11 +3,70 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: var(--canvas-bg);
+  pointer-events: none;
+}
+
+.ambientArt {
+  position: absolute;
+  inset: 0;
+  opacity: 1;
   transition:
     --blob-1 var(--duration-theme) var(--ease-calm),
     --blob-2 var(--duration-theme) var(--ease-calm),
     --blob-3 var(--duration-theme) var(--ease-calm);
+}
+
+/* Dark vibrato → scholar: fade the full stack */
+:global(.themeRoot[data-ui-theme='scholar'][data-vibrato-canvas='dark']) .ambientArt {
+  opacity: 0;
+  transition: opacity var(--duration-theme) var(--ease-calm);
+}
+
+/* Light vibrato ↔ scholar: hold the white stage, fade blobs only */
+:global(.themeRoot[data-vibrato-canvas='light']) .canvasDark,
+:global(.themeRoot[data-vibrato-canvas='light']) .bottomFadeDark {
+  opacity: 0;
+}
+
+:global(.themeRoot[data-vibrato-canvas='light']) .canvasLight {
+  opacity: 1;
+}
+
+:global(.themeRoot[data-vibrato-canvas='light']) .bottomFadeLight {
+  opacity: 1;
+}
+
+:global(.themeRoot[data-ui-theme='scholar'][data-vibrato-canvas='light']) .glowField {
+  opacity: 0;
+}
+
+:global(.themeRoot[data-ui-theme='scholar'][data-vibrato-canvas='light']) .vignette,
+:global(.themeRoot[data-ui-theme='scholar'][data-vibrato-canvas='light']) .grain {
+  opacity: 0;
+  transition: none;
+}
+
+.canvasPlate {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.canvasDark {
+  composes: canvasPlate;
+  background: #0a0a0e;
+  opacity: 1;
+}
+
+.canvasLight {
+  composes: canvasPlate;
+  background: #f6f5f0;
+  opacity: 0;
+}
+
+:global(.themeRoot[data-ui-theme='vibrato']) .canvasDark,
+:global(.themeRoot[data-ui-theme='vibrato']) .canvasLight {
+  transition: opacity var(--duration-theme) var(--ease-calm);
 }
 
 .vignette {
@@ -20,12 +79,24 @@
     rgba(0, 0, 0, 0.35) 100%
   );
   pointer-events: none;
+  opacity: 1;
+  transition: opacity var(--duration-theme) var(--ease-calm);
 }
 
-.bottomFade {
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='light']) .vignette {
+  opacity: 0.35;
+  transition: none;
+}
+
+.bottomFadePlate {
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+.bottomFadeDark {
+  composes: bottomFadePlate;
+  opacity: 1;
   background: linear-gradient(
     to bottom,
     transparent 0px,
@@ -34,8 +105,28 @@
     rgba(10, 10, 14, 0.38) calc(var(--color-boundary, 78vh) - 32px),
     rgba(10, 10, 14, 0.72) var(--color-boundary, 78vh),
     rgba(10, 10, 14, 0.92) calc(var(--color-boundary, 78vh) + 48px),
-    var(--canvas-bg) calc(var(--color-boundary, 78vh) + 120px)
+    #0a0a0e calc(var(--color-boundary, 78vh) + 120px)
   );
+}
+
+.bottomFadeLight {
+  composes: bottomFadePlate;
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent calc(var(--color-boundary, 78vh) - 140px),
+    rgba(255, 255, 255, 0.18) calc(var(--color-boundary, 78vh) - 80px),
+    rgba(255, 255, 255, 0.52) calc(var(--color-boundary, 78vh) - 32px),
+    rgba(255, 255, 255, 0.8) var(--color-boundary, 78vh),
+    rgba(255, 255, 255, 0.94) calc(var(--color-boundary, 78vh) + 48px),
+    #f6f5f0 calc(var(--color-boundary, 78vh) + 120px)
+  );
+}
+
+:global(.themeRoot[data-ui-theme='vibrato']) .bottomFadeDark,
+:global(.themeRoot[data-ui-theme='vibrato']) .bottomFadeLight {
+  transition: opacity var(--duration-theme) var(--ease-calm);
 }
 
 .glowField {
@@ -45,7 +136,9 @@
   width: min(1200px, 115vw);
   height: min(1100px, 94vh);
   pointer-events: none;
+  opacity: 1;
   transform: translateX(-50%);
+  transition: opacity var(--duration-theme) var(--ease-calm);
   animation: chamberBob 13.5s cubic-bezier(0.44, 0.05, 0.25, 0.99) infinite;
 }
 
@@ -148,6 +241,7 @@
   inset: 0;
   pointer-events: none;
   opacity: 0.055;
+  transition: opacity var(--duration-theme) var(--ease-calm);
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
@@ -319,6 +413,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ambientArt,
+  .glowField,
+  .canvasPlate,
+  .bottomFadePlate,
+  .vignette,
+  .grain {
+    transition: none;
+  }
+
   .glowField,
   .blobCore1,
   .blobCore2,
@@ -328,10 +431,7 @@
   }
 }
 
-:global(.themeRoot[data-debug-bg='white']) .glowField,
-:global(.themeRoot[data-debug-bg='white']) .vignette,
-:global(.themeRoot[data-debug-bg='white']) .bottomFade,
-:global(.themeRoot[data-debug-bg='white']) .grain {
+:global(.themeRoot[data-debug-bg='white']) .ambientArt {
   opacity: 0;
   visibility: hidden;
 }

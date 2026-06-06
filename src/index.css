@@ -9,6 +9,11 @@
   box-sizing: border-box;
 }
 
+html:has(.themeRoot[data-ui-theme='scholar']),
+html:has(.themeRoot[data-vibrato-canvas='light']) {
+  background-color: #f6f5f0;
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -19,6 +24,11 @@ body {
   background: var(--canvas-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html:has(.themeRoot[data-ui-theme='scholar']) body,
+html:has(.themeRoot[data-vibrato-canvas='light']) body {
+  background-color: #f6f5f0;
 }
 
 #root {

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { GUITAR_INSTRUMENTS, type GuitarInstrumentName } from '../lib/audio/engine';
 import type { ScaleDirection } from '../lib/audio/pitch';
 import type { ProgressionLadderDirection } from '../lib/music';
@@ -26,6 +27,86 @@ interface AudioControlsProps {
 
 export const MIN_TEMPO = 40;
 export const MAX_TEMPO = 400;
+export const DEFAULT_TEMPO = 90;
+
+function clampTempo(bpm: number): number {
+  return Math.min(MAX_TEMPO, Math.max(MIN_TEMPO, Math.round(bpm)));
+}
+
+interface TempoFieldProps {
+  tempo: number;
+  onTempoChange: (bpm: number) => void;
+}
+
+function TempoField({ tempo, onTempoChange }: TempoFieldProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(tempo));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editing) setDraft(String(tempo));
+  }, [tempo, editing]);
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
+
+  const commit = () => {
+    const parsed = Number(draft);
+    if (Number.isFinite(parsed)) {
+      onTempoChange(clampTempo(parsed));
+    }
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setDraft(String(tempo));
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className={styles.tempoField}>
+        <input
+          ref={inputRef}
+          className={styles.tempoInput}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          aria-label="Tempo in beats per minute"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={commit}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              commit();
+            }
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              cancel();
+            }
+          }}
+        />
+        <span className={styles.tempoSuffix}>BPM</span>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className={styles.tempoButton}
+      aria-label={`Tempo ${tempo} beats per minute. Click to edit.`}
+      onClick={() => setEditing(true)}
+    >
+      {tempo} BPM
+    </button>
+  );
+}
 
 export function AudioControls({
   instrument,
@@ -133,6 +214,10 @@ export function AudioControls({
         ))}
       </select>
 
+      {showTempo && (
+        <TempoField tempo={tempo} onTempoChange={onTempoChange} />
+      )}
+
       <button
         type="button"
         className={muted ? styles.iconButtonSelected : styles.iconButton}
@@ -152,21 +237,6 @@ export function AudioControls({
         aria-label="Volume"
         onChange={(event) => onVolumeChange(Number(event.target.value) / 100)}
       />
-
-      {showTempo && (
-        <label className={styles.tempo}>
-          <span className={styles.tempoLabel}>{tempo} BPM</span>
-          <input
-            className={styles.slider}
-            type="range"
-            min={MIN_TEMPO}
-            max={MAX_TEMPO}
-            value={tempo}
-            aria-label="Tempo (beats per minute)"
-            onChange={(event) => onTempoChange(Number(event.target.value))}
-          />
-        </label>
-      )}
     </div>
   );
 }

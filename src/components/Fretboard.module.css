@@ -88,7 +88,7 @@
   fill: var(--note-dot-fill);
   stroke: var(--note-dot-stroke);
   stroke-width: 1.5;
-  opacity: 0.75;
+  opacity: 0.5;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1));
 }
 
@@ -113,6 +113,16 @@
   pointer-events: none;
 }
 
+.noteLabelOnRing {
+  composes: noteLabel;
+  fill: var(--note-label-on-ring-fill);
+}
+
+.noteLabelOnRingSmall {
+  composes: noteLabelAccidental;
+  fill: var(--note-label-on-ring-fill);
+}
+
 .mutedMarker {
   font-size: 16px;
   font-weight: 300;
@@ -123,13 +133,13 @@
 
 .activeRing {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.95);
+  stroke: var(--active-ring-stroke);
   stroke-width: 2;
   pointer-events: none;
   transform-box: fill-box;
   transform-origin: center;
   animation: activePulseOnce 0.5s ease-out forwards;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.45));
+  filter: drop-shadow(0 0 8px var(--active-ring-glow));
 }
 
 @keyframes activePulseOnce {

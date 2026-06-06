@@ -1,0 +1,43 @@
+.marker {
+  fill: var(--note-dot-fill);
+  stroke: var(--note-dot-stroke);
+  stroke-width: 1.5;
+  opacity: 0.5;
+}
+
+.markerRoot {
+  composes: marker;
+  opacity: 1;
+}
+
+.markerDiagram {
+  composes: marker;
+  stroke-width: 1;
+}
+
+.markerRootDiagram {
+  composes: markerDiagram;
+  opacity: 1;
+}
+
+.markerRing {
+  fill: none;
+  stroke: var(--note-dot-fill);
+  stroke-width: 1.5;
+  opacity: 0.5;
+}
+
+.markerRingDiagram {
+  composes: markerRing;
+  stroke-width: 1;
+}
+
+.markerRingFull {
+  composes: markerRing;
+  opacity: 1;
+}
+
+.markerRingFullDiagram {
+  composes: markerRingDiagram;
+  opacity: 1;
+}

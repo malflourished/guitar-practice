@@ -39,23 +39,40 @@
   width: 100px;
 }
 
-.tempo {
+.tempoField {
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  min-width: 140px;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.tempoLabel {
+.tempoButton {
+  composes: pill from '../styles/glass.module.css';
+  min-width: 4.5rem;
+}
+
+.tempoInput {
+  composes: pill from '../styles/glass.module.css';
+  width: 3.25rem;
+  padding: 0.4rem 0.55rem;
+  text-align: center;
+  cursor: text;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.tempoInput::-webkit-outer-spin-button,
+.tempoInput::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.tempoSuffix {
   font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 300;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
   color: var(--text-secondary);
-}
-
-.tempo .slider {
-  width: 100%;
 }
 
 @media (max-width: 768px) {

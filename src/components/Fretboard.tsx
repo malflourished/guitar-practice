@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { FretPosition, NoteName } from '../types/music';
+import type { ChordQuality, FretPosition, NoteName } from '../types/music';
 import {
   FRETBOARD_LAYOUT,
   boardPlayableWidth,
@@ -14,9 +14,11 @@ import {
   STRING_COUNT,
   STRING_LABELS,
   formatNoteDisplay,
+  getChordToneForNote,
   samePitchClass,
   type NotationPreference,
 } from '../lib/music';
+import { NoteMarker } from './NoteMarker';
 import styles from './Fretboard.module.css';
 
 const SINGLE_MARKER_FRETS = [3, 5, 7, 9, 15, 17, 19, 21];
@@ -36,7 +38,10 @@ interface FretboardProps {
   mutedStrings?: number[];
   showFingers?: boolean;
   showNoteLabels?: boolean;
+  fullDotOpacity?: boolean;
+  showChordTones?: boolean;
   rootNote?: NoteName | null;
+  chordQuality?: ChordQuality | null;
   noteColors: Record<NoteName, string>;
   onPlayNote?: (position: FretPosition) => void;
   activePosition?: FretPosition | null;
@@ -52,7 +57,10 @@ export function Fretboard({
   mutedStrings = [],
   showFingers = false,
   showNoteLabels = true,
+  fullDotOpacity = false,
+  showChordTones = false,
   rootNote = null,
+  chordQuality = null,
   onPlayNote,
   activePosition = null,
 }: FretboardProps) {
@@ -110,9 +118,22 @@ export function Fretboard({
       fretSpaceWidth(fret, scaleLength) * 0.42,
     );
 
+  const chordToneContext =
+    showChordTones && rootNote && chordQuality
+      ? { root: rootNote, quality: chordQuality }
+      : null;
+
   const labelFor = (note: NoteName, finger?: number) => {
     if (showFingers && finger !== undefined) {
       return String(finger);
+    }
+    if (chordToneContext) {
+      const tone = getChordToneForNote(
+        chordToneContext.root,
+        note,
+        chordToneContext.quality,
+      );
+      if (tone) return tone.label;
     }
     return noteLabels?.get(note) ?? formatNoteDisplay(note, notation);
   };
@@ -120,10 +141,51 @@ export function Fretboard({
   const openPositions = positions.filter((p) => p.fret === 0);
   const frettedPositions = positions.filter((p) => p.fret > 0);
 
-  const dotClass = (note: NoteName) =>
-    rootNote && samePitchClass(note, rootNote)
+  const dotClass = (note: NoteName) => {
+    if (fullDotOpacity) return styles.noteDotRoot;
+    return rootNote && samePitchClass(note, rootNote)
       ? styles.noteDotRoot
       : styles.noteDot;
+  };
+
+  const renderNoteMarker = (note: NoteName, cx: number, cy: number, radius: number) => {
+    if (chordToneContext) {
+      const tone = getChordToneForNote(
+        chordToneContext.root,
+        note,
+        chordToneContext.quality,
+      );
+      return (
+        <NoteMarker
+          cx={cx}
+          cy={cy}
+          radius={radius}
+          shape={tone?.shape ?? 'circle'}
+          isRoot={tone?.isRoot ?? false}
+          fullOpacity={fullDotOpacity}
+        />
+      );
+    }
+
+    return <circle cx={cx} cy={cy} r={radius} className={dotClass(note)} />;
+  };
+
+  const isRingMarker = (note: NoteName) => {
+    if (!chordToneContext) return false;
+    const tone = getChordToneForNote(
+      chordToneContext.root,
+      note,
+      chordToneContext.quality,
+    );
+    return tone?.shape === 'ring';
+  };
+
+  const labelClass = (note: NoteName, small: boolean) => {
+    if (isRingMarker(note)) {
+      return small ? styles.noteLabelOnRingSmall : styles.noteLabelOnRing;
+    }
+    return small ? styles.noteLabelAccidental : styles.noteLabel;
+  };
 
   const renderLabel = (
     note: NoteName,
@@ -142,7 +204,7 @@ export function Fretboard({
         x={cx}
         y={cy + (small ? 4 : 5)}
         textAnchor="middle"
-        className={small ? styles.noteLabelAccidental : styles.noteLabel}
+        className={labelClass(note, small)}
       >
         {label}
       </text>
@@ -281,12 +343,12 @@ export function Fretboard({
                       className={styles.activeRing}
                     />
                   )}
-                  <circle
-                    cx={FRETBOARD_LAYOUT.openLaneX}
-                    cy={stringY(string)}
-                    r={OPEN_NOTE_RADIUS}
-                    className={dotClass(note)}
-                  />
+                  {renderNoteMarker(
+                    note,
+                    FRETBOARD_LAYOUT.openLaneX,
+                    stringY(string),
+                    OPEN_NOTE_RADIUS,
+                  )}
                   {renderLabel(
                     note,
                     finger,
@@ -316,12 +378,12 @@ export function Fretboard({
                       className={styles.activeRing}
                     />
                   )}
-                  <circle
-                    cx={fretCenterX(fret)}
-                    cy={stringY(string)}
-                    r={radius}
-                    className={dotClass(note)}
-                  />
+                  {renderNoteMarker(
+                    note,
+                    fretCenterX(fret),
+                    stringY(string),
+                    radius,
+                  )}
                   {renderLabel(
                     note,
                     finger,

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Fretboard } from './components/Fretboard';
 import { PositionSlider } from './components/PositionSlider';
-import { AudioControls } from './components/AudioControls';
+import { AudioControls, DEFAULT_TEMPO } from './components/AudioControls';
 import { DebugPanel } from './components/DebugPanel';
 import { AmbientBackground } from './components/AmbientBackground';
 import { KeySelector } from './components/KeySelector';
 import { useInstrument } from './hooks/useInstrument';
+import { useUiTheme } from './hooks/useUiTheme';
+import { UiThemeSelector } from './components/UiThemeSelector';
 import { orderScalePositions, type ScaleDirection } from './lib/audio/pitch';
 import { ALL_NOTES, NOTE_COLORS } from './lib/colors';
 import {
@@ -56,6 +58,7 @@ import {
 } from './components/SettingsList';
 import { ProgressionStrip } from './components/ProgressionStrip';
 import { TheoryPanel } from './components/TheoryPanel';
+import { APP_NAME } from './lib/brand';
 import glass from './styles/glass.module.css';
 import { useColorBoundary } from './hooks/useColorBoundary';
 import { useDebugSettings } from './hooks/useDebugSettings';
@@ -103,11 +106,14 @@ function App() {
   const [scaleSystem, setScaleSystem] = useState<ScaleSystem>('3nps');
   const [showFingers, setShowFingers] = useState(false);
   const [showNoteLabels, setShowNoteLabels] = useState(true);
+  const [fullDotOpacity, setFullDotOpacity] = useState(false);
+  const [showChordTones, setShowChordTones] = useState(false);
   const [noteColors, setNoteColors] = useState<Record<NoteName, string>>(
     loadNoteColors,
   );
 
   const debug = useDebugSettings();
+  const { uiTheme, vibratoCanvas, selectUiTheme } = useUiTheme();
 
   useEffect(() => {
     try {
@@ -168,6 +174,14 @@ function App() {
 
   const highlightRoot =
     studyMode === 'progressions' ? activeChordRoot : rootNote;
+
+  const highlightChordQuality =
+    studyMode === 'progressions' ? activeChordQuality : chordQuality;
+
+  const supportsChordTones =
+    studyMode === 'chords' ||
+    studyMode === 'arpeggios' ||
+    studyMode === 'progressions';
 
   const qualityKey =
     studyMode === 'scales'
@@ -292,7 +306,7 @@ function App() {
     }
     return activePositionRegion?.mutedStrings ?? [];
   }, [studyMode, ladderActive, activeDisplayChord, activePositionRegion]);
-  const [tempo, setTempo] = useState(90);
+  const [tempo, setTempo] = useState(DEFAULT_TEMPO);
   const playbackMode =
     studyMode === 'progressions'
       ? 'progression'
@@ -485,10 +499,11 @@ function App() {
     ],
   );
 
-  const contrastMode = useMemo(
-    () => contrastModeFromBackgroundStyle(ambientStyle),
-    [ambientStyle],
-  );
+  const contrastMode = useMemo(() => {
+    if (uiTheme === 'scholar') return 'light';
+    if (uiTheme === 'vibrato' && vibratoCanvas === 'light') return 'light';
+    return contrastModeFromBackgroundStyle(ambientStyle);
+  }, [uiTheme, vibratoCanvas, ambientStyle]);
 
   const ambientBackgroundStyle = useMemo(
     () =>
@@ -550,16 +565,29 @@ function App() {
   return (
     <div
       className="themeRoot"
+      data-ui-theme={uiTheme}
+      data-vibrato-canvas={vibratoCanvas}
       data-contrast={contrastMode}
       data-debug-bg={debug.enabled && debug.whiteBackground ? 'white' : undefined}
       data-debug-text={
         debug.enabled ? (debug.whiteText ? 'white' : 'black') : undefined
       }
-      style={ambientStyle as CSSProperties}
+      style={
+        uiTheme === 'vibrato' ? (ambientStyle as CSSProperties) : undefined
+      }
     >
       <AmbientBackground style={ambientBackgroundStyle} />
+      <UiThemeSelector
+        uiTheme={uiTheme}
+        vibratoCanvas={vibratoCanvas}
+        onUiThemeChange={selectUiTheme}
+      />
       <div className="app">
         <div className="shell">
+          <p className="wordmark" aria-label={APP_NAME.slice(0, -1)}>
+            {APP_NAME.slice(0, -1)}
+            <span className="wordmarkWave">{APP_NAME.at(-1)}</span>
+          </p>
           <SettingsList>
             <SettingsSection>
               <SettingsRow label="Mode">
@@ -676,7 +704,12 @@ function App() {
             mutedStrings={mutedStrings}
             showFingers={showFingers}
             showNoteLabels={showNoteLabels}
+            fullDotOpacity={fullDotOpacity}
+            showChordTones={supportsChordTones && showChordTones}
             rootNote={highlightRoot}
+            chordQuality={
+              supportsChordTones ? highlightChordQuality : null
+            }
             noteColors={noteColors}
             onPlayNote={audio.muted ? undefined : audio.playPosition}
             activePosition={audio.playingPosition}
@@ -689,7 +722,15 @@ function App() {
               showFingers={showFingers}
               onFingersToggle={() => setShowFingers((prev) => !prev)}
               showNoteLabels={showNoteLabels}
+              fullDotOpacity={fullDotOpacity}
               onNoteLabelsToggle={() => setShowNoteLabels((prev) => !prev)}
+              onFullDotOpacityToggle={() => setFullDotOpacity((prev) => !prev)}
+              showChordTones={supportsChordTones ? showChordTones : undefined}
+              onChordTonesToggle={
+                supportsChordTones
+                  ? () => setShowChordTones((prev) => !prev)
+                  : undefined
+              }
               disabled={ladderActive}
             />
           )}
@@ -700,6 +741,8 @@ function App() {
               notation={notation}
               showFingers={showFingers}
               showNoteLabels={showNoteLabels}
+              fullDotOpacity={fullDotOpacity}
+              showChordTones={showChordTones}
               onSelectStep={setProgressionStepIndex}
             />
           )}

@@ -1,8 +1,20 @@
 .themeRoot {
   position: relative;
   min-height: 100svh;
+  background-color: transparent;
   color: var(--text-primary);
+  transition:
+    color var(--duration-theme) var(--ease-calm),
+    background-color var(--duration-theme) var(--ease-calm);
+}
+
+.themeRoot[data-ui-theme='scholar'][data-vibrato-canvas='light'] {
+  background-color: #f6f5f0;
   transition: color var(--duration-theme) var(--ease-calm);
+}
+
+.themeRoot[data-ui-theme='scholar'] .wordmarkWave {
+  animation: none;
 }
 
 .app {
@@ -25,6 +37,38 @@
   padding: 0 var(--shell-padding);
 }
 
+.wordmark {
+  margin: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: lowercase;
+  color: var(--hero-color);
+}
+
+.wordmarkWave {
+  display: inline-block;
+  margin-left: 0.04em;
+  color: var(--accent-color);
+  animation: wordmarkWobble 2.8s var(--ease-lava) infinite;
+}
+
+@keyframes wordmarkWobble {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  25% {
+    transform: translateY(-0.08em) rotate(-6deg);
+  }
+
+  75% {
+    transform: translateY(0.06em) rotate(5deg);
+  }
+}
+
 .fretboardStage {
   width: 100%;
   padding: 0 var(--fretboard-padding);
@@ -40,5 +84,11 @@
   .app {
     padding: 1.5rem 0 2rem;
     gap: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordmarkWave {
+    animation: none;
   }
 }

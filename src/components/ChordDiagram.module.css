@@ -48,7 +48,7 @@
   fill: var(--note-dot-fill);
   stroke: var(--note-dot-stroke);
   stroke-width: 1;
-  opacity: 0.75;
+  opacity: 0.5;
 }
 
 .noteDotRoot {
@@ -76,4 +76,14 @@
   font-family: var(--font-sans);
   fill: var(--note-label-fill);
   pointer-events: none;
+}
+
+.dotLabelOnRing {
+  composes: dotLabel;
+  fill: var(--note-label-on-ring-fill);
+}
+
+.dotLabelOnRingSmall {
+  composes: dotLabelSmall;
+  fill: var(--note-label-on-ring-fill);
 }
