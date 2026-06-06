@@ -29,6 +29,16 @@ export interface UseInstrument {
   playSequence: (positions: FretPosition[], bpm: number, id: string) => void;
   /** Strum a set of fret positions low-to-high. */
   strum: (positions: FretPosition[]) => void;
+  /**
+   * Strum each chord in order at the given tempo (one chord per beat).
+   * `onStep` is called as each chord sounds so the UI can follow along.
+   */
+  playProgression: (
+    chords: FretPosition[][],
+    bpm: number,
+    id: string,
+    onStep?: (index: number) => void,
+  ) => void;
   stopAll: () => void;
 }
 
@@ -94,6 +104,45 @@ export function useInstrument(): UseInstrument {
     [engine, clearTimers],
   );
 
+  const playProgression = useCallback(
+    (
+      chords: FretPosition[][],
+      bpm: number,
+      id: string,
+      onStep?: (index: number) => void,
+    ) => {
+      clearTimers();
+      setPlayingPosition(null);
+
+      const playable = chords.filter((chord) => chord.length > 0);
+      if (playable.length === 0) {
+        setPlayingId(null);
+        return;
+      }
+
+      const gapMs = bpmToGapMs(bpm);
+      setPlayingId(id);
+
+      chords.forEach((chordPositions, index) => {
+        if (chordPositions.length === 0) return;
+        timersRef.current.push(
+          setTimeout(() => {
+            onStep?.(index);
+            const midis = chordPositions.map(positionToMidi);
+            void engine.playChord(midis);
+          }, index * gapMs),
+        );
+      });
+
+      timersRef.current.push(
+        setTimeout(() => {
+          setPlayingId(null);
+        }, chords.length * gapMs),
+      );
+    },
+    [engine, clearTimers],
+  );
+
   const playSequence = useCallback(
     (positions: FretPosition[], bpm: number, id: string) => {
       clearTimers();
@@ -139,6 +188,7 @@ export function useInstrument(): UseInstrument {
     playNote,
     playPosition,
     playSequence,
+    playProgression,
     strum,
     stopAll,
   };

@@ -2,14 +2,16 @@ import { GUITAR_INSTRUMENTS, type GuitarInstrumentName } from '../lib/audio/engi
 import type { ScaleDirection } from '../lib/audio/pitch';
 import styles from './AudioControls.module.css';
 
+export type PlaybackMode = 'strum' | 'sequence' | 'progression';
+
 interface AudioControlsProps {
   instrument: GuitarInstrumentName;
   volume: number;
   muted: boolean;
   loading: boolean;
   canPlay: boolean;
-  sequenceMode: boolean;
-  playingDirection: ScaleDirection | null;
+  playbackMode: PlaybackMode;
+  playingId: string | null;
   tempo: number;
   onInstrumentChange: (name: GuitarInstrumentName) => void;
   onVolumeChange: (volume: number) => void;
@@ -17,6 +19,7 @@ interface AudioControlsProps {
   onTempoChange: (bpm: number) => void;
   onStrum: () => void;
   onPlayScale: (direction: ScaleDirection) => void;
+  onPlayProgression: () => void;
 }
 
 export const MIN_TEMPO = 40;
@@ -28,8 +31,8 @@ export function AudioControls({
   muted,
   loading,
   canPlay,
-  sequenceMode,
-  playingDirection,
+  playbackMode,
+  playingId,
   tempo,
   onInstrumentChange,
   onVolumeChange,
@@ -37,14 +40,18 @@ export function AudioControls({
   onTempoChange,
   onStrum,
   onPlayScale,
+  onPlayProgression,
 }: AudioControlsProps) {
   const playDisabled = !canPlay || muted;
+  const playingProgression = playingId === 'progression';
+  const showTempo = playbackMode === 'sequence' || playbackMode === 'progression';
+
   return (
     <div className={styles.row} role="group" aria-label="Audio">
-      {sequenceMode ? (
+      {playbackMode === 'sequence' ? (
         <div className={styles.playGroup} role="group" aria-label="Play scale">
           {(['ascending', 'descending'] as const).map((direction) => {
-            const active = playingDirection === direction;
+            const active = playingId === direction;
             const label = direction === 'ascending' ? 'Ascending' : 'Descending';
             return (
               <button
@@ -58,6 +65,25 @@ export function AudioControls({
               </button>
             );
           })}
+        </div>
+      ) : playbackMode === 'progression' ? (
+        <div className={styles.playGroup} role="group" aria-label="Play progression">
+          <button
+            type="button"
+            className={styles.playButton}
+            onClick={onStrum}
+            disabled={playDisabled}
+          >
+            {loading ? 'Loading…' : 'Strum'}
+          </button>
+          <button
+            type="button"
+            className={`${styles.playButton} ${playingProgression ? styles.stopButton : ''}`}
+            onClick={onPlayProgression}
+            disabled={playDisabled}
+          >
+            {playingProgression ? 'Stop' : loading ? 'Loading…' : 'Play'}
+          </button>
         </div>
       ) : (
         <button
@@ -105,7 +131,7 @@ export function AudioControls({
         onChange={(event) => onVolumeChange(Number(event.target.value) / 100)}
       />
 
-      {sequenceMode && (
+      {showTempo && (
         <label className={styles.tempo}>
           <span className={styles.tempoLabel}>{tempo} BPM</span>
           <input

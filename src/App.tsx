@@ -241,7 +241,12 @@ function App() {
 
   const audio = useInstrument();
   const [tempo, setTempo] = useState(90);
-  const strumMode = studyMode === 'chords' || studyMode === 'progressions';
+  const playbackMode =
+    studyMode === 'progressions'
+      ? 'progression'
+      : studyMode === 'chords'
+        ? 'strum'
+        : 'sequence';
   const handleStrum = () => audio.strum(positions);
   const handlePlayScale = (direction: ScaleDirection) => {
     if (audio.playingId === direction) {
@@ -252,6 +257,18 @@ function App() {
       orderScalePositions(positions, rootNote, direction),
       tempo,
       direction,
+    );
+  };
+  const handlePlayProgression = () => {
+    if (audio.playingId === 'progression') {
+      audio.stopAll();
+      return;
+    }
+    audio.playProgression(
+      progressionChordViews.map((chord) => chord.positions),
+      tempo,
+      'progression',
+      setProgressionStepIndex,
     );
   };
 
@@ -506,9 +523,15 @@ function App() {
                 volume={audio.volume}
                 muted={audio.muted}
                 loading={audio.loading}
-                canPlay={positions.length > 0}
-                sequenceMode={!strumMode}
-                playingDirection={audio.playingId as ScaleDirection | null}
+                canPlay={
+                  studyMode === 'progressions'
+                    ? progressionChordViews.some(
+                        (chord) => chord.positions.length > 0,
+                      )
+                    : positions.length > 0
+                }
+                playbackMode={playbackMode}
+                playingId={audio.playingId}
                 tempo={tempo}
                 onInstrumentChange={audio.setInstrument}
                 onVolumeChange={audio.setVolume}
@@ -516,6 +539,7 @@ function App() {
                 onTempoChange={setTempo}
                 onStrum={handleStrum}
                 onPlayScale={handlePlayScale}
+                onPlayProgression={handlePlayProgression}
               />
             </SettingsSection>
           </SettingsList>
