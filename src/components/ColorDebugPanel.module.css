@@ -1,37 +1,29 @@
 .wrapper {
-  max-width: 1200px;
+  position: relative;
+  z-index: 2;
+  max-width: var(--shell-max);
   margin: 2rem auto 0;
-  padding: 0 1.5rem;
+  padding: 0 var(--shell-padding);
 }
 
 .toggle {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #6b7280;
+  composes: pill from '../styles/glass.module.css';
   font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: system-ui, sans-serif;
-}
-
-.toggle:hover {
-  background: #f3f4f6;
 }
 
 .panel {
+  composes: panel from '../styles/glass.module.css';
   margin-top: 0.75rem;
   padding: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fafafa;
+  border-radius: var(--radius-pill);
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 720px) {
@@ -45,9 +37,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--glass-border-subtle);
   border-radius: 8px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
   cursor: pointer;
 }
 
@@ -67,47 +59,39 @@
 }
 
 .colorInput::-webkit-color-swatch {
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 8px;
 }
 
 .noteName {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
   min-width: 2.75rem;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .hexInput {
   width: 100%;
   min-width: 0;
   padding: 0.3rem 0.4rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--glass-border-subtle);
   border-radius: 6px;
   font-size: 0.8rem;
   font-family: ui-monospace, monospace;
-  color: #374151;
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .actions {
   display: flex;
   gap: 0.5rem;
   margin-top: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .actionButton {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #374151;
+  composes: pill from '../styles/glass.module.css';
   font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: system-ui, sans-serif;
-}
-
-.actionButton:hover {
-  background: #f3f4f6;
 }

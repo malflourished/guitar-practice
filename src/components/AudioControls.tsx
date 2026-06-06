@@ -7,21 +7,15 @@ interface AudioControlsProps {
   volume: number;
   muted: boolean;
   loading: boolean;
-  /** Whether there is anything on the board to play right now. */
   canPlay: boolean;
-  /** Sequence mode (scales/arpeggios/notes) shows directional play + tempo. */
   sequenceMode: boolean;
-  /** Direction of the currently playing scale run, else null. */
   playingDirection: ScaleDirection | null;
-  /** Playback tempo in beats per minute. */
   tempo: number;
   onInstrumentChange: (name: GuitarInstrumentName) => void;
   onVolumeChange: (volume: number) => void;
   onMutedToggle: () => void;
   onTempoChange: (bpm: number) => void;
-  /** Strum the current chord (chords mode). */
   onStrum: () => void;
-  /** Play the current scale run in the given direction (sequence mode). */
   onPlayScale: (direction: ScaleDirection) => void;
 }
 
@@ -93,7 +87,7 @@ export function AudioControls({
 
       <button
         type="button"
-        className={`${styles.iconButton} ${muted ? styles.selected : ''}`}
+        className={muted ? styles.iconButtonSelected : styles.iconButton}
         aria-pressed={muted}
         aria-label={muted ? 'Unmute' : 'Mute'}
         onClick={onMutedToggle}

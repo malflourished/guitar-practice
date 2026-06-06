@@ -11,7 +11,9 @@ export function NotationToggle({ notation, onChange }: NotationToggleProps) {
     <div className={styles.container} role="group" aria-label="Note notation">
       <button
         type="button"
-        className={`${styles.option} ${notation === 'sharps' ? styles.selected : ''}`}
+        className={
+          notation === 'sharps' ? styles.optionSelected : styles.option
+        }
         aria-pressed={notation === 'sharps'}
         onClick={() => onChange('sharps')}
       >
@@ -19,7 +21,7 @@ export function NotationToggle({ notation, onChange }: NotationToggleProps) {
       </button>
       <button
         type="button"
-        className={`${styles.option} ${notation === 'flats' ? styles.selected : ''}`}
+        className={notation === 'flats' ? styles.optionSelected : styles.option}
         aria-pressed={notation === 'flats'}
         onClick={() => onChange('flats')}
       >

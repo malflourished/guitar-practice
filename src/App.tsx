@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Fretboard } from './components/Fretboard';
-import { NoteToggle } from './components/NoteToggle';
 import { AudioControls } from './components/AudioControls';
 import { ColorDebugPanel } from './components/ColorDebugPanel';
+import { AmbientBackground } from './components/AmbientBackground';
+import { KeySelector } from './components/KeySelector';
 import { useInstrument } from './hooks/useInstrument';
 import { orderScalePositions, type ScaleDirection } from './lib/audio/pitch';
 import { TierSelector } from './components/TierSelector';
@@ -10,10 +11,15 @@ import { TIERS, isValidTier } from './lib/tiers';
 import { ALL_NOTES, NOTE_COLORS } from './lib/colors';
 import { getFretboardTitle, getRootNote } from './lib/displayTitle';
 import {
+  getBackgroundKeyForMode,
+  getKeyBackgroundStyle,
+} from './lib/keyPalette';
+import {
   buildArpeggioPositions,
   buildChordPositions,
   buildScalePositions,
   buildSpellingMap,
+  formatNoteDisplay,
   getChordQualityLabel,
   getPositionsForNotes,
   getQualityLabel,
@@ -29,6 +35,9 @@ import type {
   StudyMode,
   Tier,
 } from './types/music';
+import { StudyModeControls } from './components/StudyModeControls';
+import { NotationToggle } from './components/NotationToggle';
+import glass from './styles/glass.module.css';
 import './App.css';
 
 function isSingleRootMode(mode: StudyMode): boolean {
@@ -78,6 +87,10 @@ function App() {
     loadNoteColors,
   );
 
+  const showColorDebug =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('debug') === 'colors';
+
   useEffect(() => {
     try {
       localStorage.setItem(COLOR_STORAGE_KEY, JSON.stringify(noteColors));
@@ -101,15 +114,12 @@ function App() {
 
   const rootNote = useMemo(() => getRootNote(activeNotes), [activeNotes]);
 
-  // The quality key + label depend on which family the current mode uses.
   const qualityKey = studyMode === 'scales' ? scaleQuality : chordQuality;
   const qualityLabel =
     studyMode === 'scales'
       ? getQualityLabel(scaleQuality)
       : getChordQualityLabel(chordQuality);
 
-  // Note: rootNote is intentionally excluded so the position index is kept
-  // when switching keys (e.g. staying in 3rd position) instead of resetting.
   const positionScope = `${studyMode}-${qualityKey}`;
 
   const positionRegions = useMemo(() => {
@@ -140,8 +150,6 @@ function App() {
     if (studyMode === 'notes') {
       return getPositionsForNotes(activeNotes);
     }
-
-    // Chords, arpeggios, and scales are shown one position at a time.
     return activePositionRegion ? activePositionRegion.positions : [];
   }, [activeNotes, studyMode, activePositionRegion]);
 
@@ -185,6 +193,30 @@ function App() {
     [activeNotes, studyMode, qualityLabel, notation, activePositionRegion],
   );
 
+  const backgroundKey = useMemo(
+    () => getBackgroundKeyForMode(studyMode, activeNotes, rootNote),
+    [studyMode, activeNotes, rootNote],
+  );
+
+  const ambientStyle = useMemo(
+    () =>
+      getKeyBackgroundStyle(
+        backgroundKey,
+        studyMode === 'scales' ? scaleQuality : chordQuality,
+        noteColors,
+      ),
+    [backgroundKey, studyMode, scaleQuality, chordQuality, noteColors],
+  );
+
+  const heroLetter = useMemo(() => {
+    if (studyMode === 'notes' && activeNotes.size !== 1) {
+      if (activeNotes.size === 0) return '—';
+      if (activeNotes.size === 12) return '♯';
+      return formatNoteDisplay(rootNote, notation);
+    }
+    return formatNoteDisplay(rootNote, notation);
+  }, [studyMode, activeNotes.size, rootNote, notation]);
+
   const handleToggle = (note: NoteName) => {
     setActiveNotes((prev) => {
       if (isSingleRootMode(studyMode)) {
@@ -211,7 +243,6 @@ function App() {
   const handleTierChange = (next: Tier) => {
     setTier(next);
     const cfg = TIERS[next];
-    // Snap any now-hidden selection back to a safe default.
     if (!cfg.studyModes.includes(studyMode)) {
       setStudyMode('notes');
     }
@@ -235,71 +266,119 @@ function App() {
     }
   };
 
+  const singleRootMode = isSingleRootMode(studyMode);
+
   return (
-    <div className="app">
-      <div className="controls">
-        <div className="tierRow">
-          <TierSelector tier={tier} onChange={handleTierChange} />
+    <div className="themeRoot" style={ambientStyle as CSSProperties}>
+      <AmbientBackground style={ambientStyle} />
+      <div className="app">
+        <div className="shell">
+          <KeySelector
+            activeNotes={activeNotes}
+            notation={notation}
+            singleRootMode={singleRootMode}
+            onToggle={handleToggle}
+          />
+
+          <div className={`${glass.panel} heroCard`}>
+            <div className={glass.panelContent}>
+              <div className="heroTop">
+                <span className="heroLetter" aria-hidden="true">
+                  {heroLetter}
+                </span>
+                <div className="heroMeta">
+                  <TierSelector tier={tier} onChange={handleTierChange} />
+                  <NotationToggle
+                    notation={notation}
+                    onChange={setNotation}
+                  />
+                </div>
+              </div>
+
+              <div className="cardSection">
+                <StudyModeControls
+                  studyMode={studyMode}
+                  chordQuality={chordQuality}
+                  scaleQuality={scaleQuality}
+                  showFingers={showFingers}
+                  positionRegions={positionRegions}
+                  positionIndex={positionIndex}
+                  allowedStudyModes={tierConfig.studyModes}
+                  allowedChordQualities={tierConfig.chordQualities}
+                  allowedScaleQualities={tierConfig.scaleQualities}
+                  onStudyModeChange={handleStudyModeChange}
+                  onChordQualityChange={setChordQuality}
+                  onScaleQualityChange={setScaleQuality}
+                  onFingersToggle={() => setShowFingers((prev) => !prev)}
+                  onPositionChange={setPositionIndex}
+                />
+
+                {!singleRootMode && (
+                  <div className="secondaryRow shortcuts">
+                    <button
+                      type="button"
+                      className={glass.pill}
+                      onClick={handleSelectAll}
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      className={glass.pill}
+                      onClick={handleClearAll}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+
+                <div className="soundSection">
+                  <span className="soundLabel">Sound</span>
+                  <AudioControls
+                    instrument={audio.instrument}
+                    volume={audio.volume}
+                    muted={audio.muted}
+                    loading={audio.loading}
+                    canPlay={positions.length > 0}
+                    sequenceMode={!strumMode}
+                    playingDirection={audio.playingId as ScaleDirection | null}
+                    tempo={tempo}
+                    onInstrumentChange={audio.setInstrument}
+                    onVolumeChange={audio.setVolume}
+                    onMutedToggle={() => audio.setMuted(!audio.muted)}
+                    onTempoChange={setTempo}
+                    onStrum={handleStrum}
+                    onPlayScale={handlePlayScale}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Fretboard
+            positions={positions}
+            title={title}
+            notation={notation}
+            noteLabels={spellingMap}
+            mutedStrings={mutedStrings}
+            showFingers={showFingers}
+            noteColors={noteColors}
+            accentColor={ambientStyle['--accent-color']}
+            onPlayNote={audio.muted ? undefined : audio.playPosition}
+            activePosition={audio.playingPosition}
+          />
         </div>
-        <NoteToggle
-          activeNotes={activeNotes}
-          notation={notation}
-          noteColors={noteColors}
-          studyMode={studyMode}
-          chordQuality={chordQuality}
-          scaleQuality={scaleQuality}
-          showFingers={showFingers}
-          positionRegions={positionRegions}
-          positionIndex={positionIndex}
-          allowedStudyModes={tierConfig.studyModes}
-          allowedChordQualities={tierConfig.chordQualities}
-          allowedScaleQualities={tierConfig.scaleQualities}
-          onNotationChange={setNotation}
-          onStudyModeChange={handleStudyModeChange}
-          singleRootMode={isSingleRootMode(studyMode)}
-          onChordQualityChange={setChordQuality}
-          onScaleQualityChange={setScaleQuality}
-          onFingersToggle={() => setShowFingers((prev) => !prev)}
-          onPositionChange={setPositionIndex}
-          onToggle={handleToggle}
-          onSelectAll={handleSelectAll}
-          onClearAll={handleClearAll}
-        />
-        <AudioControls
-          instrument={audio.instrument}
-          volume={audio.volume}
-          muted={audio.muted}
-          loading={audio.loading}
-          canPlay={positions.length > 0}
-          sequenceMode={!strumMode}
-          playingDirection={audio.playingId as ScaleDirection | null}
-          tempo={tempo}
-          onInstrumentChange={audio.setInstrument}
-          onVolumeChange={audio.setVolume}
-          onMutedToggle={() => audio.setMuted(!audio.muted)}
-          onTempoChange={setTempo}
-          onStrum={handleStrum}
-          onPlayScale={handlePlayScale}
-        />
+
+        {showColorDebug && (
+          <ColorDebugPanel
+            noteColors={noteColors}
+            onColorChange={(note, color) =>
+              setNoteColors((prev) => ({ ...prev, [note]: color }))
+            }
+            onReset={() => setNoteColors({ ...NOTE_COLORS })}
+          />
+        )}
       </div>
-      <Fretboard
-        positions={positions}
-        title={title}
-        notation={notation}
-        noteLabels={spellingMap}
-        mutedStrings={mutedStrings}
-        showFingers={showFingers}
-        noteColors={noteColors}
-        onPlayNote={audio.muted ? undefined : audio.playPosition}
-        activePosition={audio.playingPosition}
-      />
-      <ColorDebugPanel
-        noteColors={noteColors}
-        onColorChange={(note, color) =>
-          setNoteColors((prev) => ({ ...prev, [note]: color }))
-        }
-        onReset={() => setNoteColors({ ...NOTE_COLORS })}
-      />
     </div>
   );
 }

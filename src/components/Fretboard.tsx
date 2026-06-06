@@ -26,17 +26,12 @@ interface FretboardProps {
   positions: FretPosition[];
   title: string;
   notation: NotationPreference;
-  /** Spelled labels per pitch class (study modes); null in Notes mode. */
   noteLabels?: Map<NoteName, string> | null;
-  /** String indices that are muted (chord voicings). */
   mutedStrings?: number[];
-  /** Show finger numbers instead of note names. */
   showFingers?: boolean;
-  /** Color per note (pitch class). */
   noteColors: Record<NoteName, string>;
-  /** Called when a note dot is clicked, to play its pitch. */
+  accentColor?: string;
   onPlayNote?: (position: FretPosition) => void;
-  /** Position currently sounding during playback, highlighted on the board. */
   activePosition?: FretPosition | null;
 }
 
@@ -47,7 +42,7 @@ export function Fretboard({
   noteLabels = null,
   mutedStrings = [],
   showFingers = false,
-  noteColors,
+  accentColor = 'rgba(255, 255, 255, 0.9)',
   onPlayNote,
   activePosition = null,
 }: FretboardProps) {
@@ -143,23 +138,19 @@ export function Fretboard({
             viewBox={`0 0 ${boardWidth} ${boardHeight}`}
             preserveAspectRatio="xMidYMid meet"
             role="img"
-            aria-label="Guitar fretboard diagram"
+            aria-label={title}
           >
-            <rect
-              x={FRETBOARD_LAYOUT.leftPadding}
-              y={FRETBOARD_LAYOUT.topPadding - 12}
-              width={FRETBOARD_LAYOUT.nutWidth + playableWidth}
-              height={(STRING_COUNT - 1) * FRETBOARD_LAYOUT.stringGap + 24}
-              rx={4}
-              className={styles.board}
-            />
-
-            <rect
-              x={FRETBOARD_LAYOUT.leftPadding}
-              y={FRETBOARD_LAYOUT.topPadding - 12}
-              width={FRETBOARD_LAYOUT.nutWidth}
-              height={(STRING_COUNT - 1) * FRETBOARD_LAYOUT.stringGap + 24}
-              className={styles.nut}
+            <line
+              x1={FRETBOARD_LAYOUT.leftPadding + FRETBOARD_LAYOUT.nutWidth}
+              y1={FRETBOARD_LAYOUT.topPadding - 8}
+              x2={FRETBOARD_LAYOUT.leftPadding + FRETBOARD_LAYOUT.nutWidth}
+              y2={
+                FRETBOARD_LAYOUT.topPadding +
+                (STRING_COUNT - 1) * FRETBOARD_LAYOUT.stringGap +
+                8
+              }
+              className={styles.fretLine}
+              strokeWidth={3}
             />
 
             {Array.from({ length: FRET_COUNT }, (_, i) => i + 1).map((fret) => (
@@ -243,35 +234,34 @@ export function Fretboard({
             {openPositions.map((position) => {
               const { string, note, finger } = position;
               return (
-              <g
-                key={`open-${string}`}
-                onClick={onPlayNote ? () => onPlayNote(position) : undefined}
-                style={onPlayNote ? { cursor: 'pointer' } : undefined}
-              >
-                {isActive(string, 0) && (
+                <g
+                  key={`open-${string}`}
+                  onClick={onPlayNote ? () => onPlayNote(position) : undefined}
+                  style={onPlayNote ? { cursor: 'pointer' } : undefined}
+                >
+                  {isActive(string, 0) && (
+                    <circle
+                      cx={FRETBOARD_LAYOUT.openLaneX}
+                      cy={stringY(string)}
+                      r={OPEN_NOTE_RADIUS + 6}
+                      className={styles.activeRing}
+                      stroke={accentColor}
+                    />
+                  )}
                   <circle
                     cx={FRETBOARD_LAYOUT.openLaneX}
                     cy={stringY(string)}
-                    r={OPEN_NOTE_RADIUS + 5}
-                    className={styles.activeRing}
+                    r={OPEN_NOTE_RADIUS}
+                    className={styles.noteDot}
                   />
-                )}
-                <circle
-                  cx={FRETBOARD_LAYOUT.openLaneX}
-                  cy={stringY(string)}
-                  r={OPEN_NOTE_RADIUS}
-                  fill={noteColors[note]}
-                  stroke="#ffffff"
-                  strokeWidth={2}
-                />
-                {renderLabel(
-                  note,
-                  finger,
-                  FRETBOARD_LAYOUT.openLaneX,
-                  stringY(string),
-                  OPEN_NOTE_RADIUS,
-                )}
-              </g>
+                  {renderLabel(
+                    note,
+                    finger,
+                    FRETBOARD_LAYOUT.openLaneX,
+                    stringY(string),
+                    OPEN_NOTE_RADIUS,
+                  )}
+                </g>
               );
             })}
 
@@ -288,17 +278,16 @@ export function Fretboard({
                     <circle
                       cx={fretCenterX(fret)}
                       cy={stringY(string)}
-                      r={radius + 5}
+                      r={radius + 6}
                       className={styles.activeRing}
+                      stroke={accentColor}
                     />
                   )}
                   <circle
                     cx={fretCenterX(fret)}
                     cy={stringY(string)}
                     r={radius}
-                    fill={noteColors[note]}
-                    stroke="#ffffff"
-                    strokeWidth={2}
+                    className={styles.noteDot}
                   />
                   {renderLabel(
                     note,

@@ -84,7 +84,9 @@ export function StudyModeControls({
             <button
               key={id}
               type="button"
-              className={`${styles.modeButton} ${studyMode === id ? styles.selected : ''}`}
+              className={
+                studyMode === id ? styles.modeButtonSelected : styles.modeButton
+              }
               aria-pressed={studyMode === id}
               onClick={() => onStudyModeChange(id)}
             >
@@ -139,7 +141,11 @@ export function StudyModeControls({
           <div className={styles.quality} role="group" aria-label="Fingering">
             <button
               type="button"
-              className={`${styles.qualityButton} ${showFingers ? styles.selected : ''}`}
+              className={
+                showFingers
+                  ? styles.qualityButtonSelected
+                  : styles.qualityButton
+              }
               aria-pressed={showFingers}
               onClick={onFingersToggle}
             >

@@ -1,17 +1,110 @@
+.themeRoot {
+  position: relative;
+  min-height: 100svh;
+}
+
 .app {
-  width: 100%;
+  position: relative;
+  z-index: 1;
+  min-height: 100svh;
   padding: 2rem 0 3rem;
-  box-sizing: border-box;
 }
 
-.controls {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.tierRow {
+.shell {
   display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 0 var(--shell-padding);
+}
+
+.heroCard {
+  padding: 2rem 2.5rem 2.25rem;
+}
+
+.heroTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.heroLetter {
+  font-family: var(--font-sans);
+  font-size: clamp(4rem, 12vw, 5.5rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--hero-color);
+  text-shadow: var(--text-shadow);
+  transition: color var(--duration-theme) var(--ease-calm);
+}
+
+.heroMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.cardSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.secondaryRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 1.25rem;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.shortcuts {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.soundSection {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.soundLabel {
+  align-self: flex-end;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .app {
+    padding: 1.25rem 0 2rem;
+  }
+
+  .heroCard {
+    padding: 1.5rem 1.25rem 1.75rem;
+  }
+
+  .heroTop {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .heroMeta {
+    align-items: center;
+  }
 }

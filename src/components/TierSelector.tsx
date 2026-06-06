@@ -14,7 +14,7 @@ export function TierSelector({ tier, onChange }: TierSelectorProps) {
         <button
           key={id}
           type="button"
-          className={`${styles.option} ${tier === id ? styles.selected : ''}`}
+          className={tier === id ? styles.optionSelected : styles.option}
           aria-pressed={tier === id}
           onClick={() => onChange(id)}
         >

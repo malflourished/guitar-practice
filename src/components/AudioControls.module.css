@@ -2,110 +2,68 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  width: 100%;
 }
 
 .playGroup {
   display: inline-flex;
-  gap: 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .playButton {
-  padding: 0.45rem 1.2rem;
-  border: 1px solid #1f2937;
-  border-radius: 8px;
-  background: #1f2937;
-  color: #ffffff;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: system-ui, sans-serif;
-  transition: background 0.15s ease, opacity 0.15s ease;
-}
-
-.playButton:hover:not(:disabled) {
-  background: #374151;
+  composes: pill from '../styles/glass.module.css';
 }
 
 .stopButton {
-  border-color: #b91c1c;
-  background: #b91c1c;
-}
-
-.stopButton:hover:not(:disabled) {
-  background: #dc2626;
-}
-
-.playButton:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+  composes: pillSelected from '../styles/glass.module.css';
+  color: #fca5a5;
 }
 
 .select {
-  padding: 0.45rem 2rem 0.45rem 0.9rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #1f2937;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: system-ui, sans-serif;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236b7280' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.7rem center;
-}
-
-.select:hover {
-  background-color: #f3f4f6;
+  composes: select from '../styles/glass.module.css';
 }
 
 .iconButton {
-  padding: 0.45rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #6b7280;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: system-ui, sans-serif;
-  transition: background 0.15s ease, color 0.15s ease;
+  composes: pill from '../styles/glass.module.css';
 }
 
-.iconButton:hover {
-  background: #f3f4f6;
-}
-
-.iconButton.selected {
-  background: #1f2937;
-  color: #ffffff;
-}
-
-.iconButton.selected:hover {
-  background: #374151;
+.iconButtonSelected {
+  composes: pillSelected from '../styles/glass.module.css';
 }
 
 .slider {
-  width: 120px;
-  cursor: pointer;
-  accent-color: #1f2937;
+  composes: slider from '../styles/glass.module.css';
+  width: 100px;
 }
 
 .tempo {
   display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 140px;
 }
 
 .tempoLabel {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #6b7280;
-  font-family: system-ui, sans-serif;
-  min-width: 4.5ch;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 300;
+  color: var(--text-secondary);
+}
+
+.tempo .slider {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .row {
+    justify-content: center;
+  }
+
+  .slider {
+    width: 80px;
+  }
 }
