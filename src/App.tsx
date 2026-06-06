@@ -38,6 +38,7 @@ import type {
 } from './types/music';
 import { StudyModeControls } from './components/StudyModeControls';
 import { NotationToggle } from './components/NotationToggle';
+import { FolderPanel } from './components/FolderPanel';
 import glass from './styles/glass.module.css';
 import './App.css';
 
@@ -290,13 +291,17 @@ function App() {
             onToggle={handleToggle}
           />
 
-          <div className={`${glass.panel} heroCard`}>
-            <div className={glass.panelContent}>
-              <p className="heroEyebrow">Guitar Practice</p>
-              <div className="heroTop">
+          <FolderPanel
+            tab={
+              <>
+                <p className="heroEyebrow">Guitar Practice</p>
                 <span className="heroLetter" aria-hidden="true">
                   {heroLetter}
                 </span>
+              </>
+            }
+            body={
+              <>
                 <div className="heroMeta">
                   <TierSelector tier={tier} onChange={handleTierChange} />
                   <NotationToggle
@@ -304,67 +309,69 @@ function App() {
                     onChange={setNotation}
                   />
                 </div>
-              </div>
 
-              <div className="cardSection">
-                <StudyModeControls
-                  studyMode={studyMode}
-                  chordQuality={chordQuality}
-                  scaleQuality={scaleQuality}
-                  showFingers={showFingers}
-                  positionRegions={positionRegions}
-                  positionIndex={positionIndex}
-                  allowedStudyModes={tierConfig.studyModes}
-                  allowedChordQualities={tierConfig.chordQualities}
-                  allowedScaleQualities={tierConfig.scaleQualities}
-                  onStudyModeChange={handleStudyModeChange}
-                  onChordQualityChange={setChordQuality}
-                  onScaleQualityChange={setScaleQuality}
-                  onFingersToggle={() => setShowFingers((prev) => !prev)}
-                  onPositionChange={setPositionIndex}
-                />
-
-                {!singleRootMode && (
-                  <div className="secondaryRow shortcuts">
-                    <button
-                      type="button"
-                      className={glass.pill}
-                      onClick={handleSelectAll}
-                    >
-                      All
-                    </button>
-                    <button
-                      type="button"
-                      className={glass.pill}
-                      onClick={handleClearAll}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-
-                <div className="soundSection">
-                  <span className="soundLabel">Sound</span>
-                  <AudioControls
-                    instrument={audio.instrument}
-                    volume={audio.volume}
-                    muted={audio.muted}
-                    loading={audio.loading}
-                    canPlay={positions.length > 0}
-                    sequenceMode={!strumMode}
-                    playingDirection={audio.playingId as ScaleDirection | null}
-                    tempo={tempo}
-                    onInstrumentChange={audio.setInstrument}
-                    onVolumeChange={audio.setVolume}
-                    onMutedToggle={() => audio.setMuted(!audio.muted)}
-                    onTempoChange={setTempo}
-                    onStrum={handleStrum}
-                    onPlayScale={handlePlayScale}
+                <div className="cardSection">
+                  <StudyModeControls
+                    studyMode={studyMode}
+                    chordQuality={chordQuality}
+                    scaleQuality={scaleQuality}
+                    showFingers={showFingers}
+                    positionRegions={positionRegions}
+                    positionIndex={positionIndex}
+                    allowedStudyModes={tierConfig.studyModes}
+                    allowedChordQualities={tierConfig.chordQualities}
+                    allowedScaleQualities={tierConfig.scaleQualities}
+                    onStudyModeChange={handleStudyModeChange}
+                    onChordQualityChange={setChordQuality}
+                    onScaleQualityChange={setScaleQuality}
+                    onFingersToggle={() => setShowFingers((prev) => !prev)}
+                    onPositionChange={setPositionIndex}
                   />
+
+                  {!singleRootMode && (
+                    <div className="secondaryRow shortcuts">
+                      <button
+                        type="button"
+                        className={glass.pill}
+                        onClick={handleSelectAll}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        className={glass.pill}
+                        onClick={handleClearAll}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="soundSection">
+                    <span className="soundLabel">Sound</span>
+                    <AudioControls
+                      instrument={audio.instrument}
+                      volume={audio.volume}
+                      muted={audio.muted}
+                      loading={audio.loading}
+                      canPlay={positions.length > 0}
+                      sequenceMode={!strumMode}
+                      playingDirection={
+                        audio.playingId as ScaleDirection | null
+                      }
+                      tempo={tempo}
+                      onInstrumentChange={audio.setInstrument}
+                      onVolumeChange={audio.setVolume}
+                      onMutedToggle={() => audio.setMuted(!audio.muted)}
+                      onTempoChange={setTempo}
+                      onStrum={handleStrum}
+                      onPlayScale={handlePlayScale}
+                    />
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
+              </>
+            }
+          />
 
           <Fretboard
             positions={positions}

@@ -14,6 +14,7 @@ export function AmbientBackground({ style }: AmbientBackgroundProps) {
       aria-hidden="true"
     >
       <div className={styles.glowField}>
+        <div className={styles.pillar} />
         <div className={styles.blob1} />
         <div className={styles.blob2} />
         <div className={styles.blob3} />

@@ -15,15 +15,10 @@
 .shell {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.5rem;
   max-width: var(--shell-max);
   margin: 0 auto;
   padding: 0 var(--shell-padding);
-}
-
-.heroCard {
-  padding: 2.5rem 2.75rem 2.5rem;
-  text-align: center;
 }
 
 .heroEyebrow {
@@ -33,42 +28,34 @@
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;
   color: var(--text-muted);
-  margin: 0 0 1.25rem;
-}
-
-.heroTop {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-  margin-bottom: 1.75rem;
+  margin: 0 0 0.75rem;
 }
 
 .heroLetter {
   font-family: var(--font-sans);
-  font-size: clamp(3.5rem, 14vw, 5rem);
+  font-size: clamp(3rem, 10vw, 4.25rem);
   font-weight: 900;
-  line-height: 1;
+  line-height: 0.95;
   letter-spacing: -0.03em;
   text-transform: uppercase;
   color: var(--hero-color);
   text-shadow: var(--text-shadow);
-  transition: opacity var(--duration-theme) var(--ease-calm);
+  transition: color var(--duration-theme) var(--ease-calm);
 }
 
 .heroMeta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.5rem;
 }
 
 .cardSection {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
+  align-items: flex-start;
+  gap: 1rem;
   width: 100%;
 }
 
@@ -76,7 +63,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.5rem;
   width: 100%;
 }
@@ -91,20 +78,20 @@
   flex-direction: column;
   align-items: stretch;
   width: 100%;
-  margin-top: 0.75rem;
-  padding-top: 1.5rem;
+  margin-top: 0.25rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--glass-divider);
 }
 
 .soundLabel {
-  align-self: center;
+  align-self: flex-start;
   font-family: var(--font-sans);
   font-size: 0.62rem;
   font-weight: 400;
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 @media (max-width: 768px) {
@@ -112,7 +99,20 @@
     padding: 1.5rem 0 2rem;
   }
 
-  .heroCard {
-    padding: 1.75rem 1.25rem 2rem;
+  .heroMeta {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .cardSection {
+    align-items: center;
+  }
+
+  .secondaryRow {
+    justify-content: center;
+  }
+
+  .soundLabel {
+    align-self: center;
   }
 }

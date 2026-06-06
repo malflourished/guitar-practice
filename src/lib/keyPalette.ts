@@ -15,9 +15,9 @@ export interface KeyBackgroundStyle {
 }
 
 const NEUTRAL_BACKGROUND: KeyBackgroundStyle = {
-  '--blob-1': '#7a2040',
-  '--blob-2': '#e06018',
-  '--blob-3': '#f0b830',
+  '--blob-1': '#e83810',
+  '--blob-2': '#ff6a00',
+  '--blob-3': '#ffb020',
   '--accent-color': 'var(--foreground-accent)',
   '--hero-color': 'var(--foreground-primary)',
 };
@@ -114,6 +114,18 @@ function shiftLightness(hex: string, delta: number): string {
   return rgbToHex(...adjusted);
 }
 
+function shiftSaturation(hex: string, delta: number): string {
+  const [r, g, b] = parseHex(hex);
+  const [h, s, l] = rgbToHsl(r, g, b);
+  const adjusted = hslToRgb(h, Math.max(20, Math.min(100, s + delta * 100)), l);
+  return rgbToHex(...adjusted);
+}
+
+/** Push mesh-gradient vibrancy like the reference tiles. */
+function vibrance(hex: string): string {
+  return shiftSaturation(hex, 0.18);
+}
+
 export function isMinorQuality(
   quality: ChordQuality | ScaleQuality,
 ): boolean {
@@ -167,11 +179,10 @@ export function getKeyBackgroundStyle(
   const base = noteColors[root];
   const isMinor = isMinorQuality(quality);
 
-  const blob1 = shiftLightness(base, -0.06);
-  const blob2 = shiftLightness(shiftHue(base, isMinor ? -20 : 14), -0.02);
-  const blob3 = shiftLightness(
-    shiftHue(base, isMinor ? -32 : 32),
-    isMinor ? -0.12 : 0.04,
+  const blob1 = vibrance(base);
+  const blob2 = vibrance(shiftHue(base, isMinor ? -18 : 16));
+  const blob3 = vibrance(
+    shiftLightness(shiftHue(base, isMinor ? -30 : 30), isMinor ? -0.06 : 0.08),
   );
 
   return {

@@ -3,9 +3,9 @@ import type { KeyBackgroundStyle } from './keyPalette';
 /** UI reads as a light background → use dark foreground. */
 export type ContrastMode = 'light' | 'dark';
 
-const CANVAS_HEX = '#dcd8e4';
-/** Tuned so bright keys (C, D, E) flip to dark text; deep keys stay on white. */
-const LIGHT_BACKGROUND_THRESHOLD = 0.4;
+const CANVAS_HEX = '#0a0a0e';
+/** Bright mesh keys (C, D, E) flip to dark text on vivid glow. */
+const LIGHT_BACKGROUND_THRESHOLD = 0.48;
 
 function parseHex(hex: string): [number, number, number] {
   const normalized = hex.replace('#', '');
@@ -47,7 +47,7 @@ export function contrastModeFromBackgroundStyle(
   const peakBlob = Math.max(...blobs);
   const canvasLum = relativeLuminance(CANVAS_HEX);
 
-  const effective = peakBlob * 0.5 + avgBlob * 0.3 + canvasLum * 0.2;
+  const effective = peakBlob * 0.62 + avgBlob * 0.28 + canvasLum * 0.1;
 
   return effective >= LIGHT_BACKGROUND_THRESHOLD ? 'light' : 'dark';
 }
