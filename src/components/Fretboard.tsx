@@ -20,7 +20,10 @@ import styles from './Fretboard.module.css';
 
 const SINGLE_MARKER_FRETS = [3, 5, 7, 9, 15, 17, 19, 21];
 const DOUBLE_MARKER_FRETS = [12, 24];
-const OPEN_NOTE_RADIUS = 13;
+const NOTE_DOT_SCALE = 0.8;
+const OPEN_NOTE_RADIUS = 13 * NOTE_DOT_SCALE;
+const ACTIVE_RING_PAD = 6 * NOTE_DOT_SCALE;
+const SMALL_LABEL_RADIUS = 11 * NOTE_DOT_SCALE;
 
 interface FretboardProps {
   positions: FretPosition[];
@@ -32,7 +35,6 @@ interface FretboardProps {
   mutedStrings?: number[];
   showFingers?: boolean;
   noteColors: Record<NoteName, string>;
-  accentColor?: string;
   onPlayNote?: (position: FretPosition) => void;
   activePosition?: FretPosition | null;
 }
@@ -46,7 +48,6 @@ export function Fretboard({
   noteLabels = null,
   mutedStrings = [],
   showFingers = false,
-  accentColor = 'rgba(255, 255, 255, 0.9)',
   onPlayNote,
   activePosition = null,
 }: FretboardProps) {
@@ -54,6 +55,13 @@ export function Fretboard({
     activePosition?.string === string && activePosition?.fret === fret;
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [pulseGeneration, setPulseGeneration] = useState(0);
+
+  useEffect(() => {
+    if (activePosition) {
+      setPulseGeneration((generation) => generation + 1);
+    }
+  }, [activePosition?.string, activePosition?.fret]);
 
   useEffect(() => {
     const element = containerRef.current;
@@ -91,6 +99,7 @@ export function Fretboard({
     FRETBOARD_LAYOUT.topPadding + stringIndex * FRETBOARD_LAYOUT.stringGap;
 
   const noteRadiusForFret = (fret: number) =>
+    NOTE_DOT_SCALE *
     Math.min(
       FRETBOARD_LAYOUT.maxNoteRadius,
       fretSpaceWidth(fret, scaleLength) * 0.42,
@@ -115,7 +124,7 @@ export function Fretboard({
   ) => {
     const label = labelFor(note, finger);
     const wide = label.length > 1;
-    const small = wide || radius <= 11;
+    const small = wide || radius <= SMALL_LABEL_RADIUS;
     return (
       <text
         x={cx}
@@ -253,11 +262,11 @@ export function Fretboard({
                 >
                   {isActive(string, 0) && (
                     <circle
+                      key={`pulse-open-${string}-${pulseGeneration}`}
                       cx={FRETBOARD_LAYOUT.openLaneX}
                       cy={stringY(string)}
-                      r={OPEN_NOTE_RADIUS + 6}
+                      r={OPEN_NOTE_RADIUS + ACTIVE_RING_PAD}
                       className={styles.activeRing}
-                      stroke={accentColor}
                     />
                   )}
                   <circle
@@ -288,11 +297,11 @@ export function Fretboard({
                 >
                   {isActive(string, fret) && (
                     <circle
+                      key={`pulse-${string}-${fret}-${pulseGeneration}`}
                       cx={fretCenterX(fret)}
                       cy={stringY(string)}
-                      r={radius + 6}
+                      r={radius + ACTIVE_RING_PAD}
                       className={styles.activeRing}
-                      stroke={accentColor}
                     />
                   )}
                   <circle

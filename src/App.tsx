@@ -534,7 +534,6 @@ function App() {
             mutedStrings={mutedStrings}
             showFingers={showFingers}
             noteColors={noteColors}
-            accentColor="var(--foreground-accent)"
             onPlayNote={audio.muted ? undefined : audio.playPosition}
             activePosition={audio.playingPosition}
           />

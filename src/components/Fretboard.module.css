@@ -117,22 +117,32 @@
 
 .activeRing {
   fill: none;
+  stroke: rgba(255, 255, 255, 0.95);
   stroke-width: 2;
   pointer-events: none;
   transform-box: fill-box;
   transform-origin: center;
-  animation: activePulse 0.45s ease-out;
-  filter: drop-shadow(0 0 8px var(--active-ring-glow));
+  animation: activePulseOnce 0.5s ease-out forwards;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.45));
 }
 
-@keyframes activePulse {
+@keyframes activePulseOnce {
   0% {
-    opacity: 0.95;
-    stroke-width: 3.5;
+    opacity: 1;
+    transform: scale(1);
+    stroke-width: 2.5;
   }
-  100% {
-    opacity: 0.65;
+
+  35% {
+    opacity: 0.9;
+    transform: scale(1.18);
     stroke-width: 2;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.38);
+    stroke-width: 1;
   }
 }
 
