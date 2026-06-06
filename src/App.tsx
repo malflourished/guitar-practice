@@ -22,6 +22,7 @@ import {
 import { contrastModeFromBackgroundStyle } from './lib/contrast';
 import {
   buildArpeggioPositions,
+  buildChordPositionViews,
   buildChordPositions,
   buildLadderProgressionChordViews,
   buildScalePositions,
@@ -56,6 +57,7 @@ import {
   SettingsSection,
   SettingsRow,
 } from './components/SettingsList';
+import { ChordPositionStrip } from './components/ChordPositionStrip';
 import { ProgressionStrip } from './components/ProgressionStrip';
 import { TheoryPanel } from './components/TheoryPanel';
 import { APP_NAME } from './lib/brand';
@@ -246,6 +248,11 @@ function App() {
         : null;
 
   const ladderActive = ladderDirection !== null && ladderAnchor !== null;
+
+  const chordPositionViews = useMemo(() => {
+    if (studyMode !== 'chords') return [];
+    return buildChordPositionViews(rootNote, chordQuality, notation);
+  }, [studyMode, rootNote, chordQuality, notation]);
 
   const displayProgressionChordViews = useMemo(() => {
     if (studyMode !== 'progressions') return [];
@@ -732,6 +739,20 @@ function App() {
                   : undefined
               }
               disabled={ladderActive}
+            />
+          )}
+          {studyMode === 'chords' && chordPositionViews.length > 0 && (
+            <ChordPositionStrip
+              positions={chordPositionViews}
+              activeIndex={positionIndex}
+              notation={notation}
+              showFingers={showFingers}
+              showNoteLabels={showNoteLabels}
+              fullDotOpacity={fullDotOpacity}
+              showChordTones={showChordTones}
+              rootNote={rootNote}
+              chordQuality={chordQuality}
+              onSelectPosition={setPositionIndex}
             />
           )}
           {studyMode === 'progressions' && displayProgressionChordViews.length > 0 && (

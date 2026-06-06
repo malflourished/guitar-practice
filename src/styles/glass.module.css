@@ -119,6 +119,11 @@
   font-size: 0.72rem;
 }
 
+:global(.themeRoot[data-ui-theme='scholar']) .keyTileActive,
+:global(.themeRoot[data-ui-theme='scholar']) .keyTileAccidentalActive {
+  font-weight: 600;
+}
+
 .select {
   padding: 0.4rem 2rem 0.4rem 0.85rem;
   background: transparent;

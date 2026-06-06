@@ -34,6 +34,10 @@ export {
   type ProgressionChordView,
 } from './progressionChordViews';
 export {
+  buildChordPositionViews,
+  type ChordPositionView,
+} from './chordPositionViews';
+export {
   buildLadderProgressionChordViews,
   capEffectiveAnchor,
   getLadderPositionIndex,

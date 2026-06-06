@@ -13,6 +13,14 @@
   composes: pillSelected from '../styles/glass.module.css';
 }
 
+:global(.themeRoot[data-ui-theme='scholar']) .modeButtonSelected {
+  font-weight: 600;
+}
+
+:global(.themeRoot[data-ui-theme='scholar']) .select {
+  font-weight: 600;
+}
+
 .select {
   composes: select from '../styles/glass.module.css';
 }

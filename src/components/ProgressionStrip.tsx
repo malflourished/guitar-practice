@@ -1,5 +1,5 @@
 import type { NotationPreference, ProgressionChordView } from '../lib/music';
-import { ChordDiagram } from './ChordDiagram';
+import { CHORD_DIAGRAM_LABEL_STYLE, ChordDiagram } from './ChordDiagram';
 import styles from './ProgressionStrip.module.css';
 
 export type { ProgressionChordView };
@@ -49,7 +49,7 @@ export function ProgressionStrip({
                   }
                 }}
               >
-                <span className={styles.label}>
+                <span className={styles.label} style={CHORD_DIAGRAM_LABEL_STYLE}>
                   <span className={styles.numeral}>{chord.step.numeral}</span>
                   <span className={styles.chordName}>{chord.step.chordName}</span>
                 </span>

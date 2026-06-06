@@ -29,6 +29,15 @@ export function AmbientBackground({ style }: AmbientBackgroundProps) {
           <div className={styles.blobShell3}>
             <div className={styles.blobCore3} />
           </div>
+          <div className={styles.blobShellDrip1}>
+            <div className={styles.blobCoreDrip1} />
+          </div>
+          <div className={styles.blobShellDrip2}>
+            <div className={styles.blobCoreDrip2} />
+          </div>
+          <div className={styles.blobShellDrip3}>
+            <div className={styles.blobCoreDrip3} />
+          </div>
         </div>
 
         <div className={styles.vignette} />
