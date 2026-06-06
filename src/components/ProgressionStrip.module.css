@@ -1,6 +1,8 @@
 .strip {
   width: 100%;
   margin-top: 0.25rem;
+  /* Strip sits on the dark canvas — use fretboard whites, not theme text. */
+  color: var(--string-line);
 }
 
 .scroll {
@@ -24,28 +26,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.55rem;
   flex: 0 0 auto;
-  width: 8.5rem;
+  width: 9rem;
   padding: 0;
   background: none;
   border: none;
   cursor: pointer;
+  outline: none;
+}
+
+.item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.65);
+  outline-offset: 4px;
+  border-radius: var(--radius-control);
 }
 
 .label {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.1rem;
+  gap: 0.15rem;
   order: -1;
-  opacity: 0.45;
-  transition: opacity 0.15s ease;
-}
-
-.item:hover .label,
-.itemActive .label {
-  opacity: 1;
 }
 
 .diagram {
@@ -57,20 +59,38 @@
   font-family: var(--font-sans);
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--string-line);
+  opacity: 0.65;
   letter-spacing: 0.02em;
   line-height: 1.2;
+  transition: opacity 0.15s ease;
 }
 
 .numeral {
   font-family: var(--font-sans);
-  font-size: 0.68rem;
-  font-weight: 400;
-  color: var(--text-muted);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--string-line);
+  opacity: 0.88;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  transition: opacity 0.15s ease;
 }
 
-.itemActive .chordName {
-  color: var(--text-primary);
+.item:hover .chordName,
+.item:hover .numeral {
+  opacity: 0.9;
+}
+
+.itemActive .chordName,
+.itemActive .numeral {
+  opacity: 1;
+}
+
+.itemActive .chordName,
+.itemActive .numeral {
+  color: var(--string-line);
+  opacity: 1;
 }
 
 .itemActive {
@@ -84,6 +104,6 @@
   }
 
   .item {
-    width: 7.7rem;
+    width: 8.2rem;
   }
 }

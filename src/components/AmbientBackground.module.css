@@ -327,3 +327,11 @@
     animation: none;
   }
 }
+
+:global(.themeRoot[data-debug-bg='white']) .glowField,
+:global(.themeRoot[data-debug-bg='white']) .vignette,
+:global(.themeRoot[data-debug-bg='white']) .bottomFade,
+:global(.themeRoot[data-debug-bg='white']) .grain {
+  opacity: 0;
+  visibility: hidden;
+}

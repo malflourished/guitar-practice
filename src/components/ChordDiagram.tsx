@@ -1,5 +1,6 @@
 import type { FretPosition, NoteName } from '../types/music';
 import {
+  FRET_COUNT,
   STRING_COUNT,
   formatNoteDisplay,
   type NotationPreference,
@@ -7,21 +8,28 @@ import {
 import styles from './ChordDiagram.module.css';
 
 const L = {
-  left: 16,
-  right: 8,
-  markerRow: 14,
-  stringGap: 12.5,
-  fretGap: 16,
-  bottom: 6,
+  fretLabel: 14,
+  gridPad: 5,
+  right: 6,
+  markerRow: 17,
+  stringGap: 13.5,
+  fretGap: 21,
+  bottom: 10,
 };
 
-const gridLeft = L.left;
+const gridLeft = L.fretLabel + L.gridPad;
 const gridWidth = (STRING_COUNT - 1) * L.stringGap;
-const nutY = L.markerRow + 6;
+const nutY = L.markerRow + 9;
 const VIEW_WIDTH = gridLeft + gridWidth + L.right;
-const NOTE_RADIUS = 6;
-const BARRE_HEIGHT = 5.5;
+const DOT_RADIUS = 4.25;
+const NUT_HEIGHT = 5;
+const MARKER_GAP_ABOVE_NUT = 3;
+const BARRE_HEIGHT = 6;
+/** Matches .stringLine stroke-width in ChordDiagram.module.css */
+const STRING_STROKE = 1;
 const MIN_FRET_ROWS = 4;
+const FRET_INLAY_FRETS = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
+const DOUBLE_INLAY_FRETS = new Set([12, 24]);
 
 interface ChordDiagramProps {
   positions: FretPosition[];
@@ -45,22 +53,92 @@ function stringX(stringIndex: number): number {
   return gridLeft + (STRING_COUNT - 1 - stringIndex) * L.stringGap;
 }
 
-function relativeFret(absoluteFret: number, startFret: number): number {
-  if (absoluteFret === 0) return 0;
-  return startFret === 0 ? absoluteFret : absoluteFret - startFret + 1;
+function barreSpanX(
+  minString: number,
+  maxString: number,
+): { x1: number; x2: number } {
+  const leftString = Math.max(minString, maxString);
+  const rightString = Math.min(minString, maxString);
+  return {
+    x1: stringX(leftString) - DOT_RADIUS,
+    x2: stringX(rightString) + DOT_RADIUS,
+  };
 }
 
-function fretWireY(absoluteFret: number, startFret: number): number {
-  const rel = relativeFret(absoluteFret, startFret);
-  return nutY + rel * L.fretGap;
+function fretWireY(
+  absoluteFret: number,
+  startFret: number,
+  isOpenPosition: boolean,
+): number {
+  if (isOpenPosition) {
+    return nutY + absoluteFret * L.fretGap;
+  }
+  return nutY + (absoluteFret - startFret) * L.fretGap;
 }
 
-function fretCenterY(absoluteFret: number, startFret: number): number {
-  const rel = relativeFret(absoluteFret, startFret);
-  return nutY + (rel - 0.5) * L.fretGap;
+function fretCenterY(
+  absoluteFret: number,
+  startFret: number,
+  isOpenPosition: boolean,
+): number {
+  if (isOpenPosition) {
+    return nutY + (absoluteFret - 0.5) * L.fretGap;
+  }
+  return nutY + (absoluteFret - startFret + 0.5) * L.fretGap;
 }
 
-/** True barre: index finger (1) holds 3+ strings at the same fret. */
+/** Fret wires to draw — open-bottom window unless the view ends at the 24th fret. */
+function diagramFretWires(
+  startFret: number,
+  fretRows: number,
+  isOpenPosition: boolean,
+  endsAtNeckEnd: boolean,
+): number[] {
+  if (endsAtNeckEnd) {
+    const from = isOpenPosition ? 1 : startFret;
+    return Array.from({ length: fretRows }, (_, i) => from + i);
+  }
+  if (isOpenPosition) {
+    return Array.from({ length: fretRows - 1 }, (_, i) => i + 1);
+  }
+  return Array.from({ length: fretRows }, (_, i) => startFret + i);
+}
+
+function fretLabelX(): number {
+  return L.fretLabel / 2 + 1;
+}
+
+function visibleFretInlays(
+  startFret: number,
+  lastVisibleFret: number,
+  isOpenPosition: boolean,
+): number[] {
+  const minFret = isOpenPosition ? 1 : startFret;
+  return FRET_INLAY_FRETS.filter(
+    (fret) => fret >= minFret && fret <= lastVisibleFret,
+  );
+}
+
+function neckCenterX(): number {
+  return gridLeft + gridWidth / 2;
+}
+
+function nutSpanX(): { x: number; width: number } {
+  const pad = STRING_STROKE / 2;
+  const x1 = stringX(5) - pad;
+  const x2 = stringX(0) + pad;
+  return { x: x1, width: x2 - x1 };
+}
+
+function inlayCentersX(fret: number): number[] {
+  const center = neckCenterX();
+  if (DOUBLE_INLAY_FRETS.has(fret)) {
+    const offset = L.stringGap;
+    return [center - offset, center + offset];
+  }
+  return [center];
+}
+
 function isBarreGroup(group: FretPosition[]): boolean {
   if (group.length < 3) return false;
   const fingers = group
@@ -104,7 +182,8 @@ export function ChordDiagram({
   const viewHeight = nutY + fretRows * L.fretGap + L.bottom;
   const lastVisibleFret = isOpenPosition
     ? fretRows
-    : startFret + fretRows - 1;
+    : Math.min(startFret + fretRows - 1, FRET_COUNT);
+  const endsAtNeckEnd = lastVisibleFret === FRET_COUNT;
 
   const dotLabelText = (note: NoteName, finger?: number) => {
     if (showFingers && finger !== undefined && finger > 0) {
@@ -113,17 +192,21 @@ export function ChordDiagram({
     return noteLabels?.get(note) ?? formatNoteDisplay(note, notation);
   };
 
-  const openStrings = new Set(
-    positions.filter((p) => p.fret === 0).map((p) => p.string),
+  const openByString = new Map(
+    positions
+      .filter((p) => p.fret === 0)
+      .map((p) => [p.string, p] as const),
   );
   const frettedPositions = positions.filter(
     (p) => p.fret > 0 && p.fret <= lastVisibleFret,
   );
   const barres = findBarres(frettedPositions);
-  const barreFrets = new Set(barres.map((b) => b.fret));
 
   const gridRight = gridLeft + gridWidth;
   const gridBottom = nutY + fretRows * L.fretGap;
+  const fretInlays = visibleFretInlays(startFret, lastVisibleFret, isOpenPosition);
+  const markerY =
+    nutY - NUT_HEIGHT - DOT_RADIUS - MARKER_GAP_ABOVE_NUT;
 
   const renderDotLabel = (
     note: NoteName,
@@ -132,18 +215,26 @@ export function ChordDiagram({
     cy: number,
   ) => {
     const label = dotLabelText(note, finger);
-    const small = label.length > 1;
     return (
       <text
         x={cx}
-        y={cy + (small ? 2.5 : 3)}
+        y={cy}
         textAnchor="middle"
-        className={small ? styles.dotLabelSmall : styles.dotLabel}
+        dominantBaseline="central"
+        className={label.length > 1 ? styles.dotLabelSmall : styles.dotLabel}
       >
         {label}
       </text>
     );
   };
+
+  const fretWireNumbers = diagramFretWires(
+    startFret,
+    fretRows,
+    isOpenPosition,
+    endsAtNeckEnd,
+  );
+  const nutSpan = nutSpanX();
 
   return (
     <svg
@@ -152,38 +243,43 @@ export function ChordDiagram({
       preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
     >
-      {isOpenPosition ? (
-        <line
-          x1={gridLeft}
-          y1={nutY}
-          x2={gridRight}
-          y2={nutY}
+      {isOpenPosition && (
+        <rect
+          x={nutSpan.x}
+          y={nutY - NUT_HEIGHT}
+          width={nutSpan.width}
+          height={NUT_HEIGHT}
           className={styles.nut}
         />
-      ) : (
-        <>
-          <text x={4} y={nutY + 4} className={styles.positionHint}>
-            {startFret}
-          </text>
-          <line
-            x1={gridLeft}
-            y1={nutY}
-            x2={gridRight}
-            y2={nutY}
-            className={styles.nut}
-          />
-        </>
       )}
 
-      {Array.from({ length: fretRows }, (_, i) => {
-        const absoluteFret = isOpenPosition ? i + 1 : startFret + i;
+      {!isOpenPosition && (
+        <text
+          x={fretLabelX()}
+          y={fretCenterY(startFret, startFret, isOpenPosition)}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className={styles.positionHint}
+        >
+          {startFret}
+        </text>
+      )}
+
+      {fretWireNumbers.map((absoluteFret, index) => {
+        const isClosingWire =
+          endsAtNeckEnd &&
+          index === fretWireNumbers.length - 1 &&
+          absoluteFret === FRET_COUNT;
+        const y = isClosingWire
+          ? gridBottom
+          : fretWireY(absoluteFret, startFret, isOpenPosition);
         return (
           <line
             key={`fret-${absoluteFret}`}
             x1={gridLeft}
-            y1={fretWireY(absoluteFret, startFret)}
+            y1={y}
             x2={gridRight}
-            y2={fretWireY(absoluteFret, startFret)}
+            y2={y}
             className={styles.fretLine}
           />
         );
@@ -200,73 +296,76 @@ export function ChordDiagram({
         />
       ))}
 
+      {fretInlays.flatMap((fret) =>
+        inlayCentersX(fret).map((cx, index) => (
+          <circle
+            key={`inlay-${fret}-${index}`}
+            cx={cx}
+            cy={fretCenterY(fret, startFret, isOpenPosition)}
+            r={1.75}
+            className={styles.fretInlay}
+          />
+        )),
+      )}
+
       {mutedStrings.map((stringIndex) => (
         <text
           key={`mute-${stringIndex}`}
           x={stringX(stringIndex)}
-          y={L.markerRow}
+          y={markerY}
           textAnchor="middle"
-          className={styles.openMutedMarker}
+          dominantBaseline="middle"
+          className={styles.muteMarker}
         >
           ×
         </text>
       ))}
 
-      {isOpenPosition &&
-        [...openStrings]
-          .filter((s) => !mutedStrings.includes(s))
-          .map((stringIndex) => (
-            <circle
-              key={`open-${stringIndex}`}
-              cx={stringX(stringIndex)}
-              cy={L.markerRow - 1}
-              r={3.5}
-              className={styles.openMarker}
-            />
-          ))}
-
-      {barres.map((barre) => {
-        const y = fretCenterY(barre.fret, startFret);
-        const x1 = stringX(barre.minString) - NOTE_RADIUS;
-        const x2 = stringX(barre.maxString) + NOTE_RADIUS;
-        const labelPos = frettedPositions.find(
-          (p) => p.fret === barre.fret && p.string === barre.maxString,
-        );
-        return (
-          <g key={`barre-${barre.fret}`}>
-            <rect
-              x={x1}
-              y={y - BARRE_HEIGHT / 2}
-              width={x2 - x1}
-              height={BARRE_HEIGHT}
-              rx={BARRE_HEIGHT / 2}
-              className={styles.barre}
-            />
-            {labelPos &&
-              renderDotLabel(
-                labelPos.note,
-                labelPos.finger,
-                stringX(barre.maxString),
-                y,
-              )}
-          </g>
-        );
-      })}
-
-      {frettedPositions
-        .filter((position) => !barreFrets.has(position.fret))
-        .map((position) => {
-          const { string, fret, note, finger } = position;
-          const cx = stringX(string);
-          const cy = fretCenterY(fret, startFret);
-
+      {[...openByString.entries()]
+        .filter(([stringIndex]) => !mutedStrings.includes(stringIndex))
+        .map(([stringIndex, position]) => {
+          const cx = stringX(stringIndex);
           return (
-            <g key={`note-${string}-${fret}`}>
-              <circle cx={cx} cy={cy} r={NOTE_RADIUS} className={styles.noteDot} />
-              {renderDotLabel(note, finger, cx, cy)}
+            <g key={`open-${stringIndex}`}>
+              <circle
+                cx={cx}
+                cy={markerY}
+                r={DOT_RADIUS}
+                className={styles.noteDot}
+              />
+              {renderDotLabel(position.note, position.finger, cx, markerY)}
             </g>
           );
         })}
+
+      {barres.map((barre) => {
+        const y = fretCenterY(barre.fret, startFret, isOpenPosition);
+        const { x1, x2 } = barreSpanX(barre.minString, barre.maxString);
+        return (
+          <rect
+            key={`barre-${barre.fret}`}
+            x={x1}
+            y={y - BARRE_HEIGHT / 2}
+            width={x2 - x1}
+            height={BARRE_HEIGHT}
+            rx={BARRE_HEIGHT / 2}
+            className={styles.barre}
+          />
+        );
+      })}
+
+      {frettedPositions.map((position) => {
+        const { string, fret, note, finger } = position;
+        const cx = stringX(string);
+        const cy = fretCenterY(fret, startFret, isOpenPosition);
+
+        return (
+          <g key={`note-${string}-${fret}`}>
+            <circle cx={cx} cy={cy} r={DOT_RADIUS} className={styles.noteDot} />
+            {renderDotLabel(note, finger, cx, cy)}
+          </g>
+        );
+      })}
     </svg>
   );
 }

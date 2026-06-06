@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Fretboard } from './components/Fretboard';
 import { PositionSlider } from './components/PositionSlider';
 import { AudioControls } from './components/AudioControls';
-import { ColorDebugPanel } from './components/ColorDebugPanel';
+import { DebugPanel } from './components/DebugPanel';
 import { AmbientBackground } from './components/AmbientBackground';
 import { KeySelector } from './components/KeySelector';
 import { useInstrument } from './hooks/useInstrument';
@@ -55,6 +55,7 @@ import { ProgressionStrip } from './components/ProgressionStrip';
 import { TheoryPanel } from './components/TheoryPanel';
 import glass from './styles/glass.module.css';
 import { useColorBoundary } from './hooks/useColorBoundary';
+import { useDebugSettings } from './hooks/useDebugSettings';
 import './App.css';
 
 function isSingleRootMode(mode: StudyMode): boolean {
@@ -102,9 +103,7 @@ function App() {
     loadNoteColors,
   );
 
-  const showColorDebug =
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('debug') === 'colors';
+  const debug = useDebugSettings();
 
   useEffect(() => {
     try {
@@ -418,6 +417,10 @@ function App() {
     <div
       className="themeRoot"
       data-contrast={contrastMode}
+      data-debug-bg={debug.enabled && debug.whiteBackground ? 'white' : undefined}
+      data-debug-text={
+        debug.enabled ? (debug.whiteText ? 'white' : 'black') : undefined
+      }
       style={ambientStyle as CSSProperties}
     >
       <AmbientBackground style={ambientBackgroundStyle} />
@@ -555,13 +558,18 @@ function App() {
           )}
         </div>
 
-        {showColorDebug && (
-          <ColorDebugPanel
+        {debug.enabled && (
+          <DebugPanel
+            whiteBackground={debug.whiteBackground}
+            whiteText={debug.whiteText}
+            showColorEditor={debug.showColorEditor}
             noteColors={noteColors}
+            onWhiteBackgroundChange={debug.setWhiteBackground}
+            onWhiteTextChange={debug.setWhiteText}
             onColorChange={(note, color) =>
               setNoteColors((prev) => ({ ...prev, [note]: color }))
             }
-            onReset={() => setNoteColors({ ...NOTE_COLORS })}
+            onColorReset={() => setNoteColors({ ...NOTE_COLORS })}
           />
         )}
       </div>

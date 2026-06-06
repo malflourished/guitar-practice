@@ -36,17 +36,24 @@ export function ProgressionStrip({
           {chords.map((chord, index) => {
             const isActive = index === activeIndex;
             return (
-              <button
+              <div
                 key={`${chord.step.root}-${chord.step.quality}-${index}`}
-                type="button"
+                role="button"
+                tabIndex={0}
                 className={isActive ? styles.itemActive : styles.item}
                 aria-pressed={isActive}
                 aria-label={`${chord.step.chordName} (${chord.step.numeral}), chord ${index + 1} of ${chords.length}`}
                 onClick={() => onSelectStep(index)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onSelectStep(index);
+                  }
+                }}
               >
                 <span className={styles.label}>
-                  <span className={styles.chordName}>{chord.step.chordName}</span>
                   <span className={styles.numeral}>{chord.step.numeral}</span>
+                  <span className={styles.chordName}>{chord.step.chordName}</span>
                 </span>
                 <div className={styles.diagram}>
                   <ChordDiagram
@@ -59,7 +66,7 @@ export function ProgressionStrip({
                     showFingers={showFingers}
                   />
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>

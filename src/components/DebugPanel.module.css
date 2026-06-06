@@ -6,7 +6,7 @@
   padding: 0 var(--shell-padding);
 }
 
-.toggle {
+.header {
   composes: pill from '../styles/glass.module.css';
   font-size: 0.8rem;
 }
@@ -15,10 +15,67 @@
   composes: panel from '../styles/glass.module.css';
   margin-top: 0.75rem;
   padding: 1rem;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-hero);
 }
 
-.grid {
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.row + .row {
+  margin-top: 0.75rem;
+}
+
+.rowLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.toggleGroup {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.toggle {
+  composes: pill from '../styles/glass.module.css';
+  min-width: 4.5rem;
+  font-size: 0.68rem;
+}
+
+.toggleActive {
+  composes: pillSelected from '../styles/glass.module.css';
+  min-width: 4.5rem;
+  font-size: 0.68rem;
+}
+
+.divider {
+  height: 1px;
+  margin: 1rem 0;
+  background: var(--glass-divider);
+  position: relative;
+  z-index: 1;
+}
+
+.sectionTitle {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+}
+
+.colorGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
@@ -27,7 +84,7 @@
 }
 
 @media (max-width: 720px) {
-  .grid {
+  .colorGrid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -39,7 +96,7 @@
   padding: 0.4rem;
   border: 1px solid var(--glass-border-subtle);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-bg);
   cursor: pointer;
 }
 
@@ -59,7 +116,7 @@
 }
 
 .colorInput::-webkit-color-swatch {
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--glass-border-subtle);
   border-radius: 8px;
 }
 
@@ -80,7 +137,7 @@
   font-size: 0.8rem;
   font-family: ui-monospace, monospace;
   color: var(--text-primary);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--glass-bg);
 }
 
 .actions {
