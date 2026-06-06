@@ -1,0 +1,125 @@
+.wrapper {
+  width: 100%;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 0 1.5rem;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.scroll {
+  width: 100%;
+  overflow: hidden;
+  background: #f3f4f6;
+  padding: 1rem 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.board {
+  fill: #e8d5b5;
+}
+
+.nut {
+  fill: #f5f0e6;
+  stroke: #c4a882;
+  stroke-width: 1;
+}
+
+.fretLine {
+  stroke: #4b5563;
+  stroke-width: 1.5;
+}
+
+.stringLine {
+  stroke: #d4c4a8;
+  stroke-width: 1.5;
+}
+
+.stringLabel {
+  font-size: 14px;
+  font-weight: 600;
+  fill: #4b5563;
+  font-family: system-ui, sans-serif;
+}
+
+.fretNumber {
+  font-size: 11px;
+  fill: #9ca3af;
+  font-family: system-ui, sans-serif;
+}
+
+.fretMarker {
+  fill: #b8a88a;
+  opacity: 0.7;
+}
+
+.noteLabel {
+  font-size: 13px;
+  font-weight: 700;
+  fill: #111827;
+  font-family: system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.noteLabelAccidental {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #111827;
+  font-family: system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.mutedMarker {
+  font-size: 16px;
+  font-weight: 700;
+  fill: #9ca3af;
+  font-family: system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.activeRing {
+  fill: none;
+  stroke: #1f2937;
+  stroke-width: 2.5;
+  pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: activePulse 0.45s ease-out;
+}
+
+@keyframes activePulse {
+  0% {
+    opacity: 0.9;
+    stroke-width: 4;
+  }
+  100% {
+    opacity: 0.55;
+    stroke-width: 2.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activeRing {
+    animation: none;
+  }
+}

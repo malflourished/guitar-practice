@@ -1,0 +1,17 @@
+.app {
+  width: 100%;
+  padding: 2rem 0 3rem;
+  box-sizing: border-box;
+}
+
+.controls {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.tierRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}

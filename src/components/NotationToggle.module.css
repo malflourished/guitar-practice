@@ -1,0 +1,36 @@
+.container {
+  display: inline-flex;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.option {
+  padding: 0.4rem 1rem;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.option:not(:last-child) {
+  border-right: 1px solid #d1d5db;
+}
+
+.option:hover {
+  background: #f3f4f6;
+}
+
+.option.selected {
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.option.selected:hover {
+  background: #374151;
+}

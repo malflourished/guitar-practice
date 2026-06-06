@@ -1,0 +1,318 @@
+import { useEffect, useRef, useState } from 'react';
+import type { FretPosition, NoteName } from '../types/music';
+import {
+  FRETBOARD_LAYOUT,
+  boardPlayableWidth,
+  fretCenterOffset,
+  fretDistanceFromNut,
+  fretSpaceWidth,
+  scaleLengthForTargetWidth,
+  totalBoardWidth,
+} from '../lib/fretLayout';
+import {
+  FRET_COUNT,
+  STRING_COUNT,
+  STRING_LABELS,
+  formatNoteDisplay,
+  type NotationPreference,
+} from '../lib/music';
+import styles from './Fretboard.module.css';
+
+const SINGLE_MARKER_FRETS = [3, 5, 7, 9, 15, 17, 19, 21];
+const DOUBLE_MARKER_FRETS = [12, 24];
+const OPEN_NOTE_RADIUS = 13;
+
+interface FretboardProps {
+  positions: FretPosition[];
+  title: string;
+  notation: NotationPreference;
+  /** Spelled labels per pitch class (study modes); null in Notes mode. */
+  noteLabels?: Map<NoteName, string> | null;
+  /** String indices that are muted (chord voicings). */
+  mutedStrings?: number[];
+  /** Show finger numbers instead of note names. */
+  showFingers?: boolean;
+  /** Color per note (pitch class). */
+  noteColors: Record<NoteName, string>;
+  /** Called when a note dot is clicked, to play its pitch. */
+  onPlayNote?: (position: FretPosition) => void;
+  /** Position currently sounding during playback, highlighted on the board. */
+  activePosition?: FretPosition | null;
+}
+
+export function Fretboard({
+  positions,
+  title,
+  notation,
+  noteLabels = null,
+  mutedStrings = [],
+  showFingers = false,
+  noteColors,
+  onPlayNote,
+  activePosition = null,
+}: FretboardProps) {
+  const isActive = (string: number, fret: number) =>
+    activePosition?.string === string && activePosition?.fret === fret;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    const updateWidth = () => {
+      setContainerWidth(element.clientWidth);
+    };
+
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const scaleLength = scaleLengthForTargetWidth(containerWidth);
+  const boardWidth = totalBoardWidth(scaleLength);
+  const playableWidth = boardPlayableWidth(FRET_COUNT, scaleLength);
+  const boardOriginX = FRETBOARD_LAYOUT.leftPadding + FRETBOARD_LAYOUT.nutWidth;
+  const stringEndX = boardOriginX + playableWidth;
+  const boardHeight =
+    FRETBOARD_LAYOUT.topPadding +
+    (STRING_COUNT - 1) * FRETBOARD_LAYOUT.stringGap +
+    FRETBOARD_LAYOUT.bottomPadding +
+    8;
+
+  const fretWireX = (fret: number) =>
+    boardOriginX + fretDistanceFromNut(fret, scaleLength);
+
+  const fretCenterX = (fret: number) =>
+    boardOriginX + fretCenterOffset(fret, scaleLength);
+
+  const stringY = (stringIndex: number) =>
+    FRETBOARD_LAYOUT.topPadding + stringIndex * FRETBOARD_LAYOUT.stringGap;
+
+  const noteRadiusForFret = (fret: number) =>
+    Math.min(
+      FRETBOARD_LAYOUT.maxNoteRadius,
+      fretSpaceWidth(fret, scaleLength) * 0.42,
+    );
+
+  const labelFor = (note: NoteName, finger?: number) => {
+    if (showFingers && finger !== undefined) {
+      return String(finger);
+    }
+    return noteLabels?.get(note) ?? formatNoteDisplay(note, notation);
+  };
+
+  const openPositions = positions.filter((p) => p.fret === 0);
+  const frettedPositions = positions.filter((p) => p.fret > 0);
+
+  const renderLabel = (
+    note: NoteName,
+    finger: number | undefined,
+    cx: number,
+    cy: number,
+    radius: number,
+  ) => {
+    const label = labelFor(note, finger);
+    const wide = label.length > 1;
+    const small = wide || radius <= 11;
+    return (
+      <text
+        x={cx}
+        y={cy + (small ? 4 : 5)}
+        textAnchor="middle"
+        className={small ? styles.noteLabelAccidental : styles.noteLabel}
+      >
+        {label}
+      </text>
+    );
+  };
+
+  return (
+    <div className={styles.wrapper}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>{title}</h1>
+        <p className={styles.subtitle}>Standard tuning • Frets 0–24</p>
+      </header>
+
+      <div ref={containerRef} className={styles.scroll}>
+        {containerWidth > 0 && (
+          <svg
+            className={styles.svg}
+            viewBox={`0 0 ${boardWidth} ${boardHeight}`}
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label="Guitar fretboard diagram"
+          >
+            <rect
+              x={FRETBOARD_LAYOUT.leftPadding}
+              y={FRETBOARD_LAYOUT.topPadding - 12}
+              width={FRETBOARD_LAYOUT.nutWidth + playableWidth}
+              height={(STRING_COUNT - 1) * FRETBOARD_LAYOUT.stringGap + 24}
+              rx={4}
+              className={styles.board}
+            />
+
+            <rect
+              x={FRETBOARD_LAYOUT.leftPadding}
+              y={FRETBOARD_LAYOUT.topPadding - 12}
+              width={FRETBOARD_LAYOUT.nutWidth}
+              height={(STRING_COUNT - 1) * FRETBOARD_LAYOUT.stringGap + 24}
+              className={styles.nut}
+            />
+
+            {Array.from({ length: FRET_COUNT }, (_, i) => i + 1).map((fret) => (
+              <g key={`fret-${fret}`}>
+                <line
+                  x1={fretWireX(fret)}
+                  y1={FRETBOARD_LAYOUT.topPadding - 8}
+                  x2={fretWireX(fret)}
+                  y2={
+                    FRETBOARD_LAYOUT.topPadding +
+                    (STRING_COUNT - 1) * FRETBOARD_LAYOUT.stringGap +
+                    8
+                  }
+                  className={styles.fretLine}
+                />
+                <text
+                  x={fretCenterX(fret)}
+                  y={FRETBOARD_LAYOUT.topPadding - 18}
+                  textAnchor="middle"
+                  className={styles.fretNumber}
+                >
+                  {fret}
+                </text>
+              </g>
+            ))}
+
+            {Array.from({ length: STRING_COUNT }, (_, stringIndex) => (
+              <g key={`string-${stringIndex}`}>
+                <text
+                  x={FRETBOARD_LAYOUT.stringLabelX}
+                  y={stringY(stringIndex) + 5}
+                  textAnchor="start"
+                  className={styles.stringLabel}
+                >
+                  {STRING_LABELS[stringIndex]}
+                </text>
+                <line
+                  x1={FRETBOARD_LAYOUT.leftPadding}
+                  y1={stringY(stringIndex)}
+                  x2={stringEndX}
+                  y2={stringY(stringIndex)}
+                  className={styles.stringLine}
+                />
+              </g>
+            ))}
+
+            {SINGLE_MARKER_FRETS.map((fret) => (
+              <circle
+                key={`marker-${fret}`}
+                cx={fretCenterX(fret)}
+                cy={stringY(2.5)}
+                r={FRETBOARD_LAYOUT.markerRadius}
+                className={styles.fretMarker}
+              />
+            ))}
+
+            {DOUBLE_MARKER_FRETS.flatMap((fret) =>
+              [1.5, 3.5].map((stringOffset) => (
+                <circle
+                  key={`marker-${fret}-${stringOffset}`}
+                  cx={fretCenterX(fret)}
+                  cy={stringY(stringOffset)}
+                  r={FRETBOARD_LAYOUT.markerRadius}
+                  className={styles.fretMarker}
+                />
+              )),
+            )}
+
+            {mutedStrings.map((stringIndex) => (
+              <text
+                key={`mute-${stringIndex}`}
+                x={FRETBOARD_LAYOUT.openLaneX}
+                y={stringY(stringIndex) + 5}
+                textAnchor="middle"
+                className={styles.mutedMarker}
+              >
+                ×
+              </text>
+            ))}
+
+            {openPositions.map((position) => {
+              const { string, note, finger } = position;
+              return (
+              <g
+                key={`open-${string}`}
+                onClick={onPlayNote ? () => onPlayNote(position) : undefined}
+                style={onPlayNote ? { cursor: 'pointer' } : undefined}
+              >
+                {isActive(string, 0) && (
+                  <circle
+                    cx={FRETBOARD_LAYOUT.openLaneX}
+                    cy={stringY(string)}
+                    r={OPEN_NOTE_RADIUS + 5}
+                    className={styles.activeRing}
+                  />
+                )}
+                <circle
+                  cx={FRETBOARD_LAYOUT.openLaneX}
+                  cy={stringY(string)}
+                  r={OPEN_NOTE_RADIUS}
+                  fill={noteColors[note]}
+                  stroke="#ffffff"
+                  strokeWidth={2}
+                />
+                {renderLabel(
+                  note,
+                  finger,
+                  FRETBOARD_LAYOUT.openLaneX,
+                  stringY(string),
+                  OPEN_NOTE_RADIUS,
+                )}
+              </g>
+              );
+            })}
+
+            {frettedPositions.map((position) => {
+              const { string, fret, note, finger } = position;
+              const radius = noteRadiusForFret(fret);
+              return (
+                <g
+                  key={`note-${string}-${fret}`}
+                  onClick={onPlayNote ? () => onPlayNote(position) : undefined}
+                  style={onPlayNote ? { cursor: 'pointer' } : undefined}
+                >
+                  {isActive(string, fret) && (
+                    <circle
+                      cx={fretCenterX(fret)}
+                      cy={stringY(string)}
+                      r={radius + 5}
+                      className={styles.activeRing}
+                    />
+                  )}
+                  <circle
+                    cx={fretCenterX(fret)}
+                    cy={stringY(string)}
+                    r={radius}
+                    fill={noteColors[note]}
+                    stroke="#ffffff"
+                    strokeWidth={2}
+                  />
+                  {renderLabel(
+                    note,
+                    finger,
+                    fretCenterX(fret),
+                    stringY(string),
+                    radius,
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+        )}
+      </div>
+    </div>
+  );
+}

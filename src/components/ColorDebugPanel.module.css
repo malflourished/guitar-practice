@@ -1,0 +1,113 @@
+.wrapper {
+  max-width: 1200px;
+  margin: 2rem auto 0;
+  padding: 0 1.5rem;
+}
+
+.toggle {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+}
+
+.toggle:hover {
+  background: #f3f4f6;
+}
+
+.panel {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.swatch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.colorInput {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.colorInput::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.colorInput::-webkit-color-swatch {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.noteName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  min-width: 2.75rem;
+  font-family: system-ui, sans-serif;
+}
+
+.hexInput {
+  width: 100%;
+  min-width: 0;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-family: ui-monospace, monospace;
+  color: #374151;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.actionButton {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+}
+
+.actionButton:hover {
+  background: #f3f4f6;
+}

@@ -1,0 +1,111 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.playGroup {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.playButton {
+  padding: 0.45rem 1.2rem;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.playButton:hover:not(:disabled) {
+  background: #374151;
+}
+
+.stopButton {
+  border-color: #b91c1c;
+  background: #b91c1c;
+}
+
+.stopButton:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.playButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.select {
+  padding: 0.45rem 2rem 0.45rem 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236b7280' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+}
+
+.select:hover {
+  background-color: #f3f4f6;
+}
+
+.iconButton {
+  padding: 0.45rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.iconButton:hover {
+  background: #f3f4f6;
+}
+
+.iconButton.selected {
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.iconButton.selected:hover {
+  background: #374151;
+}
+
+.slider {
+  width: 120px;
+  cursor: pointer;
+  accent-color: #1f2937;
+}
+
+.tempo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tempoLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  font-family: system-ui, sans-serif;
+  min-width: 4.5ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

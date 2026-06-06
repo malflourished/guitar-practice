@@ -1,0 +1,74 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.noteButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+  font-family: system-ui, sans-serif;
+}
+
+.noteButton.accidental {
+  font-size: 0.8rem;
+  letter-spacing: -0.02em;
+}
+
+.noteButton:hover {
+  transform: scale(1.08);
+}
+
+.noteButton.active {
+  background: var(--note-color);
+  color: #111827;
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px var(--note-color), 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.noteButton.inactive {
+  background: transparent;
+  color: #6b7280;
+  border-color: var(--note-color);
+  opacity: 0.45;
+}
+
+.noteButton.inactive:hover {
+  opacity: 0.75;
+}
+
+.shortcuts {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.shortcutButton {
+  padding: 0.35rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: system-ui, sans-serif;
+}
+
+.shortcutButton:hover {
+  background: #f3f4f6;
+}
