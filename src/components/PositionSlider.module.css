@@ -1,45 +1,115 @@
-.container {
+.bar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
   width: 100%;
-  max-width: 420px;
+  max-width: min(960px, 100%);
+  margin: 0.75rem auto 0;
+  padding: 0 var(--fretboard-padding);
+  box-sizing: border-box;
 }
 
-.label {
-  font-family: var(--font-sans);
-  font-size: 0.62rem;
-  font-weight: 400;
-  letter-spacing: var(--label-tracking);
-  text-transform: uppercase;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.fretRange {
-  margin-left: 0.35rem;
-  opacity: 0.75;
-}
-
-.controls {
+.sliderRow {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   width: 100%;
 }
 
 .slider {
-  composes: slider from '../styles/glass.module.css';
   flex: 1;
+  min-width: 0;
+  height: 4px;
+  margin: 0;
+  accent-color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.28);
+}
+
+.slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.28);
+}
+
+.slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .counter {
   font-family: var(--font-sans);
   font-size: 0.62rem;
   font-weight: 400;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  min-width: 3rem;
-  text-align: right;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+  text-align: center;
+}
+
+.fingersButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.85rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-control);
+  color: rgba(255, 255, 255, 0.62);
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--duration-key) var(--ease-calm),
+    color var(--duration-key) var(--ease-calm),
+    border-color var(--duration-key) var(--ease-calm);
+}
+
+.fingersButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.fingersButtonActive {
+  composes: fingersButton;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.96);
+}
+
+@media (max-width: 768px) {
+  .bar {
+    margin-top: 0.5rem;
+  }
+
+  .sliderRow {
+    gap: 0.75rem;
+  }
+
+  .fingersButton {
+    padding: 0.4rem 0.7rem;
+  }
 }

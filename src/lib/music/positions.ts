@@ -3,12 +3,20 @@ import type {
   FretPosition,
   NoteName,
   ScaleQuality,
+  ScaleSystem,
 } from '../../types/music';
 import { getArpeggioIntervals } from './arpeggios';
 import { getNoteAt, getPositionsForIntervals } from './fretboard';
 import { noteToSemitone } from './notes';
-import { getScaleIntervals } from './scales';
-import { FRET_COUNT, OPEN_STRING_SEMITONES } from './tuning';
+import {
+  MAJOR_PENTATONIC,
+  MAJOR_SCALE,
+  MINOR_PENTATONIC,
+  NATURAL_MINOR,
+  getScaleIntervals,
+  isPentatonic,
+} from './scales';
+import { FRET_COUNT, OPEN_STRING_MIDI, OPEN_STRING_SEMITONES } from './tuning';
 
 export interface Position {
   /** 1-based position number for the slider. */
@@ -46,15 +54,147 @@ const HIGH_E_STRING = 0;
 const REACH = 4;
 
 /**
- * Scale positions are real, playable "hand boxes" anchored to each scale tone on
- * the low E string (one octave's worth — the canonical 5 pentatonic / 7 diatonic
- * positions). See buildIntervalPositions for the box algorithm.
+ * Build playable scale positions for a key/quality.
+ *
+ * Pentatonic and blues scales use the box algorithm (their tones are never a
+ * half step apart, so vertical boxes come out clean). Seven-note diatonic
+ * scales and modes use one of two recognized position systems, since a naive
+ * fret window drops notes and yields uneven, ungappy-looking shapes:
+ *
+ * - `3nps`  — three notes per string, walking the scale degrees in pitch order.
+ *             Seven positions, gap-free by construction. Used for all 7-note
+ *             scales (and the only option for modes / harmonic / melodic minor).
+ * - `caged` — five box shapes built from the relative pentatonic box plus the
+ *             two diatonic passing tones that fall inside it. Major/minor only;
+ *             other 7-note scales fall back to 3NPS.
  */
 export function buildScalePositions(
   root: NoteName,
   quality: ScaleQuality,
+  system: ScaleSystem = '3nps',
 ): Position[] {
-  return buildIntervalPositions(root, getScaleIntervals(quality));
+  const intervals = getScaleIntervals(quality);
+
+  // Pentatonic / blues keep the box algorithm.
+  if (isPentatonic(quality) || intervals.length < 7) {
+    return buildIntervalPositions(root, intervals);
+  }
+
+  if (system === 'caged' && (quality === 'major' || quality === 'minor')) {
+    return buildCagedPositions(root, quality);
+  }
+
+  return buildThreeNotesPerString(root, intervals);
+}
+
+/** String indices ordered low E (5) → high e (0) for ascending pitch walks. */
+const STRINGS_LOW_TO_HIGH = [5, 4, 3, 2, 1, 0] as const;
+
+/**
+ * Walk the scale degrees in ascending pitch, placing `notesPerString` notes on
+ * each string from the low E up. Pitch is tracked absolutely, so crossing to a
+ * higher string (including the major-third G→B gap) is handled automatically —
+ * the shape stays in position with a consistent note count and no gaps. The
+ * first note sits at `startFretLowE` on the low E string.
+ */
+function walkScaleShape(
+  steps: number[],
+  startDegree: number,
+  notesPerString: number,
+  startFretLowE: number,
+): Omit<FretPosition, 'finger'>[] {
+  const n = steps.length;
+  const lowEOpen = OPEN_STRING_MIDI[5];
+  let pitch = lowEOpen + startFretLowE;
+  const notes: Omit<FretPosition, 'finger'>[] = [];
+
+  for (let j = 0; j < 6 * notesPerString; j++) {
+    if (j > 0) {
+      const prevDegree = (startDegree + j - 1) % n;
+      const stepUp = (steps[(prevDegree + 1) % n] - steps[prevDegree] + 12) % 12;
+      pitch += stepUp;
+    }
+    const string = STRINGS_LOW_TO_HIGH[Math.floor(j / notesPerString)];
+    const fret = pitch - OPEN_STRING_MIDI[string];
+    notes.push({ string, fret, note: getNoteAt(string, fret) });
+  }
+
+  return notes;
+}
+
+function finalizeBox(
+  notes: Omit<FretPosition, 'finger'>[],
+): Omit<Position, 'number'> {
+  const startFret = Math.min(...notes.map((p) => p.fret));
+  const endFret = Math.max(...notes.map((p) => p.fret));
+  const positions: FretPosition[] = notes.map((p) => ({
+    ...p,
+    finger: p.fret === 0 ? 0 : Math.min(4, p.fret - startFret + 1),
+  }));
+  return { startFret, endFret, positions, mutedStrings: [] };
+}
+
+/** Three-notes-per-string system: 7 positions, one per starting scale degree. */
+function buildThreeNotesPerString(root: NoteName, steps: number[]): Position[] {
+  const rootSemitone = noteToSemitone(root);
+  const lowEOpenPc = OPEN_STRING_MIDI[5] % 12;
+
+  const boxes: Omit<Position, 'number'>[] = [];
+
+  for (let startDegree = 0; startDegree < steps.length; startDegree++) {
+    const firstPc = (rootSemitone + steps[startDegree]) % 12;
+    let startFret = ((firstPc - lowEOpenPc) % 12 + 12) % 12;
+
+    let notes = walkScaleShape(steps, startDegree, 3, startFret);
+    // Guard against any negative fret on higher strings (shift up an octave).
+    while (notes.some((p) => p.fret < 0) && startFret + 12 <= FRET_COUNT) {
+      startFret += 12;
+      notes = walkScaleShape(steps, startDegree, 3, startFret);
+    }
+
+    boxes.push(finalizeBox(notes));
+  }
+
+  boxes.sort((a, b) => a.startFret - b.startFret);
+  return boxes.map((box, index) => ({ ...box, number: index + 1 }));
+}
+
+/** Width (in frets beyond the anchor) of a CAGED box: a 4-fret hand span. */
+const CAGED_WINDOW = 3;
+
+/**
+ * CAGED diatonic boxes. Each of the five boxes is a 4-fret window anchored on a
+ * tone of the relative pentatonic on the low E string (the five pentatonic-box
+ * locations), containing every diatonic note that falls inside it. This yields
+ * the recognizable five major/minor shapes — pentatonic frame plus the two
+ * passing tones — at a playable 2–3 notes per string, gap-free.
+ */
+function buildCagedPositions(
+  root: NoteName,
+  quality: 'major' | 'minor',
+): Position[] {
+  const pentatonic =
+    quality === 'major' ? MAJOR_PENTATONIC : MINOR_PENTATONIC;
+  const diatonic = quality === 'major' ? MAJOR_SCALE : NATURAL_MINOR;
+
+  const rootSemitone = noteToSemitone(root);
+  const lowEOpenPc = OPEN_STRING_MIDI[5] % 12;
+
+  // Anchor frets: the low-E fret (0–11) of each relative-pentatonic tone.
+  const anchors = pentatonic
+    .map((interval) => ((rootSemitone + interval - lowEOpenPc) % 12 + 12) % 12)
+    .sort((a, b) => a - b);
+
+  const allDiatonic = getPositionsForIntervals(root, diatonic);
+
+  const boxes = anchors.map((anchor) => {
+    const hi = anchor + CAGED_WINDOW;
+    const notes = allDiatonic.filter((p) => p.fret >= anchor && p.fret <= hi);
+    return finalizeBox(notes);
+  });
+
+  boxes.sort((a, b) => a.startFret - b.startFret);
+  return boxes.map((box, index) => ({ ...box, number: index + 1 }));
 }
 
 /**

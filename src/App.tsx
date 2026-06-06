@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Fretboard } from './components/Fretboard';
+import { PositionSlider } from './components/PositionSlider';
 import { AudioControls } from './components/AudioControls';
 import { ColorDebugPanel } from './components/ColorDebugPanel';
 import { AmbientBackground } from './components/AmbientBackground';
 import { KeySelector } from './components/KeySelector';
 import { useInstrument } from './hooks/useInstrument';
 import { orderScalePositions, type ScaleDirection } from './lib/audio/pitch';
-import { TierSelector } from './components/TierSelector';
-import { TIERS, isValidTier } from './lib/tiers';
 import { ALL_NOTES, NOTE_COLORS } from './lib/colors';
 import { getFretboardTitle, getRootNote } from './lib/displayTitle';
 import {
@@ -32,11 +31,13 @@ import type {
   ChordQuality,
   NoteName,
   ScaleQuality,
+  ScaleSystem,
   StudyMode,
-  Tier,
 } from './types/music';
-import { StudyModeControls } from './components/StudyModeControls';
-import { NotationToggle } from './components/NotationToggle';
+import {
+  StudyModeControls,
+  StudyModeSelector,
+} from './components/StudyModeControls';
 import {
   SettingsList,
   SettingsSection,
@@ -56,7 +57,6 @@ function toSingleRoot(notes: Set<NoteName>): Set<NoteName> {
 }
 
 const COLOR_STORAGE_KEY = 'guitar-fretboard-note-colors';
-const TIER_STORAGE_KEY = 'guitar-fretboard-tier';
 
 function loadNoteColors(): Record<NoteName, string> {
   try {
@@ -70,16 +70,6 @@ function loadNoteColors(): Record<NoteName, string> {
   return { ...NOTE_COLORS };
 }
 
-function loadTier(): Tier {
-  try {
-    const raw = localStorage.getItem(TIER_STORAGE_KEY);
-    if (isValidTier(raw)) return raw;
-  } catch {
-    // ignore malformed storage
-  }
-  return 'basic';
-}
-
 function App() {
   const fretboardAnchorRef = useRef<HTMLDivElement>(null);
   const colorBoundary = useColorBoundary(fretboardAnchorRef);
@@ -89,8 +79,8 @@ function App() {
   const [scaleQuality, setScaleQuality] =
     useState<ScaleQuality>('minorPentatonic');
   const [chordQuality, setChordQuality] = useState<ChordQuality>('major');
+  const [scaleSystem, setScaleSystem] = useState<ScaleSystem>('3nps');
   const [showFingers, setShowFingers] = useState(false);
-  const [tier, setTier] = useState<Tier>(loadTier);
   const [noteColors, setNoteColors] = useState<Record<NoteName, string>>(
     loadNoteColors,
   );
@@ -107,15 +97,6 @@ function App() {
     }
   }, [noteColors]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(TIER_STORAGE_KEY, tier);
-    } catch {
-      // ignore storage write failures
-    }
-  }, [tier]);
-
-  const tierConfig = TIERS[tier];
   const [positionByScope, setPositionByScope] = useState<Record<string, number>>(
     {},
   );
@@ -128,7 +109,13 @@ function App() {
       ? getQualityLabel(scaleQuality)
       : getChordQualityLabel(chordQuality);
 
-  const positionScope = `${studyMode}-${qualityKey}`;
+  const supportsSystemToggle =
+    studyMode === 'scales' &&
+    (scaleQuality === 'major' || scaleQuality === 'minor');
+
+  const positionScope = `${studyMode}-${qualityKey}-${
+    supportsSystemToggle ? scaleSystem : 'fixed'
+  }`;
 
   const positionRegions = useMemo(() => {
     if (studyMode === 'chords') {
@@ -138,10 +125,10 @@ function App() {
       return buildArpeggioPositions(rootNote, chordQuality);
     }
     if (studyMode === 'scales') {
-      return buildScalePositions(rootNote, scaleQuality);
+      return buildScalePositions(rootNote, scaleQuality, scaleSystem);
     }
     return [];
-  }, [studyMode, rootNote, chordQuality, scaleQuality]);
+  }, [studyMode, rootNote, chordQuality, scaleQuality, scaleSystem]);
 
   const positionIndex = Math.min(
     positionByScope[positionScope] ?? 0,
@@ -230,17 +217,18 @@ function App() {
     [ambientStyle, colorBoundary],
   );
 
-  const handleToggle = (note: NoteName) => {
-    setActiveNotes((prev) => {
-      if (isSingleRootMode(studyMode)) {
-        return new Set([note]);
-      }
+  const handleApplyKey = (note: NoteName, action: 'select' | 'deselect' | 'set') => {
+    if (action === 'set') {
+      setActiveNotes(new Set([note]));
+      return;
+    }
 
+    setActiveNotes((prev) => {
       const next = new Set(prev);
-      if (next.has(note)) {
-        next.delete(note);
-      } else {
+      if (action === 'select') {
         next.add(note);
+      } else {
+        next.delete(note);
       }
       return next;
     });
@@ -250,20 +238,6 @@ function App() {
     setStudyMode(mode);
     if (isSingleRootMode(mode)) {
       setActiveNotes((prev) => toSingleRoot(prev));
-    }
-  };
-
-  const handleTierChange = (next: Tier) => {
-    setTier(next);
-    const cfg = TIERS[next];
-    if (!cfg.studyModes.includes(studyMode)) {
-      setStudyMode('notes');
-    }
-    if (!cfg.chordQualities.includes(chordQuality)) {
-      setChordQuality('major');
-    }
-    if (!cfg.scaleQualities.includes(scaleQuality)) {
-      setScaleQuality(cfg.scaleQualities[0]);
     }
   };
 
@@ -280,6 +254,8 @@ function App() {
   };
 
   const singleRootMode = isSingleRootMode(studyMode);
+  const showPositionSlider =
+    singleRootMode && positionRegions.length > 0;
 
   return (
     <div
@@ -290,51 +266,38 @@ function App() {
       <AmbientBackground style={ambientBackgroundStyle} />
       <div className="app">
         <div className="shell">
-          <KeySelector
-            activeNotes={activeNotes}
-            notation={notation}
-            singleRootMode={singleRootMode}
-            onToggle={handleToggle}
-          />
-
           <SettingsList>
-            <SettingsSection title="Study">
+            <SettingsSection>
+              <SettingsRow label="Mode">
+                <StudyModeSelector
+                  studyMode={studyMode}
+                  onStudyModeChange={handleStudyModeChange}
+                />
+              </SettingsRow>
+
+              <SettingsRow label="Key">
+                <KeySelector
+                  activeNotes={activeNotes}
+                  notation={notation}
+                  singleRootMode={singleRootMode}
+                  onApplyKey={handleApplyKey}
+                  onNotationChange={setNotation}
+                />
+              </SettingsRow>
+
               <StudyModeControls
                 studyMode={studyMode}
                 chordQuality={chordQuality}
                 scaleQuality={scaleQuality}
-                showFingers={showFingers}
-                positionRegions={positionRegions}
-                positionIndex={positionIndex}
-                allowedStudyModes={tierConfig.studyModes}
-                allowedChordQualities={tierConfig.chordQualities}
-                allowedScaleQualities={tierConfig.scaleQualities}
-                onStudyModeChange={handleStudyModeChange}
+                scaleSystem={scaleSystem}
+                showSystemToggle={supportsSystemToggle}
                 onChordQualityChange={setChordQuality}
                 onScaleQualityChange={setScaleQuality}
-                onFingersToggle={() => setShowFingers((prev) => !prev)}
-                onPositionChange={setPositionIndex}
+                onScaleSystemChange={setScaleSystem}
               />
-            </SettingsSection>
 
-            <SettingsSection title="Level">
-              <SettingsRow label="Tier">
-                <TierSelector tier={tier} onChange={handleTierChange} />
-              </SettingsRow>
-            </SettingsSection>
-
-            <SettingsSection title="Notation">
-              <SettingsRow label="Accidentals">
-                <NotationToggle
-                  notation={notation}
-                  onChange={setNotation}
-                />
-              </SettingsRow>
-            </SettingsSection>
-
-            {!singleRootMode && (
-              <SettingsSection title="Selection">
-                <SettingsRow label="Notes">
+              {!singleRootMode && (
+                <SettingsRow label="Selection">
                   <div className="shortcuts">
                     <button
                       type="button"
@@ -352,8 +315,8 @@ function App() {
                     </button>
                   </div>
                 </SettingsRow>
-              </SettingsSection>
-            )}
+              )}
+            </SettingsSection>
 
             <SettingsSection title="Sound">
               <AudioControls
@@ -374,21 +337,30 @@ function App() {
               />
             </SettingsSection>
           </SettingsList>
+        </div>
 
-          <div ref={fretboardAnchorRef}>
-            <Fretboard
-              positions={positions}
-              title={title}
-              notation={notation}
-              noteLabels={spellingMap}
-              mutedStrings={mutedStrings}
+        <div className="fretboardStage" ref={fretboardAnchorRef}>
+          <Fretboard
+            positions={positions}
+            title={title}
+            notation={notation}
+            noteLabels={spellingMap}
+            mutedStrings={mutedStrings}
+            showFingers={showFingers}
+            noteColors={noteColors}
+            accentColor="var(--foreground-accent)"
+            onPlayNote={audio.muted ? undefined : audio.playPosition}
+            activePosition={audio.playingPosition}
+          />
+          {showPositionSlider && (
+            <PositionSlider
+              regions={positionRegions}
+              selectedIndex={positionIndex}
+              onChange={setPositionIndex}
               showFingers={showFingers}
-              noteColors={noteColors}
-              accentColor="var(--foreground-accent)"
-              onPlayNote={audio.muted ? undefined : audio.playPosition}
-              activePosition={audio.playingPosition}
+              onFingersToggle={() => setShowFingers((prev) => !prev)}
             />
-          </div>
+          )}
         </div>
 
         {showColorDebug && (

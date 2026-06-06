@@ -17,18 +17,6 @@
   composes: select from '../styles/glass.module.css';
 }
 
-.qualityButton {
-  composes: pill from '../styles/glass.module.css';
-}
-
-.qualityButtonSelected {
-  composes: pillSelected from '../styles/glass.module.css';
-}
-
-.positionSlider {
-  width: 100%;
-}
-
 @media (max-width: 768px) {
   .modes {
     justify-content: flex-start;

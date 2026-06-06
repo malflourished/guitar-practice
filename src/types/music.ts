@@ -23,8 +23,12 @@ export interface FretPosition {
 
 export type StudyMode = 'notes' | 'chords' | 'scales' | 'arpeggios';
 
-/** Complexity tier that progressively unlocks features. */
-export type Tier = 'basic' | 'intermediate' | 'advanced';
+/**
+ * Position layout system for diatonic scales.
+ * - `3nps`: three notes per string, 7 positions (cleanest, gap-free by design)
+ * - `caged`: 5 box shapes (pentatonic box + the two diatonic passing tones)
+ */
+export type ScaleSystem = '3nps' | 'caged';
 
 /** Chord/arpeggio qualities. */
 export type ChordQuality =

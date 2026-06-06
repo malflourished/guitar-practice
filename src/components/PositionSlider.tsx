@@ -5,12 +5,16 @@ interface PositionSliderProps {
   regions: Position[];
   selectedIndex: number;
   onChange: (index: number) => void;
+  showFingers: boolean;
+  onFingersToggle: () => void;
 }
 
 export function PositionSlider({
   regions,
   selectedIndex,
   onChange,
+  showFingers,
+  onFingersToggle,
 }: PositionSliderProps) {
   if (regions.length === 0) return null;
 
@@ -18,14 +22,8 @@ export function PositionSlider({
   const positionLabel = ordinalPosition(region.number);
 
   return (
-    <div className={styles.container}>
-      <label className={styles.label} htmlFor="fret-position">
-        {positionLabel} Position
-        <span className={styles.fretRange}>
-          (frets {region.startFret}–{region.endFret})
-        </span>
-      </label>
-      <div className={styles.controls}>
+    <div className={styles.bar}>
+      <div className={styles.sliderRow}>
         <input
           id="fret-position"
           type="range"
@@ -34,15 +32,27 @@ export function PositionSlider({
           max={regions.length - 1}
           value={selectedIndex}
           onChange={(event) => onChange(Number(event.target.value))}
+          aria-label="Fretboard position"
           aria-valuemin={1}
           aria-valuemax={regions.length}
           aria-valuenow={region.number}
           aria-valuetext={`${positionLabel} position, frets ${region.startFret} to ${region.endFret}`}
         />
-        <span className={styles.counter}>
-          {region.number} / {regions.length}
-        </span>
+        <button
+          type="button"
+          className={
+            showFingers ? styles.fingersButtonActive : styles.fingersButton
+          }
+          aria-pressed={showFingers}
+          aria-label="Show fingering"
+          onClick={onFingersToggle}
+        >
+          Fingers
+        </button>
       </div>
+      <span className={styles.counter} aria-hidden="true">
+        {region.number} / {regions.length}
+      </span>
     </div>
   );
 }

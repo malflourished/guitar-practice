@@ -8,6 +8,9 @@
 .app {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
   min-height: 100svh;
   padding: 2.5rem 0 3rem;
 }
@@ -16,9 +19,16 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
   max-width: var(--shell-max);
   margin: 0 auto;
   padding: 0 var(--shell-padding);
+}
+
+.fretboardStage {
+  width: 100%;
+  padding: 0 var(--fretboard-padding);
+  box-sizing: border-box;
 }
 
 .shortcuts {
@@ -29,5 +39,6 @@
 @media (max-width: 768px) {
   .app {
     padding: 1.5rem 0 2rem;
+    gap: 1.25rem;
   }
 }

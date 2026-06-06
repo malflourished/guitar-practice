@@ -1,12 +1,15 @@
-import type { ChordQuality, ScaleQuality, StudyMode } from '../types/music';
+import type {
+  ChordQuality,
+  ScaleQuality,
+  ScaleSystem,
+  StudyMode,
+} from '../types/music';
 import {
   CHORD_QUALITY_GROUPS,
   SCALE_QUALITY_GROUPS,
   getChordQualityLabel,
   getQualityLabel,
-  type Position,
 } from '../lib/music';
-import { PositionSlider } from './PositionSlider';
 import { SettingsRow } from './SettingsList';
 import styles from './StudyModeControls.module.css';
 
@@ -17,86 +20,65 @@ const STUDY_MODES: { id: StudyMode; label: string }[] = [
   { id: 'arpeggios', label: 'Arpeggios' },
 ];
 
+interface StudyModeSelectorProps {
+  studyMode: StudyMode;
+  onStudyModeChange: (mode: StudyMode) => void;
+}
+
+export function StudyModeSelector({
+  studyMode,
+  onStudyModeChange,
+}: StudyModeSelectorProps) {
+  return (
+    <div className={styles.modes} role="group" aria-label="Study mode">
+      {STUDY_MODES.map(({ id, label }) => (
+        <button
+          key={id}
+          type="button"
+          className={
+            studyMode === id ? styles.modeButtonSelected : styles.modeButton
+          }
+          aria-pressed={studyMode === id}
+          onClick={() => onStudyModeChange(id)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const SCALE_SYSTEMS: { id: ScaleSystem; label: string }[] = [
+  { id: '3nps', label: '3 / String' },
+  { id: 'caged', label: 'CAGED' },
+];
+
 interface StudyModeControlsProps {
   studyMode: StudyMode;
   chordQuality: ChordQuality;
   scaleQuality: ScaleQuality;
-  showFingers: boolean;
-  positionRegions: Position[];
-  positionIndex: number;
-  allowedStudyModes: StudyMode[];
-  allowedChordQualities: ChordQuality[];
-  allowedScaleQualities: ScaleQuality[];
-  onStudyModeChange: (mode: StudyMode) => void;
+  scaleSystem: ScaleSystem;
+  showSystemToggle: boolean;
   onChordQualityChange: (quality: ChordQuality) => void;
   onScaleQualityChange: (quality: ScaleQuality) => void;
-  onFingersToggle: () => void;
-  onPositionChange: (index: number) => void;
+  onScaleSystemChange: (system: ScaleSystem) => void;
 }
 
 export function StudyModeControls({
   studyMode,
   chordQuality,
   scaleQuality,
-  showFingers,
-  positionRegions,
-  positionIndex,
-  allowedStudyModes,
-  allowedChordQualities,
-  allowedScaleQualities,
-  onStudyModeChange,
+  scaleSystem,
+  showSystemToggle,
   onChordQualityChange,
   onScaleQualityChange,
-  onFingersToggle,
-  onPositionChange,
+  onScaleSystemChange,
 }: StudyModeControlsProps) {
   const isChordMode = studyMode === 'chords' || studyMode === 'arpeggios';
   const isScaleMode = studyMode === 'scales';
-  const fingersAvailable =
-    studyMode === 'chords' ||
-    studyMode === 'scales' ||
-    studyMode === 'arpeggios';
-  const positionSliderEnabled =
-    studyMode === 'chords' ||
-    studyMode === 'scales' ||
-    studyMode === 'arpeggios';
-
-  const visibleModes = STUDY_MODES.filter(({ id }) =>
-    allowedStudyModes.includes(id),
-  );
-
-  const allowedChordSet = new Set(allowedChordQualities);
-  const visibleChordGroups = CHORD_QUALITY_GROUPS.map((group) => ({
-    label: group.label,
-    qualities: group.qualities.filter((quality) => allowedChordSet.has(quality)),
-  })).filter((group) => group.qualities.length > 0);
-
-  const allowedScaleSet = new Set(allowedScaleQualities);
-  const visibleScaleGroups = SCALE_QUALITY_GROUPS.map((group) => ({
-    label: group.label,
-    qualities: group.qualities.filter((quality) => allowedScaleSet.has(quality)),
-  })).filter((group) => group.qualities.length > 0);
 
   return (
     <>
-      <SettingsRow label="Mode">
-        <div className={styles.modes} role="group" aria-label="Study mode">
-          {visibleModes.map(({ id, label }) => (
-            <button
-              key={id}
-              type="button"
-              className={
-                studyMode === id ? styles.modeButtonSelected : styles.modeButton
-              }
-              aria-pressed={studyMode === id}
-              onClick={() => onStudyModeChange(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </SettingsRow>
-
       {isChordMode && (
         <SettingsRow label="Type">
           <select
@@ -107,7 +89,7 @@ export function StudyModeControls({
               onChordQualityChange(event.target.value as ChordQuality)
             }
           >
-            {visibleChordGroups.map((group) => (
+            {CHORD_QUALITY_GROUPS.map((group) => (
               <optgroup key={group.label} label={group.label}>
                 {group.qualities.map((quality) => (
                   <option key={quality} value={quality}>
@@ -130,7 +112,7 @@ export function StudyModeControls({
               onScaleQualityChange(event.target.value as ScaleQuality)
             }
           >
-            {visibleScaleGroups.map((group) => (
+            {SCALE_QUALITY_GROUPS.map((group) => (
               <optgroup key={group.label} label={group.label}>
                 {group.qualities.map((quality) => (
                   <option key={quality} value={quality}>
@@ -143,31 +125,24 @@ export function StudyModeControls({
         </SettingsRow>
       )}
 
-      {fingersAvailable && (
-        <SettingsRow label="Fingers">
-          <button
-            type="button"
-            className={
-              showFingers
-                ? styles.qualityButtonSelected
-                : styles.qualityButton
-            }
-            aria-pressed={showFingers}
-            onClick={onFingersToggle}
-          >
-            {showFingers ? 'On' : 'Off'}
-          </button>
-        </SettingsRow>
-      )}
-
-      {positionSliderEnabled && positionRegions.length > 0 && (
-        <SettingsRow label="Position" stack fullWidth>
-          <div className={styles.positionSlider}>
-            <PositionSlider
-              regions={positionRegions}
-              selectedIndex={positionIndex}
-              onChange={onPositionChange}
-            />
+      {isScaleMode && showSystemToggle && (
+        <SettingsRow label="System">
+          <div className={styles.modes} role="group" aria-label="Scale system">
+            {SCALE_SYSTEMS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className={
+                  scaleSystem === id
+                    ? styles.modeButtonSelected
+                    : styles.modeButton
+                }
+                aria-pressed={scaleSystem === id}
+                onClick={() => onScaleSystemChange(id)}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </SettingsRow>
       )}

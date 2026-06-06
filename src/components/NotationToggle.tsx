@@ -1,4 +1,5 @@
 import type { NotationPreference } from '../lib/music';
+import glass from '../styles/glass.module.css';
 import styles from './NotationToggle.module.css';
 
 interface NotationToggleProps {
@@ -12,20 +13,22 @@ export function NotationToggle({ notation, onChange }: NotationToggleProps) {
       <button
         type="button"
         className={
-          notation === 'sharps' ? styles.optionSelected : styles.option
+          notation === 'sharps' ? glass.keyTileActive : glass.keyTile
         }
         aria-pressed={notation === 'sharps'}
+        aria-label="Sharps"
         onClick={() => onChange('sharps')}
       >
-        Sharps
+        ♯
       </button>
       <button
         type="button"
-        className={notation === 'flats' ? styles.optionSelected : styles.option}
+        className={notation === 'flats' ? glass.keyTileActive : glass.keyTile}
         aria-pressed={notation === 'flats'}
+        aria-label="Flats"
         onClick={() => onChange('flats')}
       >
-        Flats
+        ♭
       </button>
     </div>
   );

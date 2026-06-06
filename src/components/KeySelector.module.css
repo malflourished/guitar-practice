@@ -1,0 +1,44 @@
+.strip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.keys {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.35rem;
+  touch-action: none;
+}
+
+.keys.dragging {
+  user-select: none;
+  cursor: grabbing;
+}
+
+.keys.dragging button {
+  cursor: grabbing;
+}
+
+.hint {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .strip {
+    align-items: flex-start;
+  }
+
+  .keys {
+    justify-content: flex-start;
+  }
+}

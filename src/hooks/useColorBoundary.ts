@@ -28,9 +28,9 @@ export function useColorBoundary(
       observer.observe(anchor);
     }
 
-    const shell = anchor?.closest('.shell');
-    if (shell instanceof Element) {
-      observer.observe(shell);
+    const app = anchor?.closest('.app');
+    if (app instanceof Element) {
+      observer.observe(app);
     }
 
     window.addEventListener('resize', update);

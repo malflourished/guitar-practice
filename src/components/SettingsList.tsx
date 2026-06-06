@@ -14,14 +14,14 @@ export function SettingsList({ children }: SettingsListProps) {
 }
 
 interface SettingsSectionProps {
-  title: string;
+  title?: string;
   children: ReactNode;
 }
 
 export function SettingsSection({ title, children }: SettingsSectionProps) {
   return (
     <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>{title}</h2>
+      {title ? <h2 className={styles.sectionTitle}>{title}</h2> : null}
       <div className={styles.sectionBody}>{children}</div>
     </section>
   );

@@ -49,6 +49,7 @@
   /* Layout */
   --shell-max: 920px;
   --shell-padding: 1.5rem;
+  --fretboard-padding: clamp(1rem, 2.5vw, 2rem);
 }
 
 /*
@@ -121,6 +122,7 @@
     --glass-blur: 28px;
     --radius-hero: 8px;
     --shell-padding: 1rem;
+    --fretboard-padding: 0.75rem;
   }
 }
 
