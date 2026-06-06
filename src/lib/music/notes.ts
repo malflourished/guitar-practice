@@ -41,6 +41,10 @@ export function noteToSemitone(note: NoteName): number {
   return CHROMATIC.indexOf(note);
 }
 
+export function samePitchClass(a: NoteName, b: NoteName): boolean {
+  return noteToSemitone(a) === noteToSemitone(b);
+}
+
 export type NotationPreference = 'sharps' | 'flats';
 
 export function isAccidental(note: NoteName): boolean {

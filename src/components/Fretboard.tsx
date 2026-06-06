@@ -14,6 +14,7 @@ import {
   STRING_COUNT,
   STRING_LABELS,
   formatNoteDisplay,
+  samePitchClass,
   type NotationPreference,
 } from '../lib/music';
 import styles from './Fretboard.module.css';
@@ -34,6 +35,8 @@ interface FretboardProps {
   noteLabels?: Map<NoteName, string> | null;
   mutedStrings?: number[];
   showFingers?: boolean;
+  showNoteLabels?: boolean;
+  rootNote?: NoteName | null;
   noteColors: Record<NoteName, string>;
   onPlayNote?: (position: FretPosition) => void;
   activePosition?: FretPosition | null;
@@ -48,6 +51,8 @@ export function Fretboard({
   noteLabels = null,
   mutedStrings = [],
   showFingers = false,
+  showNoteLabels = true,
+  rootNote = null,
   onPlayNote,
   activePosition = null,
 }: FretboardProps) {
@@ -115,6 +120,11 @@ export function Fretboard({
   const openPositions = positions.filter((p) => p.fret === 0);
   const frettedPositions = positions.filter((p) => p.fret > 0);
 
+  const dotClass = (note: NoteName) =>
+    rootNote && samePitchClass(note, rootNote)
+      ? styles.noteDotRoot
+      : styles.noteDot;
+
   const renderLabel = (
     note: NoteName,
     finger: number | undefined,
@@ -122,6 +132,8 @@ export function Fretboard({
     cy: number,
     radius: number,
   ) => {
+    if (!showNoteLabels) return null;
+
     const label = labelFor(note, finger);
     const wide = label.length > 1;
     const small = wide || radius <= SMALL_LABEL_RADIUS;
@@ -273,7 +285,7 @@ export function Fretboard({
                     cx={FRETBOARD_LAYOUT.openLaneX}
                     cy={stringY(string)}
                     r={OPEN_NOTE_RADIUS}
-                    className={styles.noteDot}
+                    className={dotClass(note)}
                   />
                   {renderLabel(
                     note,
@@ -308,7 +320,7 @@ export function Fretboard({
                     cx={fretCenterX(fret)}
                     cy={stringY(string)}
                     r={radius}
-                    className={styles.noteDot}
+                    className={dotClass(note)}
                   />
                   {renderLabel(
                     note,

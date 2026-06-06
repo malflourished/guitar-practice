@@ -9,6 +9,7 @@ interface ProgressionStripProps {
   activeIndex: number;
   notation: NotationPreference;
   showFingers: boolean;
+  showNoteLabels: boolean;
   onSelectStep: (index: number) => void;
 }
 
@@ -17,6 +18,7 @@ export function ProgressionStrip({
   activeIndex,
   notation,
   showFingers,
+  showNoteLabels,
   onSelectStep,
 }: ProgressionStripProps) {
   if (chords.length === 0) return null;
@@ -56,6 +58,8 @@ export function ProgressionStrip({
                     notation={notation}
                     noteLabels={chord.noteLabels}
                     showFingers={showFingers}
+                    showNoteLabels={showNoteLabels}
+                    rootNote={chord.step.root}
                   />
                 </div>
               </div>

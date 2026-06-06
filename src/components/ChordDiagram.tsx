@@ -3,6 +3,7 @@ import {
   FRET_COUNT,
   STRING_COUNT,
   formatNoteDisplay,
+  samePitchClass,
   type NotationPreference,
 } from '../lib/music';
 import styles from './ChordDiagram.module.css';
@@ -39,6 +40,8 @@ interface ChordDiagramProps {
   notation: NotationPreference;
   noteLabels?: Map<NoteName, string> | null;
   showFingers?: boolean;
+  showNoteLabels?: boolean;
+  rootNote?: NoteName | null;
 }
 
 function fretRowsForRegion(startFret: number, endFret: number): number {
@@ -176,6 +179,8 @@ export function ChordDiagram({
   notation,
   noteLabels = null,
   showFingers = false,
+  showNoteLabels = true,
+  rootNote = null,
 }: ChordDiagramProps) {
   const isOpenPosition = startFret === 0;
   const fretRows = fretRowsForRegion(startFret, endFret);
@@ -184,6 +189,11 @@ export function ChordDiagram({
     ? fretRows
     : Math.min(startFret + fretRows - 1, FRET_COUNT);
   const endsAtNeckEnd = lastVisibleFret === FRET_COUNT;
+
+  const dotClass = (note: NoteName) =>
+    rootNote && samePitchClass(note, rootNote)
+      ? styles.noteDotRoot
+      : styles.noteDot;
 
   const dotLabelText = (note: NoteName, finger?: number) => {
     if (showFingers && finger !== undefined && finger > 0) {
@@ -214,6 +224,8 @@ export function ChordDiagram({
     cx: number,
     cy: number,
   ) => {
+    if (!showNoteLabels) return null;
+
     const label = dotLabelText(note, finger);
     return (
       <text
@@ -331,7 +343,7 @@ export function ChordDiagram({
                 cx={cx}
                 cy={markerY}
                 r={DOT_RADIUS}
-                className={styles.noteDot}
+                className={dotClass(position.note)}
               />
               {renderDotLabel(position.note, position.finger, cx, markerY)}
             </g>
@@ -361,7 +373,7 @@ export function ChordDiagram({
 
         return (
           <g key={`note-${string}-${fret}`}>
-            <circle cx={cx} cy={cy} r={DOT_RADIUS} className={styles.noteDot} />
+            <circle cx={cx} cy={cy} r={DOT_RADIUS} className={dotClass(note)} />
             {renderDotLabel(note, finger, cx, cy)}
           </g>
         );

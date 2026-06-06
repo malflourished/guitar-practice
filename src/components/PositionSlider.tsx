@@ -7,6 +7,8 @@ interface PositionSliderProps {
   onChange: (index: number) => void;
   showFingers: boolean;
   onFingersToggle: () => void;
+  showNoteLabels: boolean;
+  onNoteLabelsToggle: () => void;
   disabled?: boolean;
 }
 
@@ -16,6 +18,8 @@ export function PositionSlider({
   onChange,
   showFingers,
   onFingersToggle,
+  showNoteLabels,
+  onNoteLabelsToggle,
   disabled = false,
 }: PositionSliderProps) {
   if (regions.length === 0) return null;
@@ -42,17 +46,30 @@ export function PositionSlider({
           aria-valuenow={region.number}
           aria-valuetext={`${positionLabel} position, frets ${region.startFret} to ${region.endFret}`}
         />
-        <button
-          type="button"
-          className={
-            showFingers ? styles.fingersButtonActive : styles.fingersButton
-          }
-          aria-pressed={showFingers}
-          aria-label="Show fingering"
-          onClick={onFingersToggle}
-        >
-          Fingers
-        </button>
+        <div className={styles.toggleGroup}>
+          <button
+            type="button"
+            className={
+              showNoteLabels ? styles.fingersButtonActive : styles.fingersButton
+            }
+            aria-pressed={showNoteLabels}
+            aria-label="Show note and finger labels"
+            onClick={onNoteLabelsToggle}
+          >
+            Labels
+          </button>
+          <button
+            type="button"
+            className={
+              showFingers ? styles.fingersButtonActive : styles.fingersButton
+            }
+            aria-pressed={showFingers}
+            aria-label="Show fingering"
+            onClick={onFingersToggle}
+          >
+            Fingers
+          </button>
+        </div>
       </div>
       <span className={styles.counter} aria-hidden="true">
         {region.number} / {regions.length}

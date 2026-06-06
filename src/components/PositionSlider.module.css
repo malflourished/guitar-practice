@@ -17,6 +17,13 @@
   width: 100%;
 }
 
+.toggleGroup {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .slider {
   flex: 1;
   min-width: 0;

@@ -72,6 +72,7 @@ export {
   formatNoteDisplay,
   isAccidental,
   noteToSemitone,
+  samePitchClass,
   semitoneToNote,
 } from './notes';
 export type { NotationPreference } from './notes';

@@ -102,6 +102,7 @@ function App() {
   const [progressionStepIndex, setProgressionStepIndex] = useState(0);
   const [scaleSystem, setScaleSystem] = useState<ScaleSystem>('3nps');
   const [showFingers, setShowFingers] = useState(false);
+  const [showNoteLabels, setShowNoteLabels] = useState(true);
   const [noteColors, setNoteColors] = useState<Record<NoteName, string>>(
     loadNoteColors,
   );
@@ -164,6 +165,9 @@ function App() {
     studyMode === 'progressions'
       ? (activeProgressionStep?.quality ?? chordQuality)
       : chordQuality;
+
+  const highlightRoot =
+    studyMode === 'progressions' ? activeChordRoot : rootNote;
 
   const qualityKey =
     studyMode === 'scales'
@@ -671,6 +675,8 @@ function App() {
             noteLabels={spellingMap}
             mutedStrings={mutedStrings}
             showFingers={showFingers}
+            showNoteLabels={showNoteLabels}
+            rootNote={highlightRoot}
             noteColors={noteColors}
             onPlayNote={audio.muted ? undefined : audio.playPosition}
             activePosition={audio.playingPosition}
@@ -682,6 +688,8 @@ function App() {
               onChange={setPositionIndex}
               showFingers={showFingers}
               onFingersToggle={() => setShowFingers((prev) => !prev)}
+              showNoteLabels={showNoteLabels}
+              onNoteLabelsToggle={() => setShowNoteLabels((prev) => !prev)}
               disabled={ladderActive}
             />
           )}
@@ -691,6 +699,7 @@ function App() {
               activeIndex={progressionStepIndex}
               notation={notation}
               showFingers={showFingers}
+              showNoteLabels={showNoteLabels}
               onSelectStep={setProgressionStepIndex}
             />
           )}
