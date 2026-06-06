@@ -7,6 +7,7 @@ interface PositionSliderProps {
   onChange: (index: number) => void;
   showFingers: boolean;
   onFingersToggle: () => void;
+  disabled?: boolean;
 }
 
 export function PositionSlider({
@@ -15,6 +16,7 @@ export function PositionSlider({
   onChange,
   showFingers,
   onFingersToggle,
+  disabled = false,
 }: PositionSliderProps) {
   if (regions.length === 0) return null;
 
@@ -27,12 +29,14 @@ export function PositionSlider({
         <input
           id="fret-position"
           type="range"
-          className={styles.slider}
+          className={disabled ? styles.sliderDisabled : styles.slider}
           min={0}
           max={regions.length - 1}
           value={selectedIndex}
           onChange={(event) => onChange(Number(event.target.value))}
+          disabled={disabled}
           aria-label="Fretboard position"
+          aria-disabled={disabled}
           aria-valuemin={1}
           aria-valuemax={regions.length}
           aria-valuenow={region.number}

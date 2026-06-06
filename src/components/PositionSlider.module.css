@@ -54,6 +54,20 @@
   background: rgba(255, 255, 255, 0.22);
 }
 
+.sliderDisabled {
+  composes: slider;
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sliderDisabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+}
+
+.sliderDisabled::-moz-range-thumb {
+  cursor: not-allowed;
+}
+
 .counter {
   font-family: var(--font-sans);
   font-size: 0.62rem;

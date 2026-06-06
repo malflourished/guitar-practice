@@ -21,7 +21,9 @@ import { contrastModeFromBackgroundStyle } from './lib/contrast';
 import {
   buildArpeggioPositions,
   buildChordPositions,
+  buildLadderProgressionChordViews,
   buildScalePositions,
+  buildSavedProgressionChordViews,
   buildSpellingMap,
   getChordQualityLabel,
   getPositionsForNotes,
@@ -34,6 +36,7 @@ import {
   resolveProgression,
   spelledRootFromNoteName,
   type NotationPreference,
+  type ProgressionLadderDirection,
 } from './lib/music';
 import type {
   ChordQuality,
@@ -129,31 +132,16 @@ function App() {
     [rootNote, activeProgression, notation],
   );
 
-  const progressionChordViews = useMemo(() => {
+  const [ladderAnchor, setLadderAnchor] = useState<number | null>(null);
+
+  const savedProgressionChordViews = useMemo(() => {
     if (studyMode !== 'progressions') return [];
-    return resolvedProgressionSteps.map((step, stepIndex) => {
-      const regions = buildChordPositions(step.root, step.quality);
-      const scope = getProgressionStepPositionScope(
-        progressionId,
-        stepIndex,
-        step.quality,
-      );
-      const regionIndex = Math.min(
-        positionByScope[scope] ?? 0,
-        Math.max(0, regions.length - 1),
-      );
-      const region = regions[regionIndex];
-      const spelledRoot = spelledRootFromNoteName(step.root, notation);
-      const spelled = getSpelledChordNotes(spelledRoot, step.quality);
-      return {
-        step,
-        positions: region?.positions ?? [],
-        mutedStrings: region?.mutedStrings ?? [],
-        startFret: region?.startFret ?? 0,
-        endFret: region?.endFret ?? 4,
-        noteLabels: buildSpellingMap(spelled),
-      };
-    });
+    return buildSavedProgressionChordViews(
+      resolvedProgressionSteps,
+      progressionId,
+      positionByScope,
+      notation,
+    );
   }, [
     studyMode,
     resolvedProgressionSteps,
@@ -230,16 +218,76 @@ function App() {
 
   const activePositionRegion = positionRegions[positionIndex];
 
+  const audio = useInstrument();
+
+  const ladderDirection: ProgressionLadderDirection | null =
+    audio.playingId === 'progression-ascending'
+      ? 'ascending'
+      : audio.playingId === 'progression-descending'
+        ? 'descending'
+        : null;
+
+  const ladderActive = ladderDirection !== null && ladderAnchor !== null;
+
+  const displayProgressionChordViews = useMemo(() => {
+    if (studyMode !== 'progressions') return [];
+    if (ladderActive && ladderDirection && ladderAnchor !== null) {
+      return buildLadderProgressionChordViews(
+        resolvedProgressionSteps,
+        ladderAnchor,
+        ladderDirection,
+        notation,
+      );
+    }
+    return savedProgressionChordViews;
+  }, [
+    studyMode,
+    ladderActive,
+    ladderDirection,
+    ladderAnchor,
+    resolvedProgressionSteps,
+    notation,
+    savedProgressionChordViews,
+  ]);
+
+  const activeDisplayChord =
+    displayProgressionChordViews[
+      Math.min(progressionStepIndex, displayProgressionChordViews.length - 1)
+    ];
+
+  const ladderPositionRegion = useMemo(() => {
+    if (!ladderActive || !activeDisplayChord) return undefined;
+    return {
+      number: activeDisplayChord.positionNumber,
+      startFret: activeDisplayChord.startFret,
+      endFret: activeDisplayChord.endFret,
+      positions: activeDisplayChord.positions,
+      mutedStrings: activeDisplayChord.mutedStrings,
+    };
+  }, [ladderActive, activeDisplayChord]);
+
   const positions = useMemo(() => {
     if (studyMode === 'notes') {
       return getPositionsForNotes(activeNotes);
     }
+    if (studyMode === 'progressions' && ladderActive && activeDisplayChord) {
+      return activeDisplayChord.positions;
+    }
     return activePositionRegion ? activePositionRegion.positions : [];
-  }, [activeNotes, studyMode, activePositionRegion]);
+  }, [
+    activeNotes,
+    studyMode,
+    ladderActive,
+    activeDisplayChord,
+    activePositionRegion,
+  ]);
 
-  const mutedStrings = activePositionRegion?.mutedStrings ?? [];
-
-  const audio = useInstrument();
+  const mutedStrings = useMemo(() => {
+    if (studyMode === 'progressions' && ladderActive && activeDisplayChord) {
+      return activeDisplayChord.mutedStrings;
+    }
+    return activePositionRegion?.mutedStrings ?? [];
+  }, [studyMode, ladderActive, activeDisplayChord, activePositionRegion]);
   const [tempo, setTempo] = useState(90);
   const playbackMode =
     studyMode === 'progressions'
@@ -264,16 +312,71 @@ function App() {
       audio.stopAll();
       return;
     }
+    audio.stopAll();
+    setLadderAnchor(null);
     audio.playProgression(
-      progressionChordViews.map((chord) => chord.positions),
+      savedProgressionChordViews.map((chord) => chord.positions),
       tempo,
       'progression',
       setProgressionStepIndex,
     );
   };
 
+  const handlePlayProgressionLadder = (direction: ProgressionLadderDirection) => {
+    const playingId =
+      direction === 'ascending' ? 'progression-ascending' : 'progression-descending';
+    if (audio.playingId === playingId) {
+      audio.stopAll();
+      return;
+    }
+
+    const step0 = resolvedProgressionSteps[0];
+    if (!step0) return;
+
+    audio.stopAll();
+    const step0Scope = getProgressionStepPositionScope(
+      progressionId,
+      0,
+      step0.quality,
+    );
+    const anchor = positionByScope[step0Scope] ?? 0;
+    const ladderViews = buildLadderProgressionChordViews(
+      resolvedProgressionSteps,
+      anchor,
+      direction,
+      notation,
+    );
+
+    setLadderAnchor(anchor);
+    setProgressionStepIndex(0);
+    audio.playProgression(
+      ladderViews.map((chord) => chord.positions),
+      tempo,
+      playingId,
+      setProgressionStepIndex,
+    );
+  };
+
+  useEffect(() => {
+    if (
+      audio.playingId !== 'progression-ascending' &&
+      audio.playingId !== 'progression-descending'
+    ) {
+      setLadderAnchor(null);
+    }
+  }, [audio.playingId]);
+
+  useEffect(() => {
+    audio.stopAll();
+    setLadderAnchor(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stop playback on progression context change only
+  }, [studyMode, progressionId, rootNote, audio.stopAll]);
+
   const spellingMap = useMemo(() => {
     if (studyMode === 'notes') return null;
+    if (studyMode === 'progressions' && ladderActive && activeDisplayChord) {
+      return activeDisplayChord.noteLabels;
+    }
     const spellingRoot =
       studyMode === 'progressions' ? activeChordRoot : rootNote;
     const spelledRoot = spelledRootFromNoteName(spellingRoot, notation);
@@ -295,6 +398,8 @@ function App() {
     chordQuality,
     activeChordQuality,
     notation,
+    ladderActive,
+    activeDisplayChord,
   ]);
 
   const title = useMemo(
@@ -304,7 +409,7 @@ function App() {
         studyMode,
         qualityLabel,
         notation,
-        activePositionRegion,
+        ladderActive ? ladderPositionRegion : activePositionRegion,
         studyMode === 'progressions' && activeProgressionStep
           ? {
               progressionId,
@@ -319,6 +424,8 @@ function App() {
       studyMode,
       qualityLabel,
       notation,
+      ladderActive,
+      ladderPositionRegion,
       activePositionRegion,
       progressionId,
       progressionStepIndex,
@@ -326,14 +433,20 @@ function App() {
     ],
   );
 
-  const subtitle = useMemo(
-    () =>
-      getFretboardSubtitle(
-        studyMode,
-        studyMode === 'progressions' ? activeProgression.theory : null,
-      ),
-    [studyMode, activeProgression],
-  );
+  const subtitle = useMemo(() => {
+    const base = getFretboardSubtitle(
+      studyMode,
+      studyMode === 'progressions' ? activeProgression.theory : null,
+    );
+    if (ladderActive && ladderDirection) {
+      const hint =
+        ladderDirection === 'ascending'
+          ? "Ladder playback climbs the neck from the I chord's position."
+          : 'Ladder playback starts at the highest position and works down from the I chord.';
+      return `${base} ${hint}`;
+    }
+    return base;
+  }, [studyMode, activeProgression, ladderActive, ladderDirection]);
 
   const currentStepRole = useMemo(() => {
     if (studyMode !== 'progressions' || !activeProgressionStep) return undefined;
@@ -525,7 +638,7 @@ function App() {
                 loading={audio.loading}
                 canPlay={
                   studyMode === 'progressions'
-                    ? progressionChordViews.some(
+                    ? displayProgressionChordViews.some(
                         (chord) => chord.positions.length > 0,
                       )
                     : positions.length > 0
@@ -540,6 +653,7 @@ function App() {
                 onStrum={handleStrum}
                 onPlayScale={handlePlayScale}
                 onPlayProgression={handlePlayProgression}
+                onPlayProgressionLadder={handlePlayProgressionLadder}
               />
             </SettingsSection>
           </SettingsList>
@@ -568,11 +682,12 @@ function App() {
               onChange={setPositionIndex}
               showFingers={showFingers}
               onFingersToggle={() => setShowFingers((prev) => !prev)}
+              disabled={ladderActive}
             />
           )}
-          {studyMode === 'progressions' && progressionChordViews.length > 0 && (
+          {studyMode === 'progressions' && displayProgressionChordViews.length > 0 && (
             <ProgressionStrip
-              chords={progressionChordViews}
+              chords={displayProgressionChordViews}
               activeIndex={progressionStepIndex}
               notation={notation}
               showFingers={showFingers}

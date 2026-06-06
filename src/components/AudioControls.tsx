@@ -1,5 +1,6 @@
 import { GUITAR_INSTRUMENTS, type GuitarInstrumentName } from '../lib/audio/engine';
 import type { ScaleDirection } from '../lib/audio/pitch';
+import type { ProgressionLadderDirection } from '../lib/music';
 import styles from './AudioControls.module.css';
 
 export type PlaybackMode = 'strum' | 'sequence' | 'progression';
@@ -20,6 +21,7 @@ interface AudioControlsProps {
   onStrum: () => void;
   onPlayScale: (direction: ScaleDirection) => void;
   onPlayProgression: () => void;
+  onPlayProgressionLadder: (direction: ProgressionLadderDirection) => void;
 }
 
 export const MIN_TEMPO = 40;
@@ -41,6 +43,7 @@ export function AudioControls({
   onStrum,
   onPlayScale,
   onPlayProgression,
+  onPlayProgressionLadder,
 }: AudioControlsProps) {
   const playDisabled = !canPlay || muted;
   const playingProgression = playingId === 'progression';
@@ -84,6 +87,25 @@ export function AudioControls({
           >
             {playingProgression ? 'Stop' : loading ? 'Loading…' : 'Play'}
           </button>
+          {(['ascending', 'descending'] as const).map((direction) => {
+            const playingIdForDirection =
+              direction === 'ascending'
+                ? 'progression-ascending'
+                : 'progression-descending';
+            const active = playingId === playingIdForDirection;
+            const label = direction === 'ascending' ? 'Ascending' : 'Descending';
+            return (
+              <button
+                key={direction}
+                type="button"
+                className={`${styles.playButton} ${active ? styles.stopButton : ''}`}
+                onClick={() => onPlayProgressionLadder(direction)}
+                disabled={playDisabled}
+              >
+                {active ? 'Stop' : loading ? 'Loading…' : label}
+              </button>
+            );
+          })}
         </div>
       ) : (
         <button

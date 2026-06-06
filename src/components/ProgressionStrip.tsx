@@ -1,16 +1,8 @@
-import type { FretPosition, NoteName } from '../types/music';
-import type { NotationPreference, ResolvedProgressionStep } from '../lib/music';
+import type { NotationPreference, ProgressionChordView } from '../lib/music';
 import { ChordDiagram } from './ChordDiagram';
 import styles from './ProgressionStrip.module.css';
 
-export interface ProgressionChordView {
-  step: ResolvedProgressionStep;
-  positions: FretPosition[];
-  mutedStrings: number[];
-  startFret: number;
-  endFret: number;
-  noteLabels: Map<NoteName, string>;
-}
+export type { ProgressionChordView };
 
 interface ProgressionStripProps {
   chords: ProgressionChordView[];
