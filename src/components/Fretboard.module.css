@@ -1,6 +1,6 @@
 .wrapper {
   width: 100%;
-  filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.08));
+  filter: drop-shadow(var(--fretboard-shadow));
 }
 
 .header {
@@ -45,45 +45,45 @@
 }
 
 .fretLine {
-  stroke: rgba(255, 255, 255, 0.5);
+  stroke: var(--fret-line);
   stroke-width: 1.5;
 }
 
 .stringLine {
-  stroke: rgba(255, 255, 255, 0.62);
+  stroke: var(--string-line);
   stroke-width: 1.5;
 }
 
 .stringLabel {
   font-size: 13px;
   font-weight: 400;
-  fill: rgba(255, 255, 255, 0.55);
+  fill: var(--string-label);
   font-family: var(--font-sans);
   letter-spacing: 0.04em;
 }
 
 .fretNumber {
   font-size: 10px;
-  fill: rgba(255, 255, 255, 0.38);
+  fill: var(--fret-number);
   font-family: var(--font-sans);
   font-weight: 400;
 }
 
 .fretMarker {
-  fill: rgba(255, 255, 255, 0.28);
+  fill: var(--fret-marker);
 }
 
 .noteDot {
-  fill: rgba(255, 255, 255, 0.95);
-  stroke: rgba(255, 255, 255, 0.7);
+  fill: var(--note-dot-fill);
+  stroke: var(--note-dot-stroke);
   stroke-width: 1.5;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.12));
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1));
 }
 
 .noteLabel {
   font-size: 13px;
   font-weight: 700;
-  fill: rgba(30, 25, 40, 0.88);
+  fill: var(--note-label-fill);
   font-family: var(--font-sans);
   pointer-events: none;
 }
@@ -91,7 +91,7 @@
 .noteLabelAccidental {
   font-size: 10px;
   font-weight: 700;
-  fill: rgba(30, 25, 40, 0.88);
+  fill: var(--note-label-fill);
   font-family: var(--font-sans);
   pointer-events: none;
 }
@@ -99,7 +99,7 @@
 .mutedMarker {
   font-size: 16px;
   font-weight: 300;
-  fill: rgba(255, 255, 255, 0.45);
+  fill: var(--muted-marker);
   font-family: var(--font-sans);
   pointer-events: none;
 }
@@ -111,7 +111,7 @@
   transform-box: fill-box;
   transform-origin: center;
   animation: activePulse 0.45s ease-out;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+  filter: drop-shadow(0 0 8px var(--active-ring-glow));
 }
 
 @keyframes activePulse {

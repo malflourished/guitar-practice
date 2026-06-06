@@ -3,7 +3,7 @@
   --canvas-bg: #dcd8e4;
   --canvas-vignette: rgba(220, 216, 228, 0.85);
 
-  /* Glass surfaces — reference: subtle tint, heavy blur, crisp rim */
+  /* Glass surfaces */
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-bg-strong: rgba(255, 255, 255, 0.1);
   --glass-bg-hover: rgba(255, 255, 255, 0.14);
@@ -18,22 +18,19 @@
   --glass-blur: 40px;
   --glass-saturate: 1.85;
   --glass-brightness: 1.08;
+  --glass-divider: rgba(255, 255, 255, 0.18);
 
-  /* Elevation — light touch, avoid credit-card lift */
+  /* Elevation */
   --shadow-glass-float: 0 12px 40px rgba(60, 40, 80, 0.07);
   --shadow-glass-rim: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 
-  /* Radii — slightly rounded, not pill/card heavy */
+  /* Radii */
   --radius-key: 6px;
   --radius-control: 6px;
   --radius-hero: 8px;
 
-  /* Typography */
+  /* Typography aliases (set per contrast on .themeRoot) */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --text-primary: rgba(255, 255, 255, 0.98);
-  --text-secondary: rgba(255, 255, 255, 0.62);
-  --text-muted: rgba(255, 255, 255, 0.45);
-  --text-shadow: 0 1px 12px rgba(0, 0, 0, 0.18);
   --label-tracking: 0.14em;
 
   /* Motion */
@@ -46,12 +43,81 @@
   --blob-1: #7a2040;
   --blob-2: #e06018;
   --blob-3: #f0b830;
-  --accent-color: rgba(255, 255, 255, 0.98);
-  --hero-color: rgba(255, 255, 255, 0.98);
 
   /* Layout */
   --shell-max: 920px;
   --shell-padding: 1.5rem;
+}
+
+/* Dark / vivid background → light foreground (default) */
+.themeRoot[data-contrast='dark'] {
+  --foreground-primary: rgba(255, 255, 255, 0.98);
+  --foreground-secondary: rgba(255, 255, 255, 0.62);
+  --foreground-muted: rgba(255, 255, 255, 0.45);
+  --foreground-accent: rgba(255, 255, 255, 0.92);
+  --text-primary: var(--foreground-primary);
+  --text-secondary: var(--foreground-secondary);
+  --text-muted: var(--foreground-muted);
+  --text-shadow: 0 1px 12px rgba(0, 0, 0, 0.18);
+  --hero-color: var(--foreground-primary);
+  --accent-color: var(--foreground-accent);
+  --slider-accent: rgba(255, 255, 255, 0.85);
+  --select-chevron: rgba(255, 255, 255, 0.55);
+
+  --fret-line: rgba(255, 255, 255, 0.5);
+  --string-line: rgba(255, 255, 255, 0.62);
+  --string-label: rgba(255, 255, 255, 0.55);
+  --fret-number: rgba(255, 255, 255, 0.38);
+  --fret-marker: rgba(255, 255, 255, 0.28);
+  --note-dot-fill: rgba(255, 255, 255, 0.95);
+  --note-dot-stroke: rgba(255, 255, 255, 0.7);
+  --note-label-fill: rgba(30, 25, 40, 0.88);
+  --muted-marker: rgba(255, 255, 255, 0.45);
+  --active-ring-glow: rgba(255, 255, 255, 0.4);
+  --fretboard-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Light / pale background → dark foreground */
+.themeRoot[data-contrast='light'] {
+  --foreground-primary: rgba(18, 14, 28, 0.92);
+  --foreground-secondary: rgba(18, 14, 28, 0.62);
+  --foreground-muted: rgba(18, 14, 28, 0.44);
+  --foreground-accent: rgba(18, 14, 28, 0.88);
+  --text-primary: var(--foreground-primary);
+  --text-secondary: var(--foreground-secondary);
+  --text-muted: var(--foreground-muted);
+  --text-shadow: none;
+  --hero-color: var(--foreground-primary);
+  --accent-color: var(--foreground-accent);
+  --slider-accent: rgba(18, 14, 28, 0.75);
+  --select-chevron: rgba(18, 14, 28, 0.5);
+
+  --glass-bg: rgba(255, 255, 255, 0.32);
+  --glass-bg-strong: rgba(255, 255, 255, 0.48);
+  --glass-bg-hover: rgba(255, 255, 255, 0.56);
+  --glass-border: rgba(18, 14, 28, 0.22);
+  --glass-border-subtle: rgba(18, 14, 28, 0.14);
+  --glass-rim: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.65) 0%,
+    rgba(255, 255, 255, 0.15) 45%,
+    transparent 65%
+  );
+  --glass-divider: rgba(18, 14, 28, 0.12);
+  --shadow-glass-float: 0 12px 40px rgba(40, 30, 60, 0.06);
+  --shadow-glass-rim: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+
+  --fret-line: rgba(18, 14, 28, 0.28);
+  --string-line: rgba(18, 14, 28, 0.38);
+  --string-label: rgba(18, 14, 28, 0.48);
+  --fret-number: rgba(18, 14, 28, 0.32);
+  --fret-marker: rgba(18, 14, 28, 0.2);
+  --note-dot-fill: rgba(255, 255, 255, 0.96);
+  --note-dot-stroke: rgba(18, 14, 28, 0.35);
+  --note-label-fill: rgba(18, 14, 28, 0.88);
+  --muted-marker: rgba(18, 14, 28, 0.35);
+  --active-ring-glow: rgba(18, 14, 28, 0.25);
+  --fretboard-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
 }
 
 @media (max-width: 768px) {
@@ -63,19 +129,28 @@
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  :root {
-    --glass-bg: rgba(255, 255, 255, 0.82);
-    --glass-bg-strong: rgba(255, 255, 255, 0.9);
+  .themeRoot[data-contrast='dark'],
+  .themeRoot[data-contrast='light'] {
+    --glass-bg: rgba(255, 255, 255, 0.88);
+    --glass-bg-strong: rgba(255, 255, 255, 0.94);
     --glass-blur: 0px;
     --glass-saturate: 1;
-    --text-primary: #1a1520;
-    --text-secondary: rgba(26, 21, 32, 0.65);
+  }
+
+  .themeRoot[data-contrast='light'] {
+    --foreground-primary: #1a1520;
+    --foreground-secondary: rgba(26, 21, 32, 0.72);
   }
 }
 
 @media (prefers-contrast: more) {
-  :root {
+  .themeRoot[data-contrast='dark'] {
     --glass-border: rgba(255, 255, 255, 0.85);
-    --text-secondary: rgba(255, 255, 255, 0.8);
+    --foreground-secondary: rgba(255, 255, 255, 0.82);
+  }
+
+  .themeRoot[data-contrast='light'] {
+    --glass-border: rgba(18, 14, 28, 0.45);
+    --foreground-secondary: rgba(18, 14, 28, 0.78);
   }
 }

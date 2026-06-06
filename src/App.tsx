@@ -14,6 +14,7 @@ import {
   getBackgroundKeyForMode,
   getKeyBackgroundStyle,
 } from './lib/keyPalette';
+import { contrastModeFromBackgroundStyle } from './lib/contrast';
 import {
   buildArpeggioPositions,
   buildChordPositions,
@@ -208,6 +209,11 @@ function App() {
     [backgroundKey, studyMode, scaleQuality, chordQuality, noteColors],
   );
 
+  const contrastMode = useMemo(
+    () => contrastModeFromBackgroundStyle(ambientStyle),
+    [ambientStyle],
+  );
+
   const heroLetter = useMemo(() => {
     if (studyMode === 'notes' && activeNotes.size !== 1) {
       if (activeNotes.size === 0) return '—';
@@ -269,7 +275,11 @@ function App() {
   const singleRootMode = isSingleRootMode(studyMode);
 
   return (
-    <div className="themeRoot" style={ambientStyle as CSSProperties}>
+    <div
+      className="themeRoot"
+      data-contrast={contrastMode}
+      style={ambientStyle as CSSProperties}
+    >
       <AmbientBackground style={ambientStyle} />
       <div className="app">
         <div className="shell">
@@ -364,7 +374,7 @@ function App() {
             mutedStrings={mutedStrings}
             showFingers={showFingers}
             noteColors={noteColors}
-            accentColor={ambientStyle['--accent-color']}
+            accentColor="var(--foreground-accent)"
             onPlayNote={audio.muted ? undefined : audio.playPosition}
             activePosition={audio.playingPosition}
           />

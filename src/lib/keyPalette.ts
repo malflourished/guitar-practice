@@ -18,8 +18,8 @@ const NEUTRAL_BACKGROUND: KeyBackgroundStyle = {
   '--blob-1': '#7a2040',
   '--blob-2': '#e06018',
   '--blob-3': '#f0b830',
-  '--accent-color': 'rgba(255, 255, 255, 0.98)',
-  '--hero-color': 'rgba(255, 255, 255, 0.98)',
+  '--accent-color': 'var(--foreground-accent)',
+  '--hero-color': 'var(--foreground-primary)',
 };
 
 function parseHex(hex: string): [number, number, number] {
@@ -178,7 +178,7 @@ export function getKeyBackgroundStyle(
     '--blob-1': blob1,
     '--blob-2': blob2,
     '--blob-3': blob3,
-    '--accent-color': 'rgba(255, 255, 255, 0.98)',
-    '--hero-color': 'rgba(255, 255, 255, 0.98)',
+    '--accent-color': 'var(--foreground-accent)',
+    '--hero-color': 'var(--foreground-primary)',
   };
 }

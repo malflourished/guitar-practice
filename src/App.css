@@ -1,6 +1,8 @@
 .themeRoot {
   position: relative;
   min-height: 100svh;
+  color: var(--text-primary);
+  transition: color var(--duration-theme) var(--ease-calm);
 }
 
 .app {
@@ -91,7 +93,7 @@
   width: 100%;
   margin-top: 0.75rem;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 1px solid var(--glass-divider);
 }
 
 .soundLabel {
