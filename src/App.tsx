@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Fretboard } from './components/Fretboard';
 import { AudioControls } from './components/AudioControls';
 import { ColorDebugPanel } from './components/ColorDebugPanel';
@@ -20,7 +20,6 @@ import {
   buildChordPositions,
   buildScalePositions,
   buildSpellingMap,
-  formatNoteDisplay,
   getChordQualityLabel,
   getPositionsForNotes,
   getQualityLabel,
@@ -38,8 +37,13 @@ import type {
 } from './types/music';
 import { StudyModeControls } from './components/StudyModeControls';
 import { NotationToggle } from './components/NotationToggle';
-import { FolderPanel } from './components/FolderPanel';
+import {
+  SettingsList,
+  SettingsSection,
+  SettingsRow,
+} from './components/SettingsList';
 import glass from './styles/glass.module.css';
+import { useColorBoundary } from './hooks/useColorBoundary';
 import './App.css';
 
 function isSingleRootMode(mode: StudyMode): boolean {
@@ -77,6 +81,8 @@ function loadTier(): Tier {
 }
 
 function App() {
+  const fretboardAnchorRef = useRef<HTMLDivElement>(null);
+  const colorBoundary = useColorBoundary(fretboardAnchorRef);
   const [activeNotes, setActiveNotes] = useState<Set<NoteName>>(new Set(['C']));
   const [notation, setNotation] = useState<NotationPreference>('sharps');
   const [studyMode, setStudyMode] = useState<StudyMode>('notes');
@@ -215,14 +221,14 @@ function App() {
     [ambientStyle],
   );
 
-  const heroLetter = useMemo(() => {
-    if (studyMode === 'notes' && activeNotes.size !== 1) {
-      if (activeNotes.size === 0) return '—';
-      if (activeNotes.size === 12) return '♯';
-      return formatNoteDisplay(rootNote, notation);
-    }
-    return formatNoteDisplay(rootNote, notation);
-  }, [studyMode, activeNotes.size, rootNote, notation]);
+  const ambientBackgroundStyle = useMemo(
+    () =>
+      ({
+        ...ambientStyle,
+        '--color-boundary': colorBoundary,
+      }) as CSSProperties,
+    [ambientStyle, colorBoundary],
+  );
 
   const handleToggle = (note: NoteName) => {
     setActiveNotes((prev) => {
@@ -281,7 +287,7 @@ function App() {
       data-contrast={contrastMode}
       style={ambientStyle as CSSProperties}
     >
-      <AmbientBackground style={ambientStyle} />
+      <AmbientBackground style={ambientBackgroundStyle} />
       <div className="app">
         <div className="shell">
           <KeySelector
@@ -291,100 +297,98 @@ function App() {
             onToggle={handleToggle}
           />
 
-          <FolderPanel
-            tab={
-              <>
-                <p className="heroEyebrow">Guitar Practice</p>
-                <span className="heroLetter" aria-hidden="true">
-                  {heroLetter}
-                </span>
-              </>
-            }
-            body={
-              <>
-                <div className="heroMeta">
-                  <TierSelector tier={tier} onChange={handleTierChange} />
-                  <NotationToggle
-                    notation={notation}
-                    onChange={setNotation}
-                  />
-                </div>
+          <SettingsList>
+            <SettingsSection title="Study">
+              <StudyModeControls
+                studyMode={studyMode}
+                chordQuality={chordQuality}
+                scaleQuality={scaleQuality}
+                showFingers={showFingers}
+                positionRegions={positionRegions}
+                positionIndex={positionIndex}
+                allowedStudyModes={tierConfig.studyModes}
+                allowedChordQualities={tierConfig.chordQualities}
+                allowedScaleQualities={tierConfig.scaleQualities}
+                onStudyModeChange={handleStudyModeChange}
+                onChordQualityChange={setChordQuality}
+                onScaleQualityChange={setScaleQuality}
+                onFingersToggle={() => setShowFingers((prev) => !prev)}
+                onPositionChange={setPositionIndex}
+              />
+            </SettingsSection>
 
-                <div className="cardSection">
-                  <StudyModeControls
-                    studyMode={studyMode}
-                    chordQuality={chordQuality}
-                    scaleQuality={scaleQuality}
-                    showFingers={showFingers}
-                    positionRegions={positionRegions}
-                    positionIndex={positionIndex}
-                    allowedStudyModes={tierConfig.studyModes}
-                    allowedChordQualities={tierConfig.chordQualities}
-                    allowedScaleQualities={tierConfig.scaleQualities}
-                    onStudyModeChange={handleStudyModeChange}
-                    onChordQualityChange={setChordQuality}
-                    onScaleQualityChange={setScaleQuality}
-                    onFingersToggle={() => setShowFingers((prev) => !prev)}
-                    onPositionChange={setPositionIndex}
-                  />
+            <SettingsSection title="Level">
+              <SettingsRow label="Tier">
+                <TierSelector tier={tier} onChange={handleTierChange} />
+              </SettingsRow>
+            </SettingsSection>
 
-                  {!singleRootMode && (
-                    <div className="secondaryRow shortcuts">
-                      <button
-                        type="button"
-                        className={glass.pill}
-                        onClick={handleSelectAll}
-                      >
-                        All
-                      </button>
-                      <button
-                        type="button"
-                        className={glass.pill}
-                        onClick={handleClearAll}
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  )}
+            <SettingsSection title="Notation">
+              <SettingsRow label="Accidentals">
+                <NotationToggle
+                  notation={notation}
+                  onChange={setNotation}
+                />
+              </SettingsRow>
+            </SettingsSection>
 
-                  <div className="soundSection">
-                    <span className="soundLabel">Sound</span>
-                    <AudioControls
-                      instrument={audio.instrument}
-                      volume={audio.volume}
-                      muted={audio.muted}
-                      loading={audio.loading}
-                      canPlay={positions.length > 0}
-                      sequenceMode={!strumMode}
-                      playingDirection={
-                        audio.playingId as ScaleDirection | null
-                      }
-                      tempo={tempo}
-                      onInstrumentChange={audio.setInstrument}
-                      onVolumeChange={audio.setVolume}
-                      onMutedToggle={() => audio.setMuted(!audio.muted)}
-                      onTempoChange={setTempo}
-                      onStrum={handleStrum}
-                      onPlayScale={handlePlayScale}
-                    />
+            {!singleRootMode && (
+              <SettingsSection title="Selection">
+                <SettingsRow label="Notes">
+                  <div className="shortcuts">
+                    <button
+                      type="button"
+                      className={glass.pill}
+                      onClick={handleSelectAll}
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      className={glass.pill}
+                      onClick={handleClearAll}
+                    >
+                      Clear
+                    </button>
                   </div>
-                </div>
-              </>
-            }
-          />
+                </SettingsRow>
+              </SettingsSection>
+            )}
 
-          <Fretboard
-            positions={positions}
-            title={title}
-            notation={notation}
-            noteLabels={spellingMap}
-            mutedStrings={mutedStrings}
-            showFingers={showFingers}
-            noteColors={noteColors}
-            accentColor="var(--foreground-accent)"
-            onPlayNote={audio.muted ? undefined : audio.playPosition}
-            activePosition={audio.playingPosition}
-          />
+            <SettingsSection title="Sound">
+              <AudioControls
+                instrument={audio.instrument}
+                volume={audio.volume}
+                muted={audio.muted}
+                loading={audio.loading}
+                canPlay={positions.length > 0}
+                sequenceMode={!strumMode}
+                playingDirection={audio.playingId as ScaleDirection | null}
+                tempo={tempo}
+                onInstrumentChange={audio.setInstrument}
+                onVolumeChange={audio.setVolume}
+                onMutedToggle={() => audio.setMuted(!audio.muted)}
+                onTempoChange={setTempo}
+                onStrum={handleStrum}
+                onPlayScale={handlePlayScale}
+              />
+            </SettingsSection>
+          </SettingsList>
+
+          <div ref={fretboardAnchorRef}>
+            <Fretboard
+              positions={positions}
+              title={title}
+              notation={notation}
+              noteLabels={spellingMap}
+              mutedStrings={mutedStrings}
+              showFingers={showFingers}
+              noteColors={noteColors}
+              accentColor="var(--foreground-accent)"
+              onPlayNote={audio.muted ? undefined : audio.playPosition}
+              activePosition={audio.playingPosition}
+            />
+          </div>
         </div>
 
         {showColorDebug && (

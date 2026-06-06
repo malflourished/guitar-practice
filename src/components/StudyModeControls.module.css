@@ -1,23 +1,7 @@
-.row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.85rem;
-  width: 100%;
-}
-
-.modeRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.65rem;
-}
-
 .modes {
   display: inline-flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 
@@ -33,10 +17,6 @@
   composes: select from '../styles/glass.module.css';
 }
 
-.quality {
-  display: inline-flex;
-}
-
 .qualityButton {
   composes: pill from '../styles/glass.module.css';
 }
@@ -45,6 +25,12 @@
   composes: pillSelected from '../styles/glass.module.css';
 }
 
-.qualityDisabled {
-  opacity: 0.45;
+.positionSlider {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .modes {
+    justify-content: flex-start;
+  }
 }

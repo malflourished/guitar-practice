@@ -36,6 +36,8 @@
   /* Motion */
   --ease-calm: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-drift: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  --ease-lava: cubic-bezier(0.44, 0.05, 0.25, 0.99);
+  --ease-lava-sink: cubic-bezier(0.55, 0.02, 0.75, 0.98);
   --duration-key: 150ms;
   --duration-theme: 900ms;
 

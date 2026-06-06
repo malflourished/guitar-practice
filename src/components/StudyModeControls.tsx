@@ -7,6 +7,7 @@ import {
   type Position,
 } from '../lib/music';
 import { PositionSlider } from './PositionSlider';
+import { SettingsRow } from './SettingsList';
 import styles from './StudyModeControls.module.css';
 
 const STUDY_MODES: { id: StudyMode; label: string }[] = [
@@ -77,8 +78,8 @@ export function StudyModeControls({
   })).filter((group) => group.qualities.length > 0);
 
   return (
-    <div className={styles.row}>
-      <div className={styles.modeRow}>
+    <>
+      <SettingsRow label="Mode">
         <div className={styles.modes} role="group" aria-label="Study mode">
           {visibleModes.map(({ id, label }) => (
             <button
@@ -94,8 +95,10 @@ export function StudyModeControls({
             </button>
           ))}
         </div>
+      </SettingsRow>
 
-        {isChordMode && (
+      {isChordMode && (
+        <SettingsRow label="Type">
           <select
             className={styles.select}
             aria-label="Chord type"
@@ -114,9 +117,11 @@ export function StudyModeControls({
               </optgroup>
             ))}
           </select>
-        )}
+        </SettingsRow>
+      )}
 
-        {isScaleMode && (
+      {isScaleMode && (
+        <SettingsRow label="Type">
           <select
             className={styles.select}
             aria-label="Scale type"
@@ -135,33 +140,37 @@ export function StudyModeControls({
               </optgroup>
             ))}
           </select>
-        )}
+        </SettingsRow>
+      )}
 
-        {fingersAvailable && (
-          <div className={styles.quality} role="group" aria-label="Fingering">
-            <button
-              type="button"
-              className={
-                showFingers
-                  ? styles.qualityButtonSelected
-                  : styles.qualityButton
-              }
-              aria-pressed={showFingers}
-              onClick={onFingersToggle}
-            >
-              Fingers
-            </button>
-          </div>
-        )}
-      </div>
+      {fingersAvailable && (
+        <SettingsRow label="Fingers">
+          <button
+            type="button"
+            className={
+              showFingers
+                ? styles.qualityButtonSelected
+                : styles.qualityButton
+            }
+            aria-pressed={showFingers}
+            onClick={onFingersToggle}
+          >
+            {showFingers ? 'On' : 'Off'}
+          </button>
+        </SettingsRow>
+      )}
 
       {positionSliderEnabled && positionRegions.length > 0 && (
-        <PositionSlider
-          regions={positionRegions}
-          selectedIndex={positionIndex}
-          onChange={onPositionChange}
-        />
+        <SettingsRow label="Position" stack fullWidth>
+          <div className={styles.positionSlider}>
+            <PositionSlider
+              regions={positionRegions}
+              selectedIndex={positionIndex}
+              onChange={onPositionChange}
+            />
+          </div>
+        </SettingsRow>
       )}
-    </div>
+    </>
   );
 }

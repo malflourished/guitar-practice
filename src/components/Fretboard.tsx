@@ -131,7 +131,7 @@ export function Fretboard({
         <p className={styles.subtitle}>Standard tuning • Frets 0–24</p>
       </header>
 
-      <div ref={containerRef} className={styles.scroll}>
+      <div ref={containerRef} className={styles.scroll} data-fretboard-grid>
         {containerWidth > 0 && (
           <svg
             className={styles.svg}

@@ -1,9 +1,8 @@
 import type { CSSProperties } from 'react';
-import type { KeyBackgroundStyle } from '../lib/keyPalette';
 import styles from './AmbientBackground.module.css';
 
 interface AmbientBackgroundProps {
-  style: KeyBackgroundStyle;
+  style: CSSProperties;
 }
 
 export function AmbientBackground({ style }: AmbientBackgroundProps) {
@@ -14,12 +13,21 @@ export function AmbientBackground({ style }: AmbientBackgroundProps) {
       aria-hidden="true"
     >
       <div className={styles.glowField}>
-        <div className={styles.pillar} />
-        <div className={styles.blob1} />
-        <div className={styles.blob2} />
-        <div className={styles.blob3} />
+        <div className={styles.pillarShell}>
+          <div className={styles.pillarCore} />
+        </div>
+        <div className={styles.blobShell1}>
+          <div className={styles.blobCore1} />
+        </div>
+        <div className={styles.blobShell2}>
+          <div className={styles.blobCore2} />
+        </div>
+        <div className={styles.blobShell3}>
+          <div className={styles.blobCore3} />
+        </div>
       </div>
       <div className={styles.vignette} />
+      <div className={styles.bottomFade} />
       <div className={styles.grain} />
     </div>
   );
