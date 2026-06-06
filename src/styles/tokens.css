@@ -49,6 +49,24 @@
   --shell-padding: 1.5rem;
 }
 
+/*
+ * Fretboard sits on the dark canvas below the glow — always white grid,
+ * independent of key-driven panel contrast (light vs dark text in folder).
+ */
+.themeRoot {
+  --fret-line: rgba(255, 255, 255, 0.58);
+  --string-line: rgba(255, 255, 255, 0.72);
+  --string-label: rgba(255, 255, 255, 0.58);
+  --fret-number: rgba(255, 255, 255, 0.42);
+  --fret-marker: rgba(255, 255, 255, 0.32);
+  --note-dot-fill: rgba(255, 255, 255, 0.96);
+  --note-dot-stroke: rgba(255, 255, 255, 0.75);
+  --note-label-fill: rgba(18, 14, 28, 0.9);
+  --muted-marker: rgba(255, 255, 255, 0.5);
+  --active-ring-glow: rgba(255, 255, 255, 0.45);
+  --fretboard-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
+}
+
 /* Dark / vivid background → light foreground (default) */
 .themeRoot[data-contrast='dark'] {
   --foreground-primary: rgba(255, 255, 255, 0.98);
@@ -63,18 +81,6 @@
   --accent-color: var(--foreground-accent);
   --slider-accent: rgba(255, 255, 255, 0.85);
   --select-chevron: rgba(255, 255, 255, 0.55);
-
-  --fret-line: rgba(255, 255, 255, 0.5);
-  --string-line: rgba(255, 255, 255, 0.62);
-  --string-label: rgba(255, 255, 255, 0.55);
-  --fret-number: rgba(255, 255, 255, 0.38);
-  --fret-marker: rgba(255, 255, 255, 0.28);
-  --note-dot-fill: rgba(255, 255, 255, 0.95);
-  --note-dot-stroke: rgba(255, 255, 255, 0.7);
-  --note-label-fill: rgba(30, 25, 40, 0.88);
-  --muted-marker: rgba(255, 255, 255, 0.45);
-  --active-ring-glow: rgba(255, 255, 255, 0.4);
-  --fretboard-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* Light / pale background → dark foreground */
@@ -106,18 +112,6 @@
   --glass-divider: rgba(18, 14, 28, 0.12);
   --shadow-glass-float: 0 12px 40px rgba(40, 30, 60, 0.06);
   --shadow-glass-rim: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-
-  --fret-line: rgba(18, 14, 28, 0.28);
-  --string-line: rgba(18, 14, 28, 0.38);
-  --string-label: rgba(18, 14, 28, 0.48);
-  --fret-number: rgba(18, 14, 28, 0.32);
-  --fret-marker: rgba(18, 14, 28, 0.2);
-  --note-dot-fill: rgba(255, 255, 255, 0.96);
-  --note-dot-stroke: rgba(18, 14, 28, 0.35);
-  --note-label-fill: rgba(18, 14, 28, 0.88);
-  --muted-marker: rgba(18, 14, 28, 0.35);
-  --active-ring-glow: rgba(18, 14, 28, 0.25);
-  --fretboard-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
 }
 
 @media (max-width: 768px) {
