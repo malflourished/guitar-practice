@@ -16,7 +16,7 @@ body {
   font-weight: 300;
   line-height: 1.5;
   color: var(--text-primary);
-  background: #0f172a;
+  background: var(--canvas-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -34,6 +34,6 @@ input {
 button:focus-visible,
 select:focus-visible,
 input:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline: 2px solid rgba(255, 255, 255, 0.65);
   outline-offset: 2px;
 }

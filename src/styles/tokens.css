@@ -1,73 +1,82 @@
 :root {
-  /* Glass surfaces */
-  --glass-bg: rgba(255, 255, 255, 0.15);
-  --glass-bg-strong: rgba(255, 255, 255, 0.2);
-  --glass-bg-hover: rgba(255, 255, 255, 0.22);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --glass-border-subtle: rgba(255, 255, 255, 0.25);
-  --glass-scrim: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.14) 0%,
-    rgba(0, 0, 0, 0.04) 100%
-  );
-  --glass-blur: 20px;
-  --glass-saturate: 1.4;
-  --glass-brightness: 1.05;
+  /* Canvas */
+  --canvas-bg: #dcd8e4;
+  --canvas-vignette: rgba(220, 216, 228, 0.85);
 
-  /* Elevation shadows */
-  --shadow-glass-inset: inset 0 1px 3px rgba(0, 0, 0, 0.25);
-  --shadow-glass-elevated: 0 4px 16px rgba(0, 0, 0, 0.1);
-  --shadow-glass-hero: 0 8px 32px rgba(0, 0, 0, 0.15);
+  /* Glass surfaces — reference: subtle tint, heavy blur, crisp rim */
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-strong: rgba(255, 255, 255, 0.1);
+  --glass-bg-hover: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-border-subtle: rgba(255, 255, 255, 0.35);
+  --glass-rim: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.08) 40%,
+    transparent 60%
+  );
+  --glass-blur: 40px;
+  --glass-saturate: 1.85;
+  --glass-brightness: 1.08;
+
+  /* Elevation — soft diffused float, not harsh inset */
+  --shadow-glass-float: 0 24px 80px rgba(60, 40, 80, 0.14);
+  --shadow-glass-rim: inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 1px 0 0 rgba(255, 255, 255, 0.2);
 
   /* Radii */
-  --radius-key: 22px;
-  --radius-pill: 12px;
-  --radius-hero: 51px;
+  --radius-key: 50%;
+  --radius-pill: 999px;
+  --radius-hero: 28px;
 
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --text-primary: rgba(255, 255, 255, 0.95);
-  --text-secondary: rgba(255, 255, 255, 0.55);
-  --text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+  --text-primary: rgba(255, 255, 255, 0.98);
+  --text-secondary: rgba(255, 255, 255, 0.62);
+  --text-muted: rgba(255, 255, 255, 0.45);
+  --text-shadow: 0 1px 12px rgba(0, 0, 0, 0.18);
+  --label-tracking: 0.14em;
 
   /* Motion */
   --ease-calm: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-drift: cubic-bezier(0.45, 0.05, 0.55, 0.95);
   --duration-key: 150ms;
-  --duration-theme: 800ms;
+  --duration-theme: 900ms;
 
   /* Ambient defaults (overridden per key) */
-  --blob-1: #1e3a5f;
-  --blob-2: #0d9488;
-  --blob-3: #312e81;
-  --accent-color: rgba(255, 255, 255, 0.95);
-  --hero-color: rgba(255, 255, 255, 0.95);
+  --blob-1: #7a2040;
+  --blob-2: #e06018;
+  --blob-3: #f0b830;
+  --accent-color: rgba(255, 255, 255, 0.98);
+  --hero-color: rgba(255, 255, 255, 0.98);
 
   /* Layout */
-  --shell-max: 960px;
+  --shell-max: 920px;
   --shell-padding: 1.5rem;
 }
 
 @media (max-width: 768px) {
   :root {
-    --glass-blur: 14px;
-    --radius-hero: 32px;
+    --glass-blur: 28px;
+    --radius-hero: 22px;
     --shell-padding: 1rem;
   }
 }
 
 @media (prefers-reduced-transparency: reduce) {
   :root {
-    --glass-bg: rgba(30, 30, 40, 0.88);
-    --glass-bg-strong: rgba(30, 30, 40, 0.92);
+    --glass-bg: rgba(255, 255, 255, 0.82);
+    --glass-bg-strong: rgba(255, 255, 255, 0.9);
     --glass-blur: 0px;
     --glass-saturate: 1;
+    --text-primary: #1a1520;
+    --text-secondary: rgba(26, 21, 32, 0.65);
   }
 }
 
 @media (prefers-contrast: more) {
   :root {
-    --glass-border: rgba(255, 255, 255, 0.7);
-    --text-secondary: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.85);
+    --text-secondary: rgba(255, 255, 255, 0.8);
   }
 }

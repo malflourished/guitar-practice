@@ -3,74 +3,96 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #0f172a;
+  background: var(--canvas-bg);
   transition:
     --blob-1 var(--duration-theme) var(--ease-calm),
     --blob-2 var(--duration-theme) var(--ease-calm),
     --blob-3 var(--duration-theme) var(--ease-calm);
 }
 
-.base {
+.vignette {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    ellipse 80% 60% at 50% 50%,
-    rgba(15, 23, 42, 0.4) 0%,
-    rgba(15, 23, 42, 0.95) 100%
+    ellipse 120% 90% at 50% 35%,
+    transparent 0%,
+    transparent 45%,
+    var(--canvas-vignette) 100%
   );
+  pointer-events: none;
+}
+
+.glowField {
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1100px, 95vw);
+  height: min(900px, 85vh);
+  pointer-events: none;
 }
 
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(100px);
   will-change: transform, opacity;
-  opacity: 0.75;
+  mix-blend-mode: normal;
 }
 
 .blob1 {
   composes: blob;
-  width: 55vw;
-  height: 55vw;
-  max-width: 720px;
-  max-height: 720px;
-  top: -10%;
-  left: -8%;
-  background: radial-gradient(circle, var(--blob-1) 0%, transparent 70%);
-  animation: drift1 23s var(--ease-drift) infinite alternate;
+  width: 70%;
+  height: 70%;
+  top: 5%;
+  left: -5%;
+  background: radial-gradient(
+    circle,
+    var(--blob-1) 0%,
+    color-mix(in srgb, var(--blob-1) 40%, transparent) 55%,
+    transparent 72%
+  );
+  animation: drift1 26s var(--ease-drift) infinite alternate;
+  opacity: 0.85;
 }
 
 .blob2 {
   composes: blob;
-  width: 50vw;
-  height: 50vw;
-  max-width: 640px;
-  max-height: 640px;
-  top: 20%;
-  right: -12%;
-  background: radial-gradient(circle, var(--blob-2) 0%, transparent 70%);
-  animation: drift2 19s var(--ease-drift) infinite alternate;
-  opacity: 0.65;
+  width: 65%;
+  height: 65%;
+  top: 10%;
+  right: -8%;
+  background: radial-gradient(
+    circle,
+    var(--blob-2) 0%,
+    color-mix(in srgb, var(--blob-2) 35%, transparent) 55%,
+    transparent 72%
+  );
+  animation: drift2 21s var(--ease-drift) infinite alternate;
+  opacity: 0.8;
 }
 
 .blob3 {
   composes: blob;
-  width: 45vw;
-  height: 45vw;
-  max-width: 560px;
-  max-height: 560px;
-  bottom: -15%;
-  left: 25%;
-  background: radial-gradient(circle, var(--blob-3) 0%, transparent 70%);
-  animation: drift3 14s var(--ease-drift) infinite alternate;
-  opacity: 0.55;
+  width: 55%;
+  height: 55%;
+  bottom: 5%;
+  left: 20%;
+  background: radial-gradient(
+    circle,
+    var(--blob-3) 0%,
+    color-mix(in srgb, var(--blob-3) 30%, transparent) 55%,
+    transparent 72%
+  );
+  animation: drift3 17s var(--ease-drift) infinite alternate;
+  opacity: 0.75;
 }
 
 .grain {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.045;
+  opacity: 0.035;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
@@ -80,45 +102,36 @@
 @keyframes drift1 {
   0% {
     transform: translate(0, 0) scale(1);
-    opacity: 0.7;
   }
   50% {
-    transform: translate(6vw, 4vh) scale(1.08);
-    opacity: 0.8;
+    transform: translate(4%, 3%) scale(1.06);
   }
   100% {
-    transform: translate(-3vw, 7vh) scale(1.04);
-    opacity: 0.72;
+    transform: translate(-2%, 5%) scale(1.03);
   }
 }
 
 @keyframes drift2 {
   0% {
     transform: translate(0, 0) scale(1.02);
-    opacity: 0.6;
   }
   50% {
-    transform: translate(-8vw, 5vh) scale(0.96);
-    opacity: 0.7;
+    transform: translate(-5%, 4%) scale(0.97);
   }
   100% {
-    transform: translate(-4vw, -4vh) scale(1.06);
-    opacity: 0.62;
+    transform: translate(-3%, -3%) scale(1.05);
   }
 }
 
 @keyframes drift3 {
   0% {
     transform: translate(0, 0) scale(0.98);
-    opacity: 0.5;
   }
   50% {
-    transform: translate(5vw, -6vh) scale(1.1);
-    opacity: 0.62;
+    transform: translate(4%, -4%) scale(1.08);
   }
   100% {
-    transform: translate(-6vw, -2vh) scale(1.02);
-    opacity: 0.52;
+    transform: translate(-4%, -1%) scale(1.01);
   }
 }
 
@@ -126,11 +139,7 @@
   .blob1,
   .blob2,
   .blob3 {
-    filter: blur(60px);
-  }
-
-  .blob3 {
-    display: none;
+    filter: blur(70px);
   }
 }
 

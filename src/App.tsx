@@ -282,6 +282,7 @@ function App() {
 
           <div className={`${glass.panel} heroCard`}>
             <div className={glass.panelContent}>
+              <p className="heroEyebrow">Guitar Practice</p>
               <div className="heroTop">
                 <span className="heroLetter" aria-hidden="true">
                   {heroLetter}

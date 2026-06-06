@@ -13,10 +13,12 @@ export function AmbientBackground({ style }: AmbientBackgroundProps) {
       style={style as CSSProperties}
       aria-hidden="true"
     >
-      <div className={styles.base} />
-      <div className={styles.blob1} />
-      <div className={styles.blob2} />
-      <div className={styles.blob3} />
+      <div className={styles.glowField}>
+        <div className={styles.blob1} />
+        <div className={styles.blob2} />
+        <div className={styles.blob3} />
+      </div>
+      <div className={styles.vignette} />
       <div className={styles.grain} />
     </div>
   );

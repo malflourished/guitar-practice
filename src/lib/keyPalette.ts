@@ -15,11 +15,11 @@ export interface KeyBackgroundStyle {
 }
 
 const NEUTRAL_BACKGROUND: KeyBackgroundStyle = {
-  '--blob-1': '#1e3a5f',
-  '--blob-2': '#0d9488',
-  '--blob-3': '#312e81',
-  '--accent-color': 'rgba(255, 255, 255, 0.95)',
-  '--hero-color': 'rgba(255, 255, 255, 0.95)',
+  '--blob-1': '#7a2040',
+  '--blob-2': '#e06018',
+  '--blob-3': '#f0b830',
+  '--accent-color': 'rgba(255, 255, 255, 0.98)',
+  '--hero-color': 'rgba(255, 255, 255, 0.98)',
 };
 
 function parseHex(hex: string): [number, number, number] {
@@ -114,23 +114,6 @@ function shiftLightness(hex: string, delta: number): string {
   return rgbToHex(...adjusted);
 }
 
-function shiftSaturation(hex: string, delta: number): string {
-  const [r, g, b] = parseHex(hex);
-  const [h, s, l] = rgbToHsl(r, g, b);
-  const adjusted = hslToRgb(h, Math.max(15, Math.min(100, s + delta * 100)), l);
-  return rgbToHex(...adjusted);
-}
-
-/** Hero/accent color with enough contrast on glass over vivid backgrounds. */
-function heroColorForKey(hex: string): string {
-  const [r, g, b] = parseHex(hex);
-  const [, , l] = rgbToHsl(r, g, b);
-  if (l > 72) {
-    return shiftLightness(hex, -0.18);
-  }
-  return hex;
-}
-
 export function isMinorQuality(
   quality: ChordQuality | ScaleQuality,
 ): boolean {
@@ -184,21 +167,18 @@ export function getKeyBackgroundStyle(
   const base = noteColors[root];
   const isMinor = isMinorQuality(quality);
 
-  const blob1 = base;
-  const blob2 = shiftHue(base, isMinor ? -18 : 12);
+  const blob1 = shiftLightness(base, -0.06);
+  const blob2 = shiftLightness(shiftHue(base, isMinor ? -20 : 14), -0.02);
   const blob3 = shiftLightness(
-    shiftHue(base, isMinor ? -28 : 28),
-    isMinor ? -0.1 : 0.06,
+    shiftHue(base, isMinor ? -32 : 32),
+    isMinor ? -0.12 : 0.04,
   );
-  const accent = isMinor
-    ? shiftSaturation(shiftLightness(base, -0.04), -0.05)
-    : shiftSaturation(shiftLightness(base, 0.04), 0.05);
 
   return {
     '--blob-1': blob1,
     '--blob-2': blob2,
     '--blob-3': blob3,
-    '--accent-color': accent,
-    '--hero-color': heroColorForKey(base),
+    '--accent-color': 'rgba(255, 255, 255, 0.98)',
+    '--hero-color': 'rgba(255, 255, 255, 0.98)',
   };
 }
