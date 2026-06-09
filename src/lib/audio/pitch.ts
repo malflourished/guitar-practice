@@ -21,29 +21,94 @@ export function positionToMidi(position: FretPosition): number {
 
 export type ScaleDirection = 'ascending' | 'descending';
 
-/**
- * Order positions into a musical scale run anchored on the root.
- *
- * Positions are sorted by pitch, then trimmed to begin at the lowest root note
- * (anything below the root in the box is dropped). The ascending run plays from
- * that root up to the highest note; the descending run is its reverse, so it
- * runs from the top down and resolves on the root.
- */
-export function orderScalePositions(
-  positions: FretPosition[],
-  root: NoteName,
-  direction: ScaleDirection,
-): FretPosition[] {
+/** How scale positions are sequenced before root resolution is applied. */
+export type ScaleOrdering = 'pitch' | 'builtIn';
+
+export interface ScalePlaybackContext {
+  /** `pitch` for CAGED/box shapes; `builtIn` preserves 3NPS walk order. */
+  ordering?: ScaleOrdering;
+  /** Position box start fret — used for open-position prefix rules. */
+  startFret?: number;
+}
+
+function dedupeByPitch(positions: FretPosition[]): FretPosition[] {
   const sorted = [...positions].sort(
     (a, b) => positionToMidi(a) - positionToMidi(b),
   );
   // Window boxes can place the same pitch on two strings (e.g. open B and
   // G-string fret 4). Collapse those unisons so a run never repeats a note.
-  const ascending = sorted.filter(
+  return sorted.filter(
     (position, index) =>
       index === 0 || positionToMidi(position) !== positionToMidi(sorted[index - 1]),
   );
-  const rootIndex = ascending.findIndex((position) => position.note === root);
-  const fromRoot = rootIndex >= 0 ? ascending.slice(rootIndex) : ascending;
-  return direction === 'ascending' ? fromRoot : [...fromRoot].reverse();
+}
+
+function findRootIndices(positions: FretPosition[], root: NoteName): number[] {
+  return positions
+    .map((position, index) => (position.note === root ? index : -1))
+    .filter((index) => index >= 0);
+}
+
+/**
+ * CAGED / box shapes: pitch-sorted run that resolves on the highest root.
+ * Bass-string approach notes below the lowest root are included when the shape
+ * calls for them; treble notes above the octave root are trimmed.
+ */
+function orderCagedBoxRun(
+  positions: FretPosition[],
+  root: NoteName,
+  startFret?: number,
+): FretPosition[] {
+  const ascending = dedupeByPitch(positions);
+  const rootIndices = findRootIndices(ascending, root);
+  if (rootIndices.length === 0) return ascending;
+
+  const lowRootIdx = rootIndices[0];
+  const highRootIdx = rootIndices[rootIndices.length - 1];
+  const rootString = ascending[lowRootIdx].string;
+
+  let start = lowRootIdx;
+  if (rootString === 5) {
+    start = lowRootIdx;
+  } else if (startFret === 0 && rootString >= 4) {
+    start = lowRootIdx;
+  } else if (rootString <= 3) {
+    start = 0;
+  } else if (rootString === 4) {
+    const firstLowE = ascending.findIndex(
+      (position, index) => index < lowRootIdx && position.string === 5,
+    );
+    start = firstLowE >= 0 ? firstLowE : lowRootIdx;
+  }
+
+  return ascending.slice(start, highRootIdx + 1);
+}
+
+/** 3NPS: keep the built low-E → high-e walk; cap at the last root. */
+function orderBuiltInRun(positions: FretPosition[], root: NoteName): FretPosition[] {
+  const rootIndices = findRootIndices(positions, root);
+  if (rootIndices.length === 0) return positions;
+  const highRootIdx = rootIndices[rootIndices.length - 1];
+  return positions.slice(0, highRootIdx + 1);
+}
+
+/**
+ * Order positions into a musical scale run anchored on the root.
+ *
+ * Ascending runs resolve on the highest root in the position. CAGED-style boxes
+ * may include bass-string approach notes before the lowest root; 3NPS shapes
+ * keep their built-in string walk. Descending is the reverse of ascending.
+ */
+export function orderScalePositions(
+  positions: FretPosition[],
+  root: NoteName,
+  direction: ScaleDirection,
+  context: ScalePlaybackContext = {},
+): FretPosition[] {
+  const { ordering = 'pitch', startFret } = context;
+  const ascending =
+    ordering === 'builtIn'
+      ? orderBuiltInRun(positions, root)
+      : orderCagedBoxRun(positions, root, startFret);
+  return direction === 'ascending' ? ascending : [...ascending].reverse();
 }

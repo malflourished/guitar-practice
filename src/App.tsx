@@ -19,6 +19,7 @@ import {
   getBackgroundKeyForMode,
   getKeyBackgroundStyle,
 } from './lib/keyPalette';
+import { getAmbientShape } from './lib/ambientShapes';
 import { contrastModeFromBackgroundStyle } from './lib/contrast';
 import {
   buildArpeggioPositions,
@@ -105,7 +106,7 @@ function App() {
   const [chordQuality, setChordQuality] = useState<ChordQuality>('major');
   const [progressionId, setProgressionId] = useState(PROGRESSIONS[0].id);
   const [progressionStepIndex, setProgressionStepIndex] = useState(0);
-  const [scaleSystem, setScaleSystem] = useState<ScaleSystem>('3nps');
+  const [scaleSystem, setScaleSystem] = useState<ScaleSystem>('caged');
   const [showFingers, setShowFingers] = useState(false);
   const [showNoteLabels, setShowNoteLabels] = useState(true);
   const [fullDotOpacity, setFullDotOpacity] = useState(false);
@@ -327,7 +328,11 @@ function App() {
       return;
     }
     audio.playSequence(
-      orderScalePositions(positions, rootNote, direction),
+      orderScalePositions(positions, rootNote, direction, {
+        ordering:
+          studyMode === 'scales' && scaleSystem === '3nps' ? 'builtIn' : 'pitch',
+        startFret: activePositionRegion?.startFret,
+      }),
       tempo,
       direction,
     );
@@ -485,6 +490,11 @@ function App() {
     [studyMode, activeNotes, rootNote],
   );
 
+  const ambientShape = useMemo(
+    () => getAmbientShape(backgroundKey),
+    [backgroundKey],
+  );
+
   const ambientStyle = useMemo(
     () =>
       getKeyBackgroundStyle(
@@ -583,7 +593,10 @@ function App() {
         uiTheme === 'vibrato' ? (ambientStyle as CSSProperties) : undefined
       }
     >
-      <AmbientBackground style={ambientBackgroundStyle} />
+      <AmbientBackground
+        style={ambientBackgroundStyle}
+        family={ambientShape.family}
+      />
       <UiThemeSelector
         uiTheme={uiTheme}
         vibratoCanvas={vibratoCanvas}
