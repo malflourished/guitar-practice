@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { GUITAR_INSTRUMENTS, type GuitarInstrumentName } from '../lib/audio/engine';
-import type { ScaleDirection } from '../lib/audio/pitch';
+import type { ScaleAnchor, ScaleDirection } from '../lib/audio/pitch';
 import type { ProgressionLadderDirection } from '../lib/music';
 import styles from './AudioControls.module.css';
 
 export type PlaybackMode = 'strum' | 'sequence' | 'progression';
+
+const SCALE_ANCHORS: { id: ScaleAnchor; label: string }[] = [
+  { id: 'root', label: 'Root' },
+  { id: 'third', label: '3rd' },
+  { id: 'fifth', label: '5th' },
+];
 
 interface AudioControlsProps {
   instrument: GuitarInstrumentName;
@@ -15,12 +21,18 @@ interface AudioControlsProps {
   playbackMode: PlaybackMode;
   playingId: string | null;
   tempo: number;
+  /** Enable "run the whole neck" traversal playback (multi-position scales). */
+  canTraverse?: boolean;
+  /** Which chord tone scale runs start on (scale playback only). */
+  scaleAnchor?: ScaleAnchor;
+  onScaleAnchorChange?: (anchor: ScaleAnchor) => void;
   onInstrumentChange: (name: GuitarInstrumentName) => void;
   onVolumeChange: (volume: number) => void;
   onMutedToggle: () => void;
   onTempoChange: (bpm: number) => void;
   onStrum: () => void;
   onPlayScale: (direction: ScaleDirection) => void;
+  onPlayTraversal?: (direction: ScaleDirection) => void;
   onPlayProgression: () => void;
   onPlayProgressionLadder: (direction: ProgressionLadderDirection) => void;
 }
@@ -117,12 +129,16 @@ export function AudioControls({
   playbackMode,
   playingId,
   tempo,
+  canTraverse = false,
+  scaleAnchor,
+  onScaleAnchorChange,
   onInstrumentChange,
   onVolumeChange,
   onMutedToggle,
   onTempoChange,
   onStrum,
   onPlayScale,
+  onPlayTraversal,
   onPlayProgression,
   onPlayProgressionLadder,
 }: AudioControlsProps) {
@@ -132,6 +148,30 @@ export function AudioControls({
 
   return (
     <div className={styles.row} role="group" aria-label="Audio">
+      {playbackMode === 'sequence' && scaleAnchor && onScaleAnchorChange && (
+        <div
+          className={styles.anchorGroup}
+          role="group"
+          aria-label="Start playback on"
+          title="Which chord tone the run starts on"
+        >
+          {SCALE_ANCHORS.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              className={
+                scaleAnchor === id
+                  ? styles.anchorButtonActive
+                  : styles.anchorButton
+              }
+              aria-pressed={scaleAnchor === id}
+              onClick={() => onScaleAnchorChange(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {playbackMode === 'sequence' ? (
         <div className={styles.playGroup} role="group" aria-label="Play scale">
           {(['ascending', 'descending'] as const).map((direction) => {
@@ -149,6 +189,25 @@ export function AudioControls({
               </button>
             );
           })}
+          {canTraverse &&
+            onPlayTraversal &&
+            (['ascending', 'descending'] as const).map((direction) => {
+              const traverseId = `traverse-${direction}`;
+              const active = playingId === traverseId;
+              const label = direction === 'ascending' ? 'Neck ↑' : 'Neck ↓';
+              return (
+                <button
+                  key={traverseId}
+                  type="button"
+                  className={`${styles.playButton} ${active ? styles.stopButton : ''}`}
+                  onClick={() => onPlayTraversal(direction)}
+                  disabled={playDisabled}
+                  title="Play every position in turn, across the whole neck"
+                >
+                  {active ? 'Stop' : loading ? 'Loading…' : label}
+                </button>
+              );
+            })}
         </div>
       ) : playbackMode === 'progression' ? (
         <div className={styles.playGroup} role="group" aria-label="Play progression">

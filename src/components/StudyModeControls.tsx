@@ -19,8 +19,8 @@ const STUDY_MODES: { id: StudyMode; label: string }[] = [
   { id: 'notes', label: 'Notes' },
   { id: 'chords', label: 'Chords' },
   { id: 'scales', label: 'Scales' },
-  { id: 'arpeggios', label: 'Arpeggios' },
   { id: 'progressions', label: 'Progressions' },
+  { id: 'theory', label: 'Theory' },
 ];
 
 interface StudyModeSelectorProps {
@@ -87,7 +87,7 @@ export function StudyModeControls({
   onProgressionChange,
   onProgressionStepChange,
 }: StudyModeControlsProps) {
-  const isChordMode = studyMode === 'chords' || studyMode === 'arpeggios';
+  const isChordMode = studyMode === 'chords';
   const isScaleMode = studyMode === 'scales';
   const isProgressionMode = studyMode === 'progressions';
   const activeStep = resolvedSteps[progressionStepIndex];

@@ -5,8 +5,7 @@ import type {
   ScaleQuality,
   ScaleSystem,
 } from '../../types/music';
-import { getArpeggioIntervals } from './arpeggios';
-import { getNoteAt, getPositionsForIntervals } from './fretboard';
+import { getNoteAt } from './fretboard';
 import { noteToSemitone } from './notes';
 import { MINOR_PENT_SHAPES } from './scaleBoxTemplates';
 import { MINOR_PENTATONIC, getScaleIntervals, isPentatonic } from './scales';
@@ -21,6 +20,8 @@ export interface Position {
   positions: FretPosition[];
   /** String indices (0 = high e … 5 = low E) that are not played. */
   mutedStrings: number[];
+  /** CAGED (or voicing) shape name, e.g. "G shape" / "Open", when known. */
+  shapeLabel?: string;
 }
 
 export function ordinalPosition(n: number): string {
@@ -40,12 +41,6 @@ export function ordinalPosition(n: number): string {
 
 const LOW_E_STRING = 5;
 const HIGH_E_STRING = 0;
-/**
- * Fret span of a position window above its anchor (inclusive), i.e. the box
- * covers frets [anchor, anchor + REACH]. 4 keeps the open box reaching fret 4
- * so the open-position G# (and the symmetric two-E-string shape) is included.
- */
-const REACH = 4;
 
 /**
  * Build playable scale positions for a key/quality.
@@ -205,6 +200,39 @@ function pitchClassAt(string: number, fret: number): number {
 }
 
 /**
+ * CAGED chord-shape letters by pentatonic ordinal of the box anchor.
+ *
+ * Minor-rooted scales read their boxes against minor barre forms: the root box
+ * (ord 0) is the Em-form barre, so A minor at fret 5 is the "E shape".
+ * Major-rooted scales share the same physical boxes via the relative-minor
+ * frame, shifting the letters by one: C major across frets 5–8 is the
+ * "G shape" of the C chord.
+ */
+const MINOR_FRAME_CAGED = ['E', 'D', 'C', 'A', 'G'] as const;
+const MAJOR_FRAME_CAGED = ['G', 'E', 'D', 'C', 'A'] as const;
+
+function cagedLetterForOrdinal(
+  quality: ScaleQuality,
+  ordinal: number,
+): string | undefined {
+  if (
+    quality === 'minorPentatonic' ||
+    quality === 'minorBlues' ||
+    quality === 'minor'
+  ) {
+    return MINOR_FRAME_CAGED[ordinal];
+  }
+  if (
+    quality === 'majorPentatonic' ||
+    quality === 'majorBlues' ||
+    quality === 'major'
+  ) {
+    return MAJOR_FRAME_CAGED[ordinal];
+  }
+  return undefined;
+}
+
+/**
  * Build the five canonical box shapes for a pentatonic / blues / CAGED scale.
  *
  * The five low-E anchors are the pentatonic tones of the (relative) minor key.
@@ -253,115 +281,15 @@ function buildBoxPositions(root: NoteName, quality: ScaleQuality): Position[] {
       }
     }
 
-    boxes.push(finalizeBox(notes));
+    const letter = cagedLetterForOrdinal(quality, ord);
+    boxes.push({
+      ...finalizeBox(notes),
+      shapeLabel: letter ? `${letter} shape` : undefined,
+    });
   }
 
   boxes.sort((a, b) => a.startFret - b.startFret);
   return boxes.map((box, index) => ({ ...box, number: index + 1 }));
-}
-
-/**
- * Arpeggio positions reuse the same hand-box algorithm as scales, but with the
- * chord's 3–5 tones instead of a full scale. Each box is a playable region that
- * the sequential player walks root-up through the chord tones.
- */
-export function buildArpeggioPositions(
-  root: NoteName,
-  quality: ChordQuality,
-): Position[] {
-  return buildIntervalPositions(root, getArpeggioIntervals(quality));
-}
-
-/**
- * Build playable "hand boxes" for an arbitrary set of intervals from the root.
- * Each box is anchored to a root-set tone on the low E string (one octave's
- * worth) and is a fret window [anchor, anchor + REACH] showing every target tone
- * that falls inside that window on every string, so the shapes come out
- * symmetric (the two E strings mirror each other) and include all the notes
- * reachable without shifting the hand. Shared by scales and arpeggios.
- */
-function buildIntervalPositions(
-  root: NoteName,
-  intervals: number[],
-): Position[] {
-  const all = getPositionsForIntervals(root, intervals);
-
-  const fretsByString: number[][] = Array.from({ length: 6 }, () => []);
-  for (const p of all) fretsByString[p.string].push(p.fret);
-  for (const frets of fretsByString) frets.sort((a, b) => a - b);
-
-  // Anchor a position at each low-E scale tone in the first octave, but collapse
-  // half-step-adjacent anchors: scale degrees a fret apart (e.g. the E/F and B/C
-  // pairs in a major scale) would spawn boxes shifted by a single fret that read
-  // as the same position. Keep the lower of each such pair. Pentatonic tones are
-  // never a half step apart, so its positions are unaffected.
-  const rawAnchors = [...new Set(fretsByString[LOW_E_STRING])]
-    .filter((fret) => fret < 12)
-    .sort((a, b) => a - b);
-  const anchors: number[] = [];
-  for (const fret of rawAnchors) {
-    const prev = anchors[anchors.length - 1];
-    if (prev === undefined || fret - prev > 1) anchors.push(fret);
-  }
-
-  interface Candidate {
-    startFret: number;
-    endFret: number;
-    positions: FretPosition[];
-    cells: Set<string>;
-  }
-
-  const seen = new Set<string>();
-  const candidates: Candidate[] = [];
-
-  for (const anchor of anchors) {
-    const boxNotes: Omit<FretPosition, 'finger'>[] = [];
-    const windowTop = Math.min(anchor + REACH, FRET_COUNT);
-
-    for (let string = LOW_E_STRING; string >= HIGH_E_STRING; string--) {
-      const onString = fretsByString[string].filter(
-        (fret) => fret >= anchor && fret <= windowTop,
-      );
-      for (const fret of onString)
-        boxNotes.push({ string, fret, note: getNoteAt(string, fret) });
-    }
-
-    if (boxNotes.length === 0) continue;
-
-    const cells = new Set(boxNotes.map((p) => `${p.string}:${p.fret}`));
-    const key = [...cells].sort().join('|');
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    const startFret = Math.min(...boxNotes.map((p) => p.fret));
-    const endFret = Math.max(...boxNotes.map((p) => p.fret));
-    const positions: FretPosition[] = boxNotes.map((p) => ({
-      ...p,
-      finger: p.fret === 0 ? 0 : Math.min(4, p.fret - startFret + 1),
-    }));
-
-    candidates.push({ startFret, endFret, positions, cells });
-  }
-
-  // Drop redundant positions whose notes are fully contained in another box.
-  // (Anchoring at every low-E scale tone yields half-step-adjacent anchors whose
-  // boxes converge; the smaller one adds nothing.)
-  const isSubset = (a: Set<string>, b: Set<string>) => {
-    if (a.size >= b.size) return false;
-    for (const cell of a) if (!b.has(cell)) return false;
-    return true;
-  };
-  const distinct = candidates.filter(
-    (c) => !candidates.some((other) => isSubset(c.cells, other.cells)),
-  );
-
-  return distinct.map((c, index) => ({
-    number: index + 1,
-    startFret: c.startFret,
-    endFret: c.endFret,
-    positions: c.positions,
-    mutedStrings: [],
-  }));
 }
 
 type StringOffset = number | 'x';
@@ -373,6 +301,8 @@ interface ChordShape {
   fingers: number[];
   /** Which string carries the root (used to anchor the shape up the neck). */
   rootStringIndex: number;
+  /** CAGED form name when the voicing derives from an open shape. */
+  label?: string;
 }
 
 /**
@@ -383,24 +313,24 @@ interface ChordShape {
  */
 const CHORD_SHAPES: Record<ChordQuality, ChordShape[]> = {
   major: [
-    { offsets: [0, 0, 1, 2, 2, 0], fingers: [1, 1, 2, 4, 3, 1], rootStringIndex: 5 },
-    { offsets: [0, 2, 2, 2, 0, 'x'], fingers: [1, 4, 3, 2, 1, 0], rootStringIndex: 4 },
+    { offsets: [0, 0, 1, 2, 2, 0], fingers: [1, 1, 2, 4, 3, 1], rootStringIndex: 5, label: 'E shape' },
+    { offsets: [0, 2, 2, 2, 0, 'x'], fingers: [1, 4, 3, 2, 1, 0], rootStringIndex: 4, label: 'A shape' },
   ],
   minor: [
-    { offsets: [0, 0, 0, 2, 2, 0], fingers: [1, 1, 1, 4, 3, 1], rootStringIndex: 5 },
-    { offsets: [0, 1, 2, 2, 0, 'x'], fingers: [1, 2, 4, 3, 1, 0], rootStringIndex: 4 },
+    { offsets: [0, 0, 0, 2, 2, 0], fingers: [1, 1, 1, 4, 3, 1], rootStringIndex: 5, label: 'E shape' },
+    { offsets: [0, 1, 2, 2, 0, 'x'], fingers: [1, 2, 4, 3, 1, 0], rootStringIndex: 4, label: 'A shape' },
   ],
   dom7: [
-    { offsets: [0, 0, 1, 0, 2, 0], fingers: [1, 1, 2, 1, 3, 1], rootStringIndex: 5 },
-    { offsets: [0, 2, 0, 2, 0, 'x'], fingers: [1, 3, 1, 2, 1, 0], rootStringIndex: 4 },
+    { offsets: [0, 0, 1, 0, 2, 0], fingers: [1, 1, 2, 1, 3, 1], rootStringIndex: 5, label: 'E shape' },
+    { offsets: [0, 2, 0, 2, 0, 'x'], fingers: [1, 3, 1, 2, 1, 0], rootStringIndex: 4, label: 'A shape' },
   ],
   maj7: [
-    { offsets: [0, 0, 1, 1, 2, 0], fingers: [1, 1, 2, 3, 4, 1], rootStringIndex: 5 },
-    { offsets: [0, 2, 1, 2, 0, 'x'], fingers: [1, 4, 2, 3, 1, 0], rootStringIndex: 4 },
+    { offsets: [0, 0, 1, 1, 2, 0], fingers: [1, 1, 2, 3, 4, 1], rootStringIndex: 5, label: 'E shape' },
+    { offsets: [0, 2, 1, 2, 0, 'x'], fingers: [1, 4, 2, 3, 1, 0], rootStringIndex: 4, label: 'A shape' },
   ],
   min7: [
-    { offsets: [0, 0, 0, 0, 2, 0], fingers: [1, 1, 1, 1, 3, 1], rootStringIndex: 5 },
-    { offsets: [0, 1, 0, 2, 0, 'x'], fingers: [1, 2, 1, 3, 1, 0], rootStringIndex: 4 },
+    { offsets: [0, 0, 0, 0, 2, 0], fingers: [1, 1, 1, 1, 3, 1], rootStringIndex: 5, label: 'E shape' },
+    { offsets: [0, 1, 0, 2, 0, 'x'], fingers: [1, 2, 1, 3, 1, 0], rootStringIndex: 4, label: 'A shape' },
   ],
   m7b5: [
     { offsets: ['x', 1, 0, 1, 0, 'x'], fingers: [0, 3, 1, 2, 1, 0], rootStringIndex: 4 },
@@ -418,8 +348,8 @@ const CHORD_SHAPES: Record<ChordQuality, ChordShape[]> = {
     { offsets: [0, 0, 2, 2, 0, 'x'], fingers: [1, 1, 3, 2, 1, 0], rootStringIndex: 4 },
   ],
   sus4: [
-    { offsets: [0, 0, 2, 2, 2, 0], fingers: [1, 1, 4, 3, 2, 1], rootStringIndex: 5 },
-    { offsets: [0, 3, 2, 2, 0, 'x'], fingers: [1, 4, 3, 2, 1, 0], rootStringIndex: 4 },
+    { offsets: [0, 0, 2, 2, 2, 0], fingers: [1, 1, 4, 3, 2, 1], rootStringIndex: 5, label: 'E shape' },
+    { offsets: [0, 3, 2, 2, 0, 'x'], fingers: [1, 4, 3, 2, 1, 0], rootStringIndex: 4, label: 'A shape' },
   ],
   // 6th and extended chords: canonical movable voicings (with the usual tone
   // omissions). Offsets may be negative; low positions below the nut are skipped.
@@ -520,7 +450,13 @@ function buildOpenPlacement(chord: OpenChord): Omit<Position, 'number'> {
     maxFret = Math.max(maxFret, fret);
   }
 
-  return { startFret: 0, endFret: maxFret, positions: sounded, mutedStrings };
+  return {
+    startFret: 0,
+    endFret: maxFret,
+    positions: sounded,
+    mutedStrings,
+    shapeLabel: 'Open',
+  };
 }
 
 export function buildChordPositions(
@@ -581,6 +517,7 @@ export function buildChordPositions(
         endFret: maxFret,
         positions: sounded,
         mutedStrings,
+        shapeLabel: shape.label,
       });
     }
   }
@@ -591,4 +528,33 @@ export function buildChordPositions(
     ...placement,
     number: index + 1,
   }));
+}
+
+/**
+ * Walk a scale along the low E string only, root to octave. Makes the
+ * whole-/half-step construction of a scale literally visible as fret gaps —
+ * used by the theory "Half & Whole Steps" demo.
+ */
+export function buildSingleStringScale(
+  root: NoteName,
+  quality: ScaleQuality,
+): Position[] {
+  const rootPc = noteToSemitone(root);
+  const rootFret = (((rootPc - LOW_E_OPEN_PC) % 12) + 12) % 12;
+  const intervals = [...getScaleIntervals(quality), 12];
+
+  const positions: FretPosition[] = intervals.map((interval) => {
+    const fret = rootFret + interval;
+    return { string: LOW_E_STRING, fret, note: getNoteAt(LOW_E_STRING, fret) };
+  });
+
+  return [
+    {
+      number: 1,
+      startFret: rootFret,
+      endFret: rootFret + 12,
+      positions,
+      mutedStrings: [],
+    },
+  ];
 }

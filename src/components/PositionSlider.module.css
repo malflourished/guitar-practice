@@ -85,6 +85,45 @@
   text-align: center;
 }
 
+.viewGroup {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--fretboard-control-border);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+
+.viewButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.7rem;
+  background: transparent;
+  border: none;
+  color: var(--fretboard-control-text);
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--duration-key) var(--ease-calm),
+    color var(--duration-key) var(--ease-calm);
+}
+
+.viewButton:hover {
+  background: var(--fretboard-control-bg-hover);
+  color: var(--fretboard-control-text-hover);
+}
+
+.viewButtonActive {
+  composes: viewButton;
+  background: var(--fretboard-control-bg-active);
+  color: var(--fretboard-control-text-active);
+}
+
 .fingersButton {
   flex-shrink: 0;
   display: inline-flex;

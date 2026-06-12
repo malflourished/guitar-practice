@@ -25,8 +25,51 @@ export type StudyMode =
   | 'notes'
   | 'chords'
   | 'scales'
-  | 'arpeggios'
-  | 'progressions';
+  | 'progressions'
+  | 'theory';
+
+/**
+ * How much of the neck to show for position-based modes.
+ * - `single`: the active position box only (quick reference)
+ * - `connected`: active box plus dimmed neighbors with shared notes marked
+ * - `full`: every position onion-skinned across the whole neck
+ */
+export type NeckViewMode = 'single' | 'connected' | 'full';
+
+/**
+ * Which notes of the active scale to display.
+ * - `scale`: every scale tone
+ * - `arpeggio`: chord tones only — the arpeggio living inside the scale shape
+ */
+export type HarmonyLayer = 'scale' | 'arpeggio';
+
+/** Interactive diagram shown in theory mode for a topic. */
+export type TheoryDiagram = 'circle-of-fifths' | 'chord-wheel';
+
+/** What to render on the fretboard when "Show on fretboard" is enabled. */
+export interface TheoryFretboardDemo {
+  scaleQuality: ScaleQuality;
+  /** Default neck view when the demo opens (e.g. `full` for CAGED). */
+  neckView?: NeckViewMode;
+  /** Walk the scale along the low E string only (for step-pattern demos). */
+  singleString?: boolean;
+}
+
+/** A curriculum topic in theory mode. */
+export interface TheoryTopic {
+  id: string;
+  section: string;
+  title: string;
+  theory: TheoryContent;
+  diagram?: TheoryDiagram;
+  fretboardDemo?: TheoryFretboardDemo;
+  practiceLink?: {
+    mode: Exclude<StudyMode, 'theory' | 'notes'>;
+    scaleQuality?: ScaleQuality;
+    /** Neck view to open practice with (e.g. `connected` after CAGED). */
+    neckView?: NeckViewMode;
+  };
+}
 
 /** Major or natural minor — the key context for a progression. */
 export type KeyMode = 'major' | 'minor';

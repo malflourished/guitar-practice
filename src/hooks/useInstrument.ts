@@ -25,8 +25,14 @@ export interface UseInstrument {
   /**
    * Play a set of fret positions sequentially like a scale run at the given
    * tempo (BPM). `id` labels the run so the UI can show a stop affordance.
+   * `onNote` fires as each note sounds (e.g. to advance the displayed box).
    */
-  playSequence: (positions: FretPosition[], bpm: number, id: string) => void;
+  playSequence: (
+    positions: FretPosition[],
+    bpm: number,
+    id: string,
+    onNote?: (index: number) => void,
+  ) => void;
   /** Strum a set of fret positions low-to-high. */
   strum: (positions: FretPosition[]) => void;
   /**
@@ -144,7 +150,12 @@ export function useInstrument(): UseInstrument {
   );
 
   const playSequence = useCallback(
-    (positions: FretPosition[], bpm: number, id: string) => {
+    (
+      positions: FretPosition[],
+      bpm: number,
+      id: string,
+      onNote?: (index: number) => void,
+    ) => {
       clearTimers();
       setPlayingPosition(null);
 
@@ -161,7 +172,10 @@ export function useInstrument(): UseInstrument {
       // Drive the on-fretboard highlight to follow each note as it sounds.
       positions.forEach((position, index) => {
         timersRef.current.push(
-          setTimeout(() => setPlayingPosition(position), index * gapMs),
+          setTimeout(() => {
+            setPlayingPosition(position);
+            onNote?.(index);
+          }, index * gapMs),
         );
       });
       timersRef.current.push(

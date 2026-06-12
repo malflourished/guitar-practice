@@ -47,22 +47,20 @@ export function getFretboardTitle(
     return `${stepLabel} — ${stepNumber} of ${stepTotal} in ${progressionLabel}${positionSuffix}`;
   }
 
+  if (studyMode === 'theory') {
+    return 'Theory';
+  }
+
   if (studyMode !== 'notes') {
     const root = formatSpelled(
       spelledRootFromNoteName(getRootNote(activeNotes), notation),
     );
-    const modeLabel =
-      studyMode === 'chords'
-        ? 'Chord'
-        : studyMode === 'scales'
-          ? 'Scale'
-          : 'Arpeggio';
+    const modeLabel = studyMode === 'chords' ? 'Chord' : 'Scale';
     const positionSuffix =
-      (studyMode === 'chords' ||
-        studyMode === 'scales' ||
-        studyMode === 'arpeggios') &&
-      positionRegion
-        ? ` — ${ordinalPosition(positionRegion.number)} Position`
+      (studyMode === 'chords' || studyMode === 'scales') && positionRegion
+        ? ` — ${ordinalPosition(positionRegion.number)} Position${
+            positionRegion.shapeLabel ? ` (${positionRegion.shapeLabel})` : ''
+          }`
         : '';
     return `${root} ${qualityLabel} ${modeLabel}${positionSuffix} on the Guitar Fretboard`;
   }
@@ -88,6 +86,9 @@ export function getFretboardSubtitle(
   keyRoot?: NoteName,
   notation?: NotationPreference,
 ): string {
+  if (studyMode === 'theory' && theory) {
+    return theory.summary;
+  }
   if (studyMode === 'progressions' && theory) {
     return theory.summary;
   }

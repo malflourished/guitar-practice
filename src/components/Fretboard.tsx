@@ -13,10 +13,13 @@ import {
   FRET_COUNT,
   STRING_COUNT,
   STRING_LABELS,
+  cellKey,
   formatNoteDisplay,
   getChordToneForNote,
   samePitchClass,
+  type GhostLayer,
   type NotationPreference,
+  type RegionBadge,
 } from '../lib/music';
 import { NoteMarker } from './NoteMarker';
 import styles from './Fretboard.module.css';
@@ -45,6 +48,14 @@ interface FretboardProps {
   noteColors: Record<NoteName, string>;
   onPlayNote?: (position: FretPosition) => void;
   activePosition?: FretPosition | null;
+  /** Dimmed neighbor/remaining position boxes (connected/full neck views). */
+  ghostLayers?: GhostLayer[];
+  /** Active-box cells shared with an adjacent box — drawn with a halo ring. */
+  overlapKeys?: Set<string>;
+  /** Per-box labels under the board in connected/full views. */
+  regionBadges?: RegionBadge[];
+  /** Jump to a region when its badge is clicked. */
+  onSelectRegion?: (index: number) => void;
 }
 
 export function Fretboard({
@@ -63,6 +74,10 @@ export function Fretboard({
   chordQuality = null,
   onPlayNote,
   activePosition = null,
+  ghostLayers = [],
+  overlapKeys,
+  regionBadges = [],
+  onSelectRegion,
 }: FretboardProps) {
   const isActive = (string: number, fret: number) =>
     activePosition?.string === string && activePosition?.fret === fret;
@@ -96,11 +111,11 @@ export function Fretboard({
   const playableWidth = boardPlayableWidth(FRET_COUNT, scaleLength);
   const boardOriginX = FRETBOARD_LAYOUT.leftPadding + FRETBOARD_LAYOUT.nutWidth;
   const stringEndX = boardOriginX + playableWidth;
+  const hasBadges = regionBadges.length > 0;
+  const stringsBottomY =
+    FRETBOARD_LAYOUT.topPadding + (STRING_COUNT - 1) * FRETBOARD_LAYOUT.stringGap;
   const boardHeight =
-    FRETBOARD_LAYOUT.topPadding +
-    (STRING_COUNT - 1) * FRETBOARD_LAYOUT.stringGap +
-    FRETBOARD_LAYOUT.bottomPadding +
-    8;
+    stringsBottomY + FRETBOARD_LAYOUT.bottomPadding + 8 + (hasBadges ? 24 : 0);
 
   const fretWireX = (fret: number) =>
     boardOriginX + fretDistanceFromNut(fret, scaleLength);
@@ -326,6 +341,35 @@ export function Fretboard({
               </text>
             ))}
 
+            {ghostLayers.map((layer, layerIndex) => (
+              <g
+                key={`ghost-${layerIndex}`}
+                className={
+                  layer.tier === 'near' ? styles.ghostNear : styles.ghostFar
+                }
+              >
+                {layer.positions.map((position) => {
+                  const cx =
+                    position.fret === 0
+                      ? FRETBOARD_LAYOUT.openLaneX
+                      : fretCenterX(position.fret);
+                  const radius =
+                    position.fret === 0
+                      ? OPEN_NOTE_RADIUS
+                      : noteRadiusForFret(position.fret);
+                  return (
+                    <circle
+                      key={`ghost-${position.string}-${position.fret}`}
+                      cx={cx}
+                      cy={stringY(position.string)}
+                      r={radius}
+                      className={styles.ghostDot}
+                    />
+                  );
+                })}
+              </g>
+            ))}
+
             {openPositions.map((position) => {
               const { string, note, finger } = position;
               return (
@@ -341,6 +385,14 @@ export function Fretboard({
                       cy={stringY(string)}
                       r={OPEN_NOTE_RADIUS + ACTIVE_RING_PAD}
                       className={styles.activeRing}
+                    />
+                  )}
+                  {overlapKeys?.has(cellKey(position)) && (
+                    <circle
+                      cx={FRETBOARD_LAYOUT.openLaneX}
+                      cy={stringY(string)}
+                      r={OPEN_NOTE_RADIUS + 3.5}
+                      className={styles.overlapRing}
                     />
                   )}
                   {renderNoteMarker(
@@ -378,6 +430,14 @@ export function Fretboard({
                       className={styles.activeRing}
                     />
                   )}
+                  {overlapKeys?.has(cellKey(position)) && (
+                    <circle
+                      cx={fretCenterX(fret)}
+                      cy={stringY(string)}
+                      r={radius + 3.5}
+                      className={styles.overlapRing}
+                    />
+                  )}
                   {renderNoteMarker(
                     note,
                     fretCenterX(fret),
@@ -394,6 +454,30 @@ export function Fretboard({
                 </g>
               );
             })}
+
+            {regionBadges.map((badge) => (
+              <text
+                key={`badge-${badge.index}`}
+                x={fretCenterX(Math.max(badge.centerFret, 0.5))}
+                y={stringsBottomY + 28}
+                textAnchor="middle"
+                className={
+                  badge.isActive ? styles.regionBadgeActive : styles.regionBadge
+                }
+                onClick={
+                  onSelectRegion && !badge.isActive
+                    ? () => onSelectRegion(badge.index)
+                    : undefined
+                }
+                style={
+                  onSelectRegion && !badge.isActive
+                    ? { cursor: 'pointer' }
+                    : undefined
+                }
+              >
+                {badge.label}
+              </text>
+            ))}
           </svg>
         )}
       </div>

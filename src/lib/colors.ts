@@ -13,7 +13,7 @@ export const NOTE_COLORS: Record<NoteName, string> = {
   'G#': '#B0186A', // Magenta
   A: '#D81E1E', // Red
   'A#': '#AA1212', // Crimson
-  B: '#F59200', // Orange
+  B: '#A84800', // Orange — kept below bright-key contrast threshold
 };
 
 /** All 12 chromatic notes in order. */

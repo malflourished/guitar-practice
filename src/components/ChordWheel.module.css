@@ -1,0 +1,143 @@
+.root {
+  position: relative;
+  width: min(100%, calc(36rem * 1.4));
+  margin: 0 auto;
+  aspect-ratio: 1;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hub {
+  fill: var(--glass-bg-strong);
+  stroke: var(--glass-border-subtle);
+  stroke-width: 1;
+}
+
+.wedge {
+  stroke: rgba(0, 0, 0, 0.22);
+  stroke-width: 0.6;
+  transition:
+    opacity 0.2s var(--ease-calm),
+    filter 0.2s var(--ease-calm);
+}
+
+.wedgeLit {
+  opacity: 0.92;
+}
+
+.wedgeDimmed {
+  opacity: 0.28;
+}
+
+.wedgeHighlighted {
+  filter: brightness(1.12) saturate(1.1);
+  stroke: rgba(255, 255, 255, 0.45);
+  stroke-width: 1.2;
+}
+
+.signatureLabel {
+  font-family: var(--font-sans);
+  font-size: 0.48rem;
+  font-weight: 500;
+  fill: var(--text-muted);
+  pointer-events: none;
+  user-select: none;
+}
+
+.signatureLabelActive {
+  fill: var(--text-primary);
+  font-weight: 600;
+}
+
+.chordLabel {
+  outline: none;
+}
+
+.chordLabel[role='button'] {
+  cursor: pointer;
+}
+
+.chordHit {
+  fill: transparent;
+  stroke: none;
+}
+
+.chordLabel[role='button']:focus-visible .chordHit {
+  fill: rgba(255, 255, 255, 0.12);
+  stroke: var(--accent-color);
+  stroke-width: 1.5;
+}
+
+.majorChordText,
+.minorChordText,
+.dimChordText {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  fill: rgba(0, 0, 0, 0.82);
+  paint-order: stroke fill;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 2px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.minorChordText,
+.dimChordText {
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.chordLabelHighlighted .majorChordText,
+.chordLabelHighlighted .minorChordText,
+.chordLabelHighlighted .dimChordText {
+  fill: rgba(0, 0, 0, 0.95);
+  stroke: rgba(255, 255, 255, 0.75);
+  stroke-width: 3px;
+}
+
+.numeralBadge {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  fill: var(--accent-color);
+  paint-order: stroke fill;
+  stroke: rgba(0, 0, 0, 0.65);
+  stroke-width: 2px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.centerLabel {
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  font-weight: 500;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  fill: var(--text-muted);
+}
+
+.centerKey {
+  font-family: var(--font-sans);
+  font-size: 1.45rem;
+  font-weight: 600;
+  fill: var(--text-primary);
+}
+
+.centerMeta {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  font-weight: 500;
+  fill: var(--text-secondary);
+}
+
+.centerDim {
+  font-family: var(--font-sans);
+  font-size: 0.54rem;
+  font-weight: 500;
+  fill: var(--text-muted);
+}

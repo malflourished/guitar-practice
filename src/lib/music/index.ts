@@ -1,4 +1,3 @@
-export { getArpeggioIntervals } from './arpeggios';
 export {
   CHORD_DEFS,
   CHORD_QUALITIES,
@@ -44,12 +43,24 @@ export {
   type ProgressionLadderDirection,
 } from './progressionLadder';
 export {
-  buildArpeggioPositions,
   buildChordPositions,
   buildScalePositions,
+  buildSingleStringScale,
   ordinalPosition,
 } from './positions';
 export type { Position } from './positions';
+export {
+  buildNeckViewLayers,
+  buildRegionBadges,
+  cellKey,
+  type GhostLayer,
+  type NeckViewLayers,
+  type RegionBadge,
+} from './neckView';
+export {
+  filterToChordTones,
+  getImpliedChordQuality,
+} from './harmonyLayers';
 export { getNoteAt, getPositionsForIntervals, getPositionsForNotes } from './fretboard';
 export {
   MAJOR_SCALE,
@@ -85,6 +96,26 @@ export {
   semitoneToNote,
 } from './notes';
 export type { NotationPreference } from './notes';
+export {
+  CIRCLE_MAJOR_KEYS,
+  chromaticLabels,
+  findCircleEntry,
+  formatCircleKey,
+  getAccidentalLabel,
+  getCircleKeyEntries,
+  getRelativeMajor,
+  getRelativeMinor,
+  isOnCircle,
+  nextCircleKey,
+  prevCircleKey,
+} from './circleOfFifths';
+export {
+  DEFAULT_THEORY_TOPIC_ID,
+  THEORY_SECTIONS,
+  THEORY_TOPICS,
+  getTheoryTopicById,
+  getTheoryTopicsBySection,
+} from './theoryTopics';
 export {
   FRET_COUNT,
   OPEN_STRING_SEMITONES,

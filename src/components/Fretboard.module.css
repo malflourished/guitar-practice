@@ -131,6 +131,47 @@
   pointer-events: none;
 }
 
+.ghostNear {
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+.ghostFar {
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.ghostDot {
+  fill: var(--note-dot-fill);
+  stroke: var(--note-dot-stroke);
+  stroke-width: 1;
+}
+
+.overlapRing {
+  fill: none;
+  stroke: var(--active-ring-stroke);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.regionBadge {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--fret-number);
+  font-family: var(--font-sans);
+  letter-spacing: 0.06em;
+  opacity: 0.65;
+}
+
+.regionBadgeActive {
+  composes: regionBadge;
+  fill: var(--note-label-fill);
+  opacity: 1;
+  font-size: 13px;
+}
+
 .activeRing {
   fill: none;
   stroke: var(--active-ring-stroke);

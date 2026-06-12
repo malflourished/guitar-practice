@@ -31,6 +31,14 @@
   transform: rotate(180deg);
 }
 
+.expandedTitle {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem;
+}
+
 .content {
   display: flex;
   flex-direction: column;

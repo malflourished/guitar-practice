@@ -9,6 +9,17 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
 html:has(.themeRoot[data-ui-theme='scholar']),
 html:has(.themeRoot[data-vibrato-canvas='light']) {
   background-color: #f6f5f0;

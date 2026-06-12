@@ -1,5 +1,12 @@
+import type { HarmonyLayer, NeckViewMode } from '../types/music';
 import { ordinalPosition, type Position } from '../lib/music';
 import styles from './PositionSlider.module.css';
+
+const NECK_VIEWS: { id: NeckViewMode; label: string }[] = [
+  { id: 'single', label: 'Box' },
+  { id: 'connected', label: 'Linked' },
+  { id: 'full', label: 'Neck' },
+];
 
 interface PositionSliderProps {
   regions: Position[];
@@ -13,6 +20,10 @@ interface PositionSliderProps {
   onFullDotOpacityToggle: () => void;
   showChordTones?: boolean;
   onChordTonesToggle?: () => void;
+  viewMode?: NeckViewMode;
+  onViewModeChange?: (mode: NeckViewMode) => void;
+  harmonyLayer?: HarmonyLayer;
+  onHarmonyLayerChange?: (layer: HarmonyLayer) => void;
   disabled?: boolean;
 }
 
@@ -28,12 +39,19 @@ export function PositionSlider({
   onFullDotOpacityToggle,
   showChordTones,
   onChordTonesToggle,
+  viewMode,
+  onViewModeChange,
+  harmonyLayer,
+  onHarmonyLayerChange,
   disabled = false,
 }: PositionSliderProps) {
   if (regions.length === 0) return null;
 
   const region = regions[selectedIndex];
   const positionLabel = ordinalPosition(region.number);
+  const showViewToggle =
+    viewMode !== undefined && onViewModeChange !== undefined && regions.length > 1;
+  const arpeggioActive = harmonyLayer === 'arpeggio';
 
   return (
     <div className={styles.bar}>
@@ -52,9 +70,49 @@ export function PositionSlider({
           aria-valuemin={1}
           aria-valuemax={regions.length}
           aria-valuenow={region.number}
-          aria-valuetext={`${positionLabel} position, frets ${region.startFret} to ${region.endFret}`}
+          aria-valuetext={`${positionLabel} position, frets ${region.startFret} to ${region.endFret}${region.shapeLabel ? `, ${region.shapeLabel}` : ''}`}
         />
         <div className={styles.toggleGroup}>
+          {showViewToggle && (
+            <div
+              className={styles.viewGroup}
+              role="group"
+              aria-label="Neck view"
+            >
+              {NECK_VIEWS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={
+                    viewMode === id
+                      ? styles.viewButtonActive
+                      : styles.viewButton
+                  }
+                  aria-pressed={viewMode === id}
+                  onClick={() => onViewModeChange(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+          {onHarmonyLayerChange && (
+            <button
+              type="button"
+              className={
+                arpeggioActive
+                  ? styles.fingersButtonActive
+                  : styles.fingersButton
+              }
+              aria-pressed={arpeggioActive}
+              aria-label="Show only chord tones (the arpeggio inside the scale)"
+              onClick={() =>
+                onHarmonyLayerChange(arpeggioActive ? 'scale' : 'arpeggio')
+              }
+            >
+              Arpeggio
+            </button>
+          )}
           <button
             type="button"
             className={
@@ -106,6 +164,7 @@ export function PositionSlider({
       </div>
       <span className={styles.counter} aria-hidden="true">
         {region.number} / {regions.length}
+        {region.shapeLabel ? ` · ${region.shapeLabel}` : ''}
       </span>
     </div>
   );

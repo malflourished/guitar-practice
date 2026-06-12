@@ -24,11 +24,17 @@ export type ScaleDirection = 'ascending' | 'descending';
 /** How scale positions are sequenced before root resolution is applied. */
 export type ScaleOrdering = 'pitch' | 'builtIn';
 
+/** Which chord tone a scale run starts from. */
+export type ScaleAnchor = 'root' | 'third' | 'fifth';
+
 export interface ScalePlaybackContext {
   /** `pitch` for CAGED/box shapes; `builtIn` preserves 3NPS walk order. */
   ordering?: ScaleOrdering;
-  /** Position box start fret — used for open-position prefix rules. */
-  startFret?: number;
+  /**
+   * Pitch class (0–11) the run starts on. Defaults to matching the root by
+   * note name. Lets the player anchor runs on the 3rd or 5th instead.
+   */
+  anchorPc?: number;
 }
 
 function dedupeByPitch(positions: FretPosition[]): FretPosition[] {
@@ -43,61 +49,15 @@ function dedupeByPitch(positions: FretPosition[]): FretPosition[] {
   );
 }
 
-function findRootIndices(positions: FretPosition[], root: NoteName): number[] {
-  return positions
-    .map((position, index) => (position.note === root ? index : -1))
-    .filter((index) => index >= 0);
-}
-
 /**
- * CAGED / box shapes: pitch-sorted run that resolves on the highest root.
- * Bass-string approach notes below the lowest root are included when the shape
- * calls for them; treble notes above the octave root are trimmed.
- */
-function orderCagedBoxRun(
-  positions: FretPosition[],
-  root: NoteName,
-  startFret?: number,
-): FretPosition[] {
-  const ascending = dedupeByPitch(positions);
-  const rootIndices = findRootIndices(ascending, root);
-  if (rootIndices.length === 0) return ascending;
-
-  const lowRootIdx = rootIndices[0];
-  const highRootIdx = rootIndices[rootIndices.length - 1];
-  const rootString = ascending[lowRootIdx].string;
-
-  let start = lowRootIdx;
-  if (rootString === 5) {
-    start = lowRootIdx;
-  } else if (startFret === 0 && rootString >= 4) {
-    start = lowRootIdx;
-  } else if (rootString <= 3) {
-    start = 0;
-  } else if (rootString === 4) {
-    const firstLowE = ascending.findIndex(
-      (position, index) => index < lowRootIdx && position.string === 5,
-    );
-    start = firstLowE >= 0 ? firstLowE : lowRootIdx;
-  }
-
-  return ascending.slice(start, highRootIdx + 1);
-}
-
-/** 3NPS: keep the built low-E → high-e walk; cap at the last root. */
-function orderBuiltInRun(positions: FretPosition[], root: NoteName): FretPosition[] {
-  const rootIndices = findRootIndices(positions, root);
-  if (rootIndices.length === 0) return positions;
-  const highRootIdx = rootIndices[rootIndices.length - 1];
-  return positions.slice(0, highRootIdx + 1);
-}
-
-/**
- * Order positions into a musical scale run anchored on the root.
+ * Order positions into a musical scale run anchored on a chord tone.
  *
- * Ascending runs resolve on the highest root in the position. CAGED-style boxes
- * may include bass-string approach notes before the lowest root; 3NPS shapes
- * keep their built-in string walk. Descending is the reverse of ascending.
+ * Ascending runs start on the lowest occurrence of the anchor (the root by
+ * default) and play every remaining note up to the top of the shape, so the
+ * run always covers what's drawn on the fretboard. Descending runs start on
+ * the highest anchor occurrence and walk down to the bottom of the shape.
+ * `builtIn` ordering preserves the 3NPS string walk; `pitch` sorts box shapes
+ * by pitch and collapses unison doublings.
  */
 export function orderScalePositions(
   positions: FretPosition[],
@@ -105,10 +65,24 @@ export function orderScalePositions(
   direction: ScaleDirection,
   context: ScalePlaybackContext = {},
 ): FretPosition[] {
-  const { ordering = 'pitch', startFret } = context;
-  const ascending =
-    ordering === 'builtIn'
-      ? orderBuiltInRun(positions, root)
-      : orderCagedBoxRun(positions, root, startFret);
-  return direction === 'ascending' ? ascending : [...ascending].reverse();
+  const { ordering = 'pitch', anchorPc } = context;
+  const sequence =
+    ordering === 'builtIn' ? positions : dedupeByPitch(positions);
+  const isAnchor = (position: FretPosition) =>
+    anchorPc !== undefined
+      ? positionToMidi(position) % 12 === anchorPc
+      : position.note === root;
+
+  if (direction === 'ascending') {
+    const start = sequence.findIndex(isAnchor);
+    return start > 0 ? sequence.slice(start) : [...sequence];
+  }
+
+  let lastAnchor = -1;
+  for (let index = 0; index < sequence.length; index += 1) {
+    if (isAnchor(sequence[index])) lastAnchor = index;
+  }
+  const run =
+    lastAnchor >= 0 ? sequence.slice(0, lastAnchor + 1) : [...sequence];
+  return run.reverse();
 }

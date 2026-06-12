@@ -70,9 +70,39 @@
 }
 
 .fretboardStage {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
   width: 100%;
   padding: 0 var(--fretboard-padding);
   box-sizing: border-box;
+}
+
+.focusRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: -1rem;
+}
+
+/* Sound options live with the rest of the fretboard controls, just below the
+   position slider, so the whole control deck reads as one cluster. */
+.soundRow {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: min(960px, 100%);
+  margin: -0.5rem auto 0;
+  padding: 0 var(--fretboard-padding);
+  box-sizing: border-box;
+}
+
+/* Focus mode: hide the sidebar so the fretboard fills the viewport. */
+.app[data-focus='true'] .shell {
+  display: none;
+}
+
+.app[data-focus='true'] {
+  justify-content: center;
 }
 
 .shortcuts {
