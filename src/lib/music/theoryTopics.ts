@@ -1,6 +1,7 @@
 import type { TheoryTopic } from '../../types/music';
 
 export const THEORY_SECTIONS = [
+  'Fundamentals',
   'The Map',
   'Keys & Scales',
   'Diatonic Harmony',
@@ -9,6 +10,85 @@ export const THEORY_SECTIONS = [
 export type TheorySection = (typeof THEORY_SECTIONS)[number];
 
 export const THEORY_TOPICS: TheoryTopic[] = [
+  {
+    id: 'intervals',
+    section: 'Fundamentals',
+    title: 'Intervals',
+    fretboardDemo: { scaleQuality: 'major', singleString: true },
+    theory: {
+      title: 'Intervals',
+      summary:
+        'The distance between two notes — the atoms that every scale and chord is built from.',
+      body: [
+        'An interval is the gap between two pitches, measured in semitones (one fret on guitar). Name the size (2nd, 3rd, 5th...) and the quality (major, minor, perfect) and you have named the building block of all harmony.',
+        'Perfect intervals — the unison, 4th, 5th, and octave — sound stable and open. Major and minor 3rds and 6ths sound warm and consonant. 2nds, 7ths, and the tritone are dissonant: they create the tension that music resolves.',
+      ],
+      sections: [
+        {
+          heading: 'Intervals from C',
+          body: [
+            'Every interval measured up from C, with its size in semitones and its character. Enable "Show on fretboard" to count these distances along a single string.',
+          ],
+          table: {
+            columns: ['Interval', 'Semitones', 'From C', 'Character'],
+            rows: [
+              ['Unison (P1)', '0', 'C', 'Identical'],
+              ['Minor 2nd', '1', 'C–D♭', 'Sharp dissonance'],
+              ['Major 2nd', '2', 'C–D', 'Mild tension'],
+              ['Minor 3rd', '3', 'C–E♭', 'Warm, minor'],
+              ['Major 3rd', '4', 'C–E', 'Bright, major'],
+              ['Perfect 4th', '5', 'C–F', 'Open, stable'],
+              ['Tritone', '6', 'C–F♯', 'Maximum tension'],
+              ['Perfect 5th', '7', 'C–G', 'Hollow, strong'],
+              ['Minor 6th', '8', 'C–A♭', 'Bittersweet'],
+              ['Major 6th', '9', 'C–A', 'Sweet, open'],
+              ['Minor 7th', '10', 'C–B♭', 'Bluesy pull'],
+              ['Major 7th', '11', 'C–B', 'Lush dissonance'],
+              ['Octave (P8)', '12', 'C', 'Same note, higher'],
+            ],
+          },
+        },
+      ],
+    },
+  },
+  {
+    id: 'chord-construction',
+    section: 'Fundamentals',
+    title: 'Chord Construction',
+    practiceLink: { mode: 'chords' },
+    theory: {
+      title: 'Chord Construction',
+      summary:
+        'Stack thirds on a root to build triads, then keep stacking for seventh chords.',
+      body: [
+        'A chord is built by stacking intervals of a third. Start on a root, skip a scale degree to add the third, skip again for the fifth — that three-note stack is a triad. The quality of the third (major or minor) and the fifth determine whether the triad is major, minor, diminished, or augmented.',
+        'Add one more third on top of a triad and you get a seventh chord — the richer, more colorful sound of jazz and soul. The same stacking logic keeps going: ninths, elevenths, and thirteenths are just more thirds piled on.',
+      ],
+      sections: [
+        {
+          heading: 'Triad recipes',
+          body: [
+            'Each triad is the root plus a third and a fifth. R = root, M3/m3 = major/minor third, P5 = perfect fifth, d5 = diminished fifth, A5 = augmented fifth.',
+          ],
+          table: {
+            columns: ['Triad', 'Formula', 'In C'],
+            rows: [
+              ['Major', 'R + M3 + P5', 'C – E – G'],
+              ['Minor', 'R + m3 + P5', 'C – E♭ – G'],
+              ['Diminished', 'R + m3 + d5', 'C – E♭ – G♭'],
+              ['Augmented', 'R + M3 + A5', 'C – E – G♯'],
+            ],
+          },
+        },
+        {
+          heading: 'Reading chord symbols',
+          body: [
+            'A bare letter means a major triad (C). A small "m" means minor (Cm). A "7" adds a minor seventh (C7); "maj7" adds a major seventh (Cmaj7). Symbols like dim and aug name the triad quality directly.',
+          ],
+        },
+      ],
+    },
+  },
   {
     id: 'circle-of-fifths',
     section: 'The Map',
@@ -95,6 +175,14 @@ export const THEORY_TOPICS: TheoryTopic[] = [
         'The major scale is the baseline for naming everything else: intervals, chord qualities, and Roman numerals all refer back to it.',
         'Pick a key on the circle, then enable "Show on fretboard" to see the major scale in that key. The scale degrees 1 through 7 become the pool for building diatonic chords.',
       ],
+      sections: [
+        {
+          heading: 'Built from intervals',
+          body: [
+            'Each scale degree sits a specific interval above the root: a major 2nd to degree 2, a major 3rd to degree 3, a perfect 5th to degree 5, and so on. The major scale is the yardstick those interval names are measured against — see the Intervals topic for the full ruler.',
+          ],
+        },
+      ],
     },
   },
   {
@@ -145,13 +233,22 @@ export const THEORY_TOPICS: TheoryTopic[] = [
         'The chord wheel lights up all seven diatonic chords for any key you pick. I sits on the inner ring, vi on the middle, ii on the outer — IV and V are the neighbors on either side. Click a major or minor label to change key.',
         'Switch to Progressions mode to hear common formulas built from this same chord family.',
       ],
+      sections: [
+        {
+          heading: 'How they pull on each other',
+          body: [
+            'These seven chords are not equals — each has a job. The tonic chords feel like rest, the predominants create motion, and the dominants build tension that resolves home. See the Harmonic Function topic for the full tension-and-release story.',
+          ],
+        },
+      ],
       functions: [
         { numeral: 'I', role: 'Tonic — home, stable' },
-        { numeral: 'ii', role: 'Predominant — sets up movement' },
-        { numeral: 'IV', role: 'Subdominant — lifts away from home' },
+        { numeral: 'ii', role: 'Predominant — sets up the dominant' },
+        { numeral: 'iii', role: 'Tonic family — mediant color, bridges I and vi' },
+        { numeral: 'IV', role: 'Predominant (subdominant) — lifts away from home' },
         { numeral: 'V', role: 'Dominant — tension toward I' },
-        { numeral: 'vi', role: 'Relative minor color in a major key' },
-        { numeral: 'vii°', role: 'Leading tone — strong pull to I' },
+        { numeral: 'vi', role: 'Tonic family — relative minor, a softer home' },
+        { numeral: 'vii°', role: 'Dominant — leading-tone pull to I' },
       ],
     },
   },
@@ -176,9 +273,65 @@ export const THEORY_TOPICS: TheoryTopic[] = [
       ],
     },
   },
+  {
+    id: 'harmonic-function',
+    section: 'Diatonic Harmony',
+    title: 'Harmonic Function',
+    diagram: 'chord-wheel',
+    practiceLink: { mode: 'progressions' },
+    theory: {
+      title: 'Harmonic Function',
+      summary:
+        'Why progressions feel like they move — every chord plays a role of rest, motion, or tension.',
+      body: [
+        'Harmony tells a story in three acts: rest, departure, and return. The tonic feels like home. The predominant pulls you away from it. The dominant builds tension that wants to fall back to the tonic. Most progressions are just trips around this tonic → predominant → dominant → tonic arc.',
+        'Each of the seven diatonic chords belongs to one of these families, so chords within a family can often substitute for each other. That is why iii and vi can stand in for the tonic, or ii for the subdominant — they share the same function.',
+      ],
+      sections: [
+        {
+          heading: 'The three functions',
+          body: [
+            'Group the diatonic chords by the job they do. Chords in the same family are interchangeable enough to swap without breaking the flow.',
+          ],
+          table: {
+            columns: ['Function', 'Chords', 'Feeling'],
+            rows: [
+              ['Tonic', 'I, iii, vi', 'Rest, home, resolution'],
+              ['Predominant', 'ii, IV', 'Motion, sets up the dominant'],
+              ['Dominant', 'V, vii°', 'Tension, pulls back to I'],
+            ],
+          },
+        },
+        {
+          heading: 'Scale-degree names',
+          body: [
+            'Each degree of the scale has a traditional name. The tonic, subdominant, and dominant — degrees 1, 4, and 5 — are the pillars of the key.',
+          ],
+          table: {
+            columns: ['Degree', 'Name'],
+            rows: [
+              ['1', 'Tonic'],
+              ['2', 'Supertonic'],
+              ['3', 'Mediant'],
+              ['4', 'Subdominant'],
+              ['5', 'Dominant'],
+              ['6', 'Submediant'],
+              ['7', 'Leading tone'],
+            ],
+          },
+        },
+        {
+          heading: 'Cadences',
+          body: [
+            'A cadence is the chord move that ends a phrase. Authentic (V–I) is the strongest resolution. Plagal (IV–I) is the gentle "amen" ending. A half cadence pauses on V, leaving the phrase open. A deceptive cadence (V–vi) sets up the tonic, then sidesteps to vi for a surprise.',
+          ],
+        },
+      ],
+    },
+  },
 ];
 
-export const DEFAULT_THEORY_TOPIC_ID = THEORY_TOPICS[0].id;
+export const DEFAULT_THEORY_TOPIC_ID = 'circle-of-fifths';
 
 export function getTheoryTopicById(id: string): TheoryTopic | undefined {
   return THEORY_TOPICS.find((topic) => topic.id === id);

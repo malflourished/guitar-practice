@@ -36,6 +36,28 @@
   padding-bottom: 0.5rem;
 }
 
+.diagramToggle {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.diagramToggleButton {
+  composes: pill from '../styles/glass.module.css';
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.72rem;
+}
+
+.diagramToggleSelected {
+  composes: pillSelected from '../styles/glass.module.css';
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.72rem;
+}
+
 .diagram {
   display: flex;
   justify-content: center;

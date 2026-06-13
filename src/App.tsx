@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Fretboard } from './components/Fretboard';
 import { PositionSlider } from './components/PositionSlider';
+import { DisplayToggles } from './components/DisplayToggles';
 import { AudioControls, DEFAULT_TEMPO } from './components/AudioControls';
 import { DebugPanel } from './components/DebugPanel';
 import { AmbientBackground } from './components/AmbientBackground';
@@ -19,11 +20,7 @@ import {
 } from './lib/audio/pitch';
 import { buildTraversalRun } from './lib/audio/traversal';
 import { ALL_NOTES, NOTE_COLORS } from './lib/colors';
-import {
-  getFretboardSubtitle,
-  getFretboardTitle,
-  getRootNote,
-} from './lib/displayTitle';
+import { getFretboardTitle, getRootNote } from './lib/displayTitle';
 import {
   getBackgroundKeyForMode,
   getKeyBackgroundStyle,
@@ -768,25 +765,6 @@ function App() {
     ],
   );
 
-  const subtitle = useMemo(() => {
-    const base = getFretboardSubtitle(
-      studyMode,
-      studyMode === 'progressions'
-        ? activeProgression.theory
-        : studyMode === 'theory'
-          ? activeTheoryTopic.theory
-          : null,
-    );
-    if (ladderActive && ladderDirection) {
-      const hint =
-        ladderDirection === 'ascending'
-          ? "Ladder playback climbs the neck from the I chord's position."
-          : 'Ladder playback starts at the highest position and works down from the I chord.';
-      return `${base} ${hint}`;
-    }
-    return base;
-  }, [studyMode, activeProgression, activeTheoryTopic, ladderActive, ladderDirection]);
-
   const currentStepRole = useMemo(() => {
     if (studyMode !== 'progressions' || !activeProgressionStep) return undefined;
     return activeProgression.theory.functions?.find(
@@ -1184,6 +1162,7 @@ function App() {
           )}
           {showTheoryStage ? (
             <TheoryStage
+              key={activeTheoryTopic.id}
               topic={activeTheoryTopic}
               selectedRoot={rootNote}
               keyMode={keyMode}
@@ -1199,15 +1178,17 @@ function App() {
           ) : null}
           {showFretboard ? (
             <>
+              {showPositionSlider && (
+                <PositionSlider
+                  regions={displayRegions}
+                  selectedIndex={positionIndex}
+                  onChange={setPositionIndex}
+                  disabled={ladderActive || traversalActive}
+                />
+              )}
               <Fretboard
                 positions={positions}
                 title={title}
-                subtitle={subtitle}
-                subtitleVariant={
-                  studyMode === 'progressions' || studyMode === 'theory'
-                    ? 'theory'
-                    : 'default'
-                }
                 notation={notation}
                 noteLabels={spellingMap}
                 mutedStrings={mutedStrings}
@@ -1229,38 +1210,6 @@ function App() {
                   traversalActive ? undefined : setPositionIndex
                 }
               />
-              {showPositionSlider && (
-                <PositionSlider
-                  regions={displayRegions}
-                  selectedIndex={positionIndex}
-                  onChange={setPositionIndex}
-                  showFingers={showFingers}
-                  onFingersToggle={() => setShowFingers((prev) => !prev)}
-                  showNoteLabels={showNoteLabels}
-                  fullDotOpacity={fullDotOpacity}
-                  onNoteLabelsToggle={() => setShowNoteLabels((prev) => !prev)}
-                  onFullDotOpacityToggle={() =>
-                    setFullDotOpacity((prev) => !prev)
-                  }
-                  showChordTones={supportsChordTones ? showChordTones : undefined}
-                  onChordTonesToggle={
-                    supportsChordTones
-                      ? () => setShowChordTones((prev) => !prev)
-                      : undefined
-                  }
-                  viewMode={neckViewEnabled ? neckView.viewMode : undefined}
-                  onViewModeChange={
-                    neckViewEnabled ? neckView.setViewMode : undefined
-                  }
-                  harmonyLayer={
-                    studyMode === 'scales' ? harmonyLayer : undefined
-                  }
-                  onHarmonyLayerChange={
-                    studyMode === 'scales' ? setHarmonyLayer : undefined
-                  }
-                  disabled={ladderActive || traversalActive}
-                />
-              )}
               <div className="soundRow">
                 <AudioControls
                   instrument={audio.instrument}
@@ -1294,6 +1243,37 @@ function App() {
                   onPlayProgression={handlePlayProgression}
                   onPlayProgressionLadder={handlePlayProgressionLadder}
                 />
+                {showPositionSlider && (
+                  <DisplayToggles
+                    showFingers={showFingers}
+                    onFingersToggle={() => setShowFingers((prev) => !prev)}
+                    showNoteLabels={showNoteLabels}
+                    fullDotOpacity={fullDotOpacity}
+                    onNoteLabelsToggle={() => setShowNoteLabels((prev) => !prev)}
+                    onFullDotOpacityToggle={() =>
+                      setFullDotOpacity((prev) => !prev)
+                    }
+                    showChordTones={
+                      supportsChordTones ? showChordTones : undefined
+                    }
+                    onChordTonesToggle={
+                      supportsChordTones
+                        ? () => setShowChordTones((prev) => !prev)
+                        : undefined
+                    }
+                    regionCount={displayRegions.length}
+                    viewMode={neckViewEnabled ? neckView.viewMode : undefined}
+                    onViewModeChange={
+                      neckViewEnabled ? neckView.setViewMode : undefined
+                    }
+                    harmonyLayer={
+                      studyMode === 'scales' ? harmonyLayer : undefined
+                    }
+                    onHarmonyLayerChange={
+                      studyMode === 'scales' ? setHarmonyLayer : undefined
+                    }
+                  />
+                )}
               </div>
               {studyMode === 'chords' && chordPositionViews.length > 0 && (
                 <ChordPositionStrip

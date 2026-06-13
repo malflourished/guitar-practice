@@ -197,14 +197,14 @@ export const PROGRESSIONS: ProgressionDef[] = [
     theory: {
       title: 'ii – V – I',
       summary:
-        'The essential jazz cadence — pre-dominant, dominant, then home.',
+        'The essential jazz cadence — predominant, dominant, then home.',
       body: [
         'ii – V – I is the harmonic engine of jazz standards. The ii chord (minor 7) sets up the V (dominant 7), which resolves to I (major 7).',
         'Seventh chords add color and voice-leading opportunities. Once you can play this in one key, transpose the same shapes to any other.',
       ],
       examples: [{ label: 'C major', chords: 'Dm7 – G7 – Cmaj7' }],
       functions: [
-        { numeral: 'ii⁷', role: 'Pre-dominant — sets up the V' },
+        { numeral: 'ii⁷', role: 'Predominant — sets up the V' },
         { numeral: 'V⁷', role: 'Dominant — strong pull to I' },
         { numeral: 'I maj7', role: 'Tonic — resolved, colorful home' },
       ],
