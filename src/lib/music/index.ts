@@ -50,6 +50,16 @@ export {
   type FormulaTone,
 } from './intervalFormulas';
 export {
+  CHANGES_PROGRESSIONS,
+  buildChangesProgression,
+  buildChangesStepView,
+  getChangesProgression,
+  getGuideToneMotion,
+  type ChangesProgressionDef,
+  type ChangesStepView,
+  type GuideToneMotion,
+} from './changesTargeting';
+export {
   SHELL_QUALITIES,
   getColorTonePitchClasses,
   getShellDef,

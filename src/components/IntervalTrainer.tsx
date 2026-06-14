@@ -3,13 +3,17 @@ import type { ChordQuality, FretPosition, NoteName } from '../types/music';
 import type { UseInstrument } from '../hooks/useInstrument';
 import type { NotationPreference } from '../lib/music';
 import {
+  CHANGES_PROGRESSIONS,
   FORMULA_TARGETS,
   INTERVALS,
   SHELL_QUALITIES,
+  buildChangesProgression,
   buildFormulaSpec,
+  getChangesProgression,
   getDirectedTargets,
   getDyadRelationshipLabel,
   getFormulaTarget,
+  getGuideToneMotion,
   getIntervalColor,
   getIntervalDef,
   getIntervalDyadShapes,
@@ -33,7 +37,14 @@ import {
 import { Fretboard } from './Fretboard';
 import styles from './IntervalTrainer.module.css';
 
-type Drill = 'learn' | 'find' | 'identify' | 'shell' | 'shapes' | 'build';
+type Drill =
+  | 'learn'
+  | 'find'
+  | 'identify'
+  | 'shell'
+  | 'shapes'
+  | 'build'
+  | 'changes';
 type LabelStyle = 'function' | 'degree';
 
 interface IntervalTrainerProps {
@@ -43,6 +54,9 @@ interface IntervalTrainerProps {
   audio: UseInstrument;
 }
 
+// Ordered to follow the two-point learning path: meet the interval, see its
+// generic shapes, drill recognition, then apply it to chord tones, full
+// formulas, and finally chord changes.
 const DRILLS: { id: Drill; label: string; blurb: string }[] = [
   { id: 'learn', label: 'Learn', blurb: 'See and hear an interval everywhere it lives.' },
   { id: 'shapes', label: 'Shapes', blurb: 'The generic two-point shapes for one interval.' },
@@ -50,6 +64,7 @@ const DRILLS: { id: Drill; label: string; blurb: string }[] = [
   { id: 'identify', label: 'Identify', blurb: 'Hear it, then name it by ear.' },
   { id: 'shell', label: 'Shells', blurb: 'Build a chord from its 3rd and 7th.' },
   { id: 'build', label: 'Build', blurb: 'Assemble a scale or chord from interval functions.' },
+  { id: 'changes', label: 'Changes', blurb: 'Outline a progression with its 3rds and 7ths.' },
 ];
 
 const SCOPES: { id: DrillScope; label: string }[] = [
@@ -64,9 +79,13 @@ const DEFAULT_ENABLED = [4, 7, 10];
 /** Toggle-able intervals (1..12 — the unison is always the root). */
 const TOGGLEABLE = INTERVALS.filter((i) => i.semitones > 0).map((i) => i.semitones);
 
+// Presets follow Quayle's curriculum order: the money intervals first, then
+// the full chord-tone set, the chromatic-completion tensions, and everything.
 const ENABLED_PRESETS: { label: string; semitones: number[] }[] = [
   { label: '3 · 5 · ♭7', semitones: [4, 7, 10] },
   { label: '3rds & 7ths', semitones: [3, 4, 10, 11] },
+  { label: 'Chord tones', semitones: [3, 4, 6, 7, 10, 11] },
+  { label: 'Tensions', semitones: [1, 2, 5, 8, 9] },
   { label: 'Diatonic', semitones: [2, 4, 5, 7, 9, 11] },
   { label: 'All 12', semitones: TOGGLEABLE },
 ];
@@ -111,6 +130,8 @@ export function IntervalTrainer({
   const [shapeSemitones, setShapeSemitones] = useState(4);
   const [formulaTargetId, setFormulaTargetId] = useState('scale:major');
   const [buildStep, setBuildStep] = useState(1);
+  const [changesId, setChangesId] = useState('major-251');
+  const [changesStep, setChangesStep] = useState(0);
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [found, setFound] = useState<FretPosition[]>([]);
@@ -145,8 +166,8 @@ export function IntervalTrainer({
   const enabledArray = enabled.length > 0 ? enabled : DEFAULT_ENABLED;
 
   const nextQuestion = useCallback(() => {
-    // Shapes and Build are exploratory views, not graded questions.
-    if (drill === 'shapes' || drill === 'build') return;
+    // Shapes, Build, and Changes are exploratory views, not graded questions.
+    if (drill === 'shapes' || drill === 'build' || drill === 'changes') return;
 
     const qRoot = randomRoot ? pick(ALL_NOTES) : root;
     setFound([]);
@@ -367,6 +388,42 @@ export function IntervalTrainer({
     if (!audio.muted) playNote(positionToMidi(pos));
   };
 
+  // Changes drill: resolve the chosen progression and walk its guide tones.
+  const changesSteps = useMemo(
+    () => buildChangesProgression(root, getChangesProgression(changesId)),
+    [root, changesId],
+  );
+  const changeIndex = Math.min(changesStep, changesSteps.length - 1);
+  const changeStep = changesSteps[changeIndex] ?? null;
+
+  const changeAnchor = useMemo<FretPosition | null>(() => {
+    if (!changeStep) return null;
+    const anchors = getRootAnchors(changeStep.root);
+    const comfy = anchors.filter((a) => a.fret >= 3 && a.fret <= 12);
+    const pool = comfy.length ? comfy : anchors;
+    if (pool.length === 0) return null;
+    return [...pool].sort((a, b) => b.string - a.string || a.fret - b.fret)[0];
+  }, [changeStep]);
+
+  const changesPositions = useMemo<FretPosition[]>(() => {
+    if (!changeStep || !changeAnchor) return [];
+    const third = getDirectedTargets(changeAnchor, changeStep.third, 'position')[0];
+    const seventh = getDirectedTargets(changeAnchor, changeStep.seventh, 'position')[0];
+    return dedupe(
+      [changeAnchor, third, seventh].filter(Boolean) as FretPosition[],
+    );
+  }, [changeStep, changeAnchor]);
+
+  // Keep the step index in range when the progression or key changes.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the walk on a new progression
+    setChangesStep(0);
+  }, [changesId, root]);
+
+  const handleChangesPlay = () => {
+    if (!audio.muted && changesPositions.length) audio.strum(changesPositions);
+  };
+
   // Positions drawn on the board for the current drill + state.
   const boardPositions = useMemo<FretPosition[]>(() => {
     if (drill === 'shapes') {
@@ -376,6 +433,9 @@ export function IntervalTrainer({
     if (drill === 'build') {
       const intervals = revealedTones.map((t) => t.interval);
       return getPositionsForIntervals(root, intervals);
+    }
+    if (drill === 'changes') {
+      return changesPositions;
     }
     if (!question) return [];
     if (drill === 'learn') {
@@ -404,11 +464,31 @@ export function IntervalTrainer({
       return dedupe([...base, ...found, ...reveal]);
     }
     return [];
-  }, [question, drill, scope, found, revealed, shapeAnchor, dyadShapes, revealedTones, root]);
+  }, [
+    question,
+    drill,
+    scope,
+    found,
+    revealed,
+    shapeAnchor,
+    dyadShapes,
+    revealedTones,
+    changesPositions,
+    root,
+  ]);
 
   const showBoard = drill !== 'identify';
   const showScope = drill === 'find' || drill === 'learn';
-  const boardRoot = drill === 'shapes' || drill === 'build' ? root : question?.root ?? root;
+  const boardRoot =
+    drill === 'shapes' || drill === 'build'
+      ? root
+      : drill === 'changes'
+        ? changeStep?.root ?? root
+        : question?.root ?? root;
+  const guideMotion =
+    drill === 'changes' && changeIndex > 0 && changeStep
+      ? getGuideToneMotion(changesSteps[changeIndex - 1], changeStep)
+      : null;
   const intervalDef = question ? getIntervalDef(question.semitones) : null;
   const gbWarning =
     showScope &&
@@ -428,6 +508,10 @@ export function IntervalTrainer({
         : `Building ${root} ${formulaSpec.label} — ${revealedTones
             .map((t) => t.label)
             .join(' ')}`;
+    }
+    if (drill === 'changes') {
+      if (!changeStep) return '';
+      return `${changeStep.numeral} on ${changeStep.root} — guide tones ${changeStep.thirdLabel} (${changeStep.thirdNote}) and ${changeStep.seventhLabel} (${changeStep.seventhNote})`;
     }
     if (!question || !intervalDef) return '';
     const target =
@@ -698,6 +782,38 @@ export function IntervalTrainer({
         </>
       )}
 
+      {drill === 'changes' && (
+        <>
+          <div className={styles.presets} role="group" aria-label="Progression">
+            {CHANGES_PROGRESSIONS.map((prog) => (
+              <button
+                key={prog.id}
+                type="button"
+                className={changesId === prog.id ? styles.chipOn : styles.preset}
+                aria-pressed={changesId === prog.id}
+                onClick={() => setChangesId(prog.id)}
+              >
+                {prog.label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.chips} role="group" aria-label="Chords">
+            {changesSteps.map((step, index) => (
+              <button
+                key={`${step.numeral}-${index}`}
+                type="button"
+                className={index === changeIndex ? styles.chipOn : styles.chip}
+                aria-pressed={index === changeIndex}
+                onClick={() => setChangesStep(index)}
+                title={`${step.numeral} on ${step.root}`}
+              >
+                {step.numeral}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       <div className={styles.promptRow}>
         <div className={styles.promptMain}>
           <p
@@ -711,6 +827,15 @@ export function IntervalTrainer({
             <p className={styles.gbBadge}>
               G→B shift: this shape spans the only string pair tuned a major 3rd
               apart, so the geometry differs here.
+            </p>
+          )}
+          {guideMotion && (
+            <p className={styles.guess}>
+              {guideMotion.semitones === 0
+                ? `Common tone held: ${guideMotion.fromLabel} → ${guideMotion.toLabel}`
+                : `Voice-leading: ${guideMotion.fromLabel} → ${guideMotion.toLabel} moves ${guideMotion.semitones} semitone${
+                    guideMotion.semitones === 1 ? '' : 's'
+                  }`}
             </p>
           )}
           {guessLabel && !solved && drill !== 'identify' && !revealed && (
@@ -762,6 +887,39 @@ export function IntervalTrainer({
                 title="Add the next interval"
               >
                 Add tone
+              </button>
+            </>
+          )}
+          {drill === 'changes' && (
+            <>
+              <button
+                type="button"
+                className={styles.btn}
+                onClick={() => setChangesStep((s) => Math.max(0, s - 1))}
+                disabled={changeIndex <= 0}
+                title="Previous chord"
+              >
+                Prev
+              </button>
+              <button
+                type="button"
+                className={styles.btn}
+                onClick={handleChangesPlay}
+                disabled={audio.muted}
+                title={audio.muted ? 'Unmute to hear the shell' : 'Hear the guide tones'}
+              >
+                Hear
+              </button>
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={() =>
+                  setChangesStep((s) => Math.min(changesSteps.length - 1, s + 1))
+                }
+                disabled={changeIndex >= changesSteps.length - 1}
+                title="Next chord"
+              >
+                Next
               </button>
             </>
           )}
@@ -832,32 +990,36 @@ export function IntervalTrainer({
         </div>
       )}
 
-      {showBoard && (question || drill === 'shapes' || drill === 'build') && (
-        <Fretboard
-          positions={boardPositions}
-          title={promptText}
-          notation={notation}
-          noteColors={noteColors}
-          showNoteLabels
-          intervalLabeling={{ root: boardRoot, style: labelStyle }}
-          onCellClick={
-            drill === 'find'
-              ? handleFindClick
-              : drill === 'shell'
-                ? handleShellClick
-                : undefined
-          }
-          onPlayNote={
-            drill === 'learn'
-              ? handleLearnPlay
-              : drill === 'shapes'
-                ? handleShapePlay
-                : drill === 'build'
-                  ? handleBuildPlay
+      {showBoard &&
+        (question ||
+          drill === 'shapes' ||
+          drill === 'build' ||
+          drill === 'changes') && (
+          <Fretboard
+            positions={boardPositions}
+            title={promptText}
+            notation={notation}
+            noteColors={noteColors}
+            showNoteLabels
+            intervalLabeling={{ root: boardRoot, style: labelStyle }}
+            onCellClick={
+              drill === 'find'
+                ? handleFindClick
+                : drill === 'shell'
+                  ? handleShellClick
                   : undefined
-          }
-        />
-      )}
+            }
+            onPlayNote={
+              drill === 'learn'
+                ? handleLearnPlay
+                : drill === 'shapes'
+                  ? handleShapePlay
+                  : drill === 'build' || drill === 'changes'
+                    ? handleBuildPlay
+                    : undefined
+            }
+          />
+        )}
     </div>
   );
 }

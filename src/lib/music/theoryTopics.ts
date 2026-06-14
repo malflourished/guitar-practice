@@ -339,6 +339,40 @@ export const THEORY_TOPICS: TheoryTopic[] = [
     },
   },
   {
+    id: 'two-point-system',
+    section: 'Intervallic Function',
+    title: 'The Two-Point System',
+    practiceLink: { mode: 'intervals' },
+    theory: {
+      title: 'The Two-Point System',
+      summary:
+        'A small vocabulary of two-note interval shapes that builds every scale, chord, and arpeggio — anywhere, in any key.',
+      body: [
+        'A "two-point shape" is literally two points on the neck: a root and one interval function above it (the 3, the 5, the ♭7). Learn the handful of generic shapes for each of the twelve functions — on the same string, the adjacent string, and a string skip — and you can place any interval relative to any root without memorising large position patterns.',
+        'The payoff is leverage. Instead of memorising thousands of multi-note boxes across positions and keys, you internalise twelve functions plus a few generic shapes each, then generate scales, chords, and arpeggios on the fly from their formulas. The one mechanical adjustment is the G→B string pair, where every shape shifts a fret.',
+      ],
+      sections: [
+        {
+          heading: 'The learning path',
+          body: [
+            'The Intervals trainer is ordered to follow this path — meet a function, see its shapes, drill recognition, then apply it to chord tones, full formulas, and finally chord changes.',
+          ],
+          table: {
+            columns: ['Stage', 'Focus', 'Trainer drill'],
+            rows: [
+              ['Meet the interval', 'Hear and see one function from a root', 'Learn'],
+              ['Generic shapes', 'Same string, adjacent, string skip', 'Shapes'],
+              ['Recognise it', 'Find on the neck and name by ear', 'Find · Identify'],
+              ['Chord tones', 'Root, 3rd, and 7th shells', 'Shells'],
+              ['Build formulas', 'Scales and chords from interval functions', 'Build'],
+              ['Play the changes', '3rds and 7ths across a progression', 'Changes'],
+            ],
+          },
+        },
+      ],
+    },
+  },
+  {
     id: 'intervallic-function',
     section: 'Intervallic Function',
     title: 'Thinking in Intervals',
