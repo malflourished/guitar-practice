@@ -77,6 +77,7 @@ import {
 } from './components/SettingsList';
 import { ChordPositionStrip } from './components/ChordPositionStrip';
 import { ProgressionStrip } from './components/ProgressionStrip';
+import { IntervalTrainer } from './components/IntervalTrainer';
 import { TheoryPanel } from './components/TheoryPanel';
 import { TheoryNavigator } from './components/TheoryNavigator';
 import { TheoryStage } from './components/TheoryStage';
@@ -94,6 +95,7 @@ function isSingleRootMode(mode: StudyMode): boolean {
     mode === 'chords' ||
     mode === 'scales' ||
     mode === 'progressions' ||
+    mode === 'intervals' ||
     mode === 'theory'
   );
 }
@@ -103,6 +105,7 @@ const STUDY_MODES = [
   'chords',
   'scales',
   'progressions',
+  'intervals',
   'theory',
 ] as const;
 
@@ -424,6 +427,7 @@ function App() {
   const neckViewEnabled =
     studyMode === 'scales' ||
     studyMode === 'chords' ||
+    studyMode === 'progressions' ||
     theoryDemoSupportsNeckView;
 
   const neckView = useNeckView(positionScope, displayRegions, {
@@ -888,7 +892,7 @@ function App() {
     setTheoryShowFretboard(show);
     const demoView = activeTheoryTopic.fretboardDemo?.neckView;
     if (show && demoView) {
-      neckView.setViewMode(demoView);
+      neckView.applySpanPreset(demoView);
     }
   };
 
@@ -900,7 +904,7 @@ function App() {
       setScaleQuality(link.scaleQuality);
     }
     if (link.neckView) {
-      neckView.setViewMode(link.neckView);
+      neckView.applySpanPreset(link.neckView);
     }
     setTheoryShowFretboard(false);
   };
@@ -991,8 +995,9 @@ function App() {
     positionRegions.length > 0 &&
     (studyMode !== 'theory' || theoryShowFretboard);
   const showTheoryStage = studyMode === 'theory';
+  const showIntervalTrainer = studyMode === 'intervals';
   const showFretboard =
-    studyMode !== 'theory' || theoryShowFretboard;
+    studyMode !== 'intervals' && (studyMode !== 'theory' || theoryShowFretboard);
 
   return (
     <div
@@ -1176,6 +1181,14 @@ function App() {
               }
             />
           ) : null}
+          {showIntervalTrainer ? (
+            <IntervalTrainer
+              root={rootNote}
+              notation={notation}
+              noteColors={noteColors}
+              audio={audio}
+            />
+          ) : null}
           {showFretboard ? (
             <>
               {showPositionSlider && (
@@ -1183,6 +1196,9 @@ function App() {
                   regions={displayRegions}
                   selectedIndex={positionIndex}
                   onChange={setPositionIndex}
+                  spanEndIndex={neckView.spanEndIndex}
+                  onSpanEndChange={neckView.setSpanEndIndex}
+                  allowRange={neckViewEnabled}
                   disabled={ladderActive || traversalActive}
                 />
               )}
@@ -1260,11 +1276,6 @@ function App() {
                       supportsChordTones
                         ? () => setShowChordTones((prev) => !prev)
                         : undefined
-                    }
-                    regionCount={displayRegions.length}
-                    viewMode={neckViewEnabled ? neckView.viewMode : undefined}
-                    onViewModeChange={
-                      neckViewEnabled ? neckView.setViewMode : undefined
                     }
                     harmonyLayer={
                       studyMode === 'scales' ? harmonyLayer : undefined

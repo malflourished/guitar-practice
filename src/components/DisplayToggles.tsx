@@ -1,11 +1,5 @@
-import type { HarmonyLayer, NeckViewMode } from '../types/music';
+import type { HarmonyLayer } from '../types/music';
 import styles from './DisplayToggles.module.css';
-
-const NECK_VIEWS: { id: NeckViewMode; label: string }[] = [
-  { id: 'single', label: 'Box' },
-  { id: 'connected', label: 'Linked' },
-  { id: 'full', label: 'Neck' },
-];
 
 interface DisplayTogglesProps {
   showFingers: boolean;
@@ -16,10 +10,6 @@ interface DisplayTogglesProps {
   onFullDotOpacityToggle: () => void;
   showChordTones?: boolean;
   onChordTonesToggle?: () => void;
-  /** Number of position regions — the neck-view toggle only shows with more than one. */
-  regionCount: number;
-  viewMode?: NeckViewMode;
-  onViewModeChange?: (mode: NeckViewMode) => void;
   harmonyLayer?: HarmonyLayer;
   onHarmonyLayerChange?: (layer: HarmonyLayer) => void;
 }
@@ -33,35 +23,13 @@ export function DisplayToggles({
   onFullDotOpacityToggle,
   showChordTones,
   onChordTonesToggle,
-  regionCount,
-  viewMode,
-  onViewModeChange,
   harmonyLayer,
   onHarmonyLayerChange,
 }: DisplayTogglesProps) {
-  const showViewToggle =
-    viewMode !== undefined && onViewModeChange !== undefined && regionCount > 1;
   const arpeggioActive = harmonyLayer === 'arpeggio';
 
   return (
     <div className={styles.toggleGroup} role="group" aria-label="Display options">
-      {showViewToggle && (
-        <div className={styles.viewGroup} role="group" aria-label="Neck view">
-          {NECK_VIEWS.map(({ id, label }) => (
-            <button
-              key={id}
-              type="button"
-              className={
-                viewMode === id ? styles.viewButtonActive : styles.viewButton
-              }
-              aria-pressed={viewMode === id}
-              onClick={() => onViewModeChange(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
       {onHarmonyLayerChange && (
         <button
           type="button"

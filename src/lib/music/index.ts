@@ -8,9 +8,40 @@ export {
 } from './chords';
 export {
   getChordToneForNote,
+  getIntervalShape,
   type ChordToneInfo,
   type ChordToneShape,
 } from './chordTones';
+export {
+  INTERVALS,
+  INTERVAL_COLORS,
+  getIntervalColor,
+  getIntervalDef,
+  getIntervalLabel,
+  getIntervalMarker,
+  getIntervalTextColor,
+  intervalBetween,
+  noteAtInterval,
+  type IntervalDef,
+  type IntervalMarker,
+  type IntervalQuality,
+} from './intervals';
+export {
+  crossesGtoB,
+  getDirectedTargets,
+  getOneStringShapes,
+  getPlayableAnchors,
+  getRootAnchors,
+  type DrillScope,
+} from './intervalGeometry';
+export {
+  SHELL_QUALITIES,
+  getColorTonePitchClasses,
+  getShellDef,
+  getShellPitchClasses,
+  isShellComplete,
+  type ShellDef,
+} from './shellVoicings';
 export {
   getDiatonicQuality,
   getDiatonicRoot,

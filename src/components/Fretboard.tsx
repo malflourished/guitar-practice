@@ -16,6 +16,8 @@ import {
   cellKey,
   formatNoteDisplay,
   getChordToneForNote,
+  getIntervalMarker,
+  getIntervalTextColor,
   samePitchClass,
   type GhostLayer,
   type NotationPreference,
@@ -43,8 +45,19 @@ interface FretboardProps {
   showChordTones?: boolean;
   rootNote?: NoteName | null;
   chordQuality?: ChordQuality | null;
+  /**
+   * Interval-trainer labeling: render every note as its interval (function or
+   * scale-degree) above the given root, with function colors and shapes.
+   */
+  intervalLabeling?: { root: NoteName; style: 'function' | 'degree' } | null;
   noteColors: Record<NoteName, string>;
   onPlayNote?: (position: FretPosition) => void;
+  /**
+   * Interval trainer: click any cell on the board (not just lit notes). Renders
+   * a transparent hit grid over every string/fret so the player can answer
+   * "find the interval" by clicking an empty fret.
+   */
+  onCellClick?: (stringIndex: number, fret: number) => void;
   activePosition?: FretPosition | null;
   /** Dimmed neighbor/remaining position boxes (connected/full neck views). */
   ghostLayers?: GhostLayer[];
@@ -68,7 +81,9 @@ export function Fretboard({
   showChordTones = false,
   rootNote = null,
   chordQuality = null,
+  intervalLabeling = null,
   onPlayNote,
+  onCellClick,
   activePosition = null,
   ghostLayers = [],
   overlapKeys,
@@ -138,6 +153,10 @@ export function Fretboard({
     if (showFingers && finger !== undefined) {
       return String(finger);
     }
+    if (intervalLabeling) {
+      return getIntervalMarker(intervalLabeling.root, note, intervalLabeling.style)
+        .label;
+    }
     if (chordToneContext) {
       const tone = getChordToneForNote(
         chordToneContext.root,
@@ -160,6 +179,24 @@ export function Fretboard({
   };
 
   const renderNoteMarker = (note: NoteName, cx: number, cy: number, radius: number) => {
+    if (intervalLabeling) {
+      const marker = getIntervalMarker(
+        intervalLabeling.root,
+        note,
+        intervalLabeling.style,
+      );
+      return (
+        <NoteMarker
+          cx={cx}
+          cy={cy}
+          radius={radius}
+          shape={marker.shape}
+          isRoot={marker.isRoot}
+          fullOpacity
+          fill={marker.color}
+        />
+      );
+    }
     if (chordToneContext) {
       const tone = getChordToneForNote(
         chordToneContext.root,
@@ -210,12 +247,21 @@ export function Fretboard({
     const label = labelFor(note, finger);
     const wide = label.length > 1;
     const small = wide || radius <= SMALL_LABEL_RADIUS;
+    const intervalTextStyle = intervalLabeling
+      ? {
+          fill: getIntervalTextColor(
+            getIntervalMarker(intervalLabeling.root, note, intervalLabeling.style)
+              .semitones,
+          ),
+        }
+      : undefined;
     return (
       <text
         x={cx}
         y={cy + (small ? 4 : 5)}
         textAnchor="middle"
         className={labelClass(note, small)}
+        style={intervalTextStyle}
       >
         {label}
       </text>
@@ -441,6 +487,30 @@ export function Fretboard({
                 </g>
               );
             })}
+
+            {onCellClick &&
+              Array.from({ length: STRING_COUNT }, (_, stringIndex) =>
+                Array.from({ length: FRET_COUNT + 1 }, (_, fret) => {
+                  const cx =
+                    fret === 0 ? FRETBOARD_LAYOUT.openLaneX : fretCenterX(fret);
+                  const width =
+                    fret === 0
+                      ? OPEN_NOTE_RADIUS * 2.2
+                      : fretSpaceWidth(fret, scaleLength) * 0.92;
+                  return (
+                    <rect
+                      key={`cell-${stringIndex}-${fret}`}
+                      x={cx - width / 2}
+                      y={stringY(stringIndex) - FRETBOARD_LAYOUT.stringGap / 2}
+                      width={width}
+                      height={FRETBOARD_LAYOUT.stringGap}
+                      fill="transparent"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => onCellClick(stringIndex, fret)}
+                    />
+                  );
+                }),
+              )}
 
             {regionBadges.map((badge) => (
               <text

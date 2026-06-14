@@ -26,6 +26,7 @@ export type StudyMode =
   | 'chords'
   | 'scales'
   | 'progressions'
+  | 'intervals'
   | 'theory';
 
 /**

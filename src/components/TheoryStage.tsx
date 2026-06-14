@@ -46,7 +46,9 @@ export function TheoryStage({
         ? 'Practice this across the neck →'
         : topic.practiceLink?.mode === 'chords'
           ? 'Try in Chords →'
-          : null;
+          : topic.practiceLink?.mode === 'intervals'
+            ? 'Train your ear & eye →'
+            : null;
 
   return (
     <section

@@ -5,6 +5,7 @@ export const THEORY_SECTIONS = [
   'The Map',
   'Keys & Scales',
   'Diatonic Harmony',
+  'Intervallic Function',
 ] as const;
 
 export type TheorySection = (typeof THEORY_SECTIONS)[number];
@@ -15,6 +16,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
     section: 'Fundamentals',
     title: 'Intervals',
     fretboardDemo: { scaleQuality: 'major', singleString: true },
+    practiceLink: { mode: 'intervals' },
     theory: {
       title: 'Intervals',
       summary:
@@ -47,6 +49,13 @@ export const THEORY_TOPICS: TheoryTopic[] = [
               ['Octave (P8)', '12', 'C', 'Same note, higher'],
             ],
           },
+        },
+        {
+          heading: 'Hear it, see it, find it',
+          body: [
+            'Guitarist Jack Gardiner (drawing on Tom Quayle and Paul Gilbert) argues that the fastest way to truly own the fretboard is to stop thinking in shapes and start thinking in intervals: hear what each interval sounds like, know its job relative to a root, and see where it lives on every string set.',
+            'Use the practice link to open the Intervals trainer — hear an interval, then find it on the neck — and build the ear-to-hand connection that scale boxes alone never teach.',
+          ],
         },
       ],
     },
@@ -326,6 +335,90 @@ export const THEORY_TOPICS: TheoryTopic[] = [
             'A cadence is the chord move that ends a phrase. Authentic (V–I) is the strongest resolution. Plagal (IV–I) is the gentle "amen" ending. A half cadence pauses on V, leaving the phrase open. A deceptive cadence (V–vi) sets up the tonic, then sidesteps to vi for a surprise.',
           ],
         },
+      ],
+    },
+  },
+  {
+    id: 'intervallic-function',
+    section: 'Intervallic Function',
+    title: 'Thinking in Intervals',
+    practiceLink: { mode: 'intervals' },
+    theory: {
+      title: 'Thinking in Intervals',
+      summary:
+        'Shapes tell you where notes are; intervals tell you what they do. Learn to hear function against a root.',
+      body: [
+        'CAGED and three-notes-per-string are powerful maps, but they teach geometry, not meaning — you can rip through a box without knowing what any note is doing. Intervallic thinking flips that: every note is heard and seen as a function above a root (a 3rd, a ♭7, a 5th), so the same idea transfers to any key, any position, even any instrument.',
+        'The goal is three senses working together: an ear that recognises the sound of each interval, a voice that can sing it, and eyes that see its shape on every string set. Keep your shapes — then layer interval knowledge on top to finally understand them.',
+      ],
+      sections: [
+        {
+          heading: 'The two senses to train',
+          body: [
+            'Hearing and seeing are separate skills. Drill both: identify intervals by ear, and find them on the neck from a known root. The Intervals trainer alternates between the two.',
+          ],
+        },
+      ],
+    },
+  },
+  {
+    id: 'shell-voicings',
+    section: 'Intervallic Function',
+    title: 'Shell Voicings',
+    practiceLink: { mode: 'intervals' },
+    theory: {
+      title: 'Shell Voicings',
+      summary:
+        'Root, 3rd, and 7th — the three notes that define a seventh chord. Drop the 5th.',
+      body: [
+        'A shell voicing keeps only the root, the 3rd, and the 7th. The 5th adds almost no harmonic information (Gardiner calls it the "potato"), so leaving it out gives you a lean, mobile chord that still states the quality clearly.',
+        'From one root, three shells cover the core seventh chords: flatten the 7 and a major 7 becomes a dominant 7; flatten the 3 as well and it becomes a minor 7. Hearing those two notes move is hearing the chord change.',
+      ],
+      sections: [
+        {
+          heading: 'The three core shells',
+          body: [
+            'Build each from the same root and listen to how only the 3rd and 7th change.',
+          ],
+          table: {
+            columns: ['Chord', 'Shell', 'From C'],
+            rows: [
+              ['Major 7', 'R + 3 + 7', 'C – E – B'],
+              ['Dominant 7', 'R + 3 + ♭7', 'C – E – B♭'],
+              ['Minor 7', 'R + ♭3 + ♭7', 'C – E♭ – B♭'],
+            ],
+          },
+        },
+      ],
+    },
+  },
+  {
+    id: 'color-tones',
+    section: 'Intervallic Function',
+    title: '3rds & 7ths',
+    practiceLink: { mode: 'intervals' },
+    theory: {
+      title: '3rds & 7ths',
+      summary:
+        'The 3rd and 7th are the two notes that carry the sound of the changes — target them.',
+      body: [
+        'When chords move, the roots and 5ths mostly just relocate; it is the 3rds and 7ths that actually voice-lead, often by a single semitone. The 3rd of one chord frequently becomes the 7th of the next, and they sit close together on the neck.',
+        'Outline a progression with only its 3rds and 7ths and a listener still hears the harmony, even with no chords underneath. That is why these two tones are the heart of jazz and blues comping — and a brilliant constraint for melodic soloing.',
+      ],
+    },
+  },
+  {
+    id: 'gb-shift',
+    section: 'Intervallic Function',
+    title: 'The G→B Shift',
+    practiceLink: { mode: 'intervals' },
+    theory: {
+      title: 'The G→B Shift',
+      summary:
+        'Standard tuning is all fourths — except between the G and B strings, which jump a major 3rd.',
+      body: [
+        'Five of the six strings are tuned a perfect 4th apart. The exception is G to B, a major 3rd. That single gap is why an interval shape that works on the lower strings suddenly "breaks" when it crosses onto the B or high E strings.',
+        'There is no trick to memorise away — just be aware of it. When a two-note shape spans the G and B strings, shift the upper note one fret higher than the lower-string version. The Intervals trainer flags this seam whenever a drill crosses it.',
       ],
     },
   },
