@@ -3,14 +3,20 @@ import type { ChordQuality, FretPosition, NoteName } from '../types/music';
 import type { UseInstrument } from '../hooks/useInstrument';
 import type { NotationPreference } from '../lib/music';
 import {
+  FORMULA_TARGETS,
   INTERVALS,
   SHELL_QUALITIES,
+  buildFormulaSpec,
   getDirectedTargets,
+  getDyadRelationshipLabel,
+  getFormulaTarget,
   getIntervalColor,
   getIntervalDef,
+  getIntervalDyadShapes,
   getNoteAt,
   getOneStringShapes,
   getPlayableAnchors,
+  getPositionsForIntervals,
   getRootAnchors,
   getShellDef,
   crossesGtoB,
@@ -27,7 +33,7 @@ import {
 import { Fretboard } from './Fretboard';
 import styles from './IntervalTrainer.module.css';
 
-type Drill = 'learn' | 'find' | 'identify' | 'shell';
+type Drill = 'learn' | 'find' | 'identify' | 'shell' | 'shapes' | 'build';
 type LabelStyle = 'function' | 'degree';
 
 interface IntervalTrainerProps {
@@ -39,9 +45,11 @@ interface IntervalTrainerProps {
 
 const DRILLS: { id: Drill; label: string; blurb: string }[] = [
   { id: 'learn', label: 'Learn', blurb: 'See and hear an interval everywhere it lives.' },
+  { id: 'shapes', label: 'Shapes', blurb: 'The generic two-point shapes for one interval.' },
   { id: 'find', label: 'Find', blurb: 'Hear it, then find it on the neck.' },
   { id: 'identify', label: 'Identify', blurb: 'Hear it, then name it by ear.' },
   { id: 'shell', label: 'Shells', blurb: 'Build a chord from its 3rd and 7th.' },
+  { id: 'build', label: 'Build', blurb: 'Assemble a scale or chord from interval functions.' },
 ];
 
 const SCOPES: { id: DrillScope; label: string }[] = [
@@ -100,6 +108,9 @@ export function IntervalTrainer({
   const [randomRoot, setRandomRoot] = useState(false);
   const [enabled, setEnabled] = useState<number[]>(DEFAULT_ENABLED);
   const [shellQuality, setShellQuality] = useState<ChordQuality>('maj7');
+  const [shapeSemitones, setShapeSemitones] = useState(4);
+  const [formulaTargetId, setFormulaTargetId] = useState('scale:major');
+  const [buildStep, setBuildStep] = useState(1);
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [found, setFound] = useState<FretPosition[]>([]);
@@ -134,6 +145,9 @@ export function IntervalTrainer({
   const enabledArray = enabled.length > 0 ? enabled : DEFAULT_ENABLED;
 
   const nextQuestion = useCallback(() => {
+    // Shapes and Build are exploratory views, not graded questions.
+    if (drill === 'shapes' || drill === 'build') return;
+
     const qRoot = randomRoot ? pick(ALL_NOTES) : root;
     setFound([]);
     setSolved(false);
@@ -308,8 +322,61 @@ export function IntervalTrainer({
     }
   };
 
+  // Shapes drill: a comfortable low root anchor and its generic dyad shapes.
+  const shapeAnchor = useMemo<FretPosition | null>(() => {
+    const anchors = getRootAnchors(root);
+    if (anchors.length === 0) return null;
+    const comfy = anchors.filter((a) => a.fret >= 2 && a.fret <= 9);
+    const pool = comfy.length ? comfy : anchors;
+    // Prefer the lowest-pitched string (highest index) so the higher strings
+    // needed for adjacent / string-skip shapes exist above the root.
+    return [...pool].sort((a, b) => b.string - a.string || a.fret - b.fret)[0];
+  }, [root]);
+
+  const dyadShapes = useMemo(
+    () => (shapeAnchor ? getIntervalDyadShapes(shapeAnchor, shapeSemitones) : []),
+    [shapeAnchor, shapeSemitones],
+  );
+
+  // Build drill: the chosen target's formula and how many tones are revealed.
+  const formulaSpec = useMemo(
+    () => buildFormulaSpec(getFormulaTarget(formulaTargetId)),
+    [formulaTargetId],
+  );
+  const revealedCount = Math.min(Math.max(1, buildStep), formulaSpec.tones.length);
+  const revealedTones = formulaSpec.tones.slice(0, revealedCount);
+
+  // Reset the reveal to the full shape whenever the build target changes.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync reveal count to the new target
+    setBuildStep(buildFormulaSpec(getFormulaTarget(formulaTargetId)).tones.length);
+  }, [formulaTargetId]);
+
+  const handleShapePlay = useCallback(() => {
+    if (!shapeAnchor || audio.muted) return;
+    clearPlayTimers();
+    playTimers.current = playInterval(
+      playNote,
+      positionToMidi(shapeAnchor),
+      shapeSemitones,
+      direction,
+    );
+  }, [shapeAnchor, shapeSemitones, audio.muted, clearPlayTimers, playNote, direction]);
+
+  const handleBuildPlay = (pos: FretPosition) => {
+    if (!audio.muted) playNote(positionToMidi(pos));
+  };
+
   // Positions drawn on the board for the current drill + state.
   const boardPositions = useMemo<FretPosition[]>(() => {
+    if (drill === 'shapes') {
+      if (!shapeAnchor) return [];
+      return dedupe([shapeAnchor, ...dyadShapes.map((s) => s.target)]);
+    }
+    if (drill === 'build') {
+      const intervals = revealedTones.map((t) => t.interval);
+      return getPositionsForIntervals(root, intervals);
+    }
     if (!question) return [];
     if (drill === 'learn') {
       if (scope === 'string') {
@@ -337,10 +404,11 @@ export function IntervalTrainer({
       return dedupe([...base, ...found, ...reveal]);
     }
     return [];
-  }, [question, drill, scope, found, revealed]);
+  }, [question, drill, scope, found, revealed, shapeAnchor, dyadShapes, revealedTones, root]);
 
   const showBoard = drill !== 'identify';
   const showScope = drill === 'find' || drill === 'learn';
+  const boardRoot = drill === 'shapes' || drill === 'build' ? root : question?.root ?? root;
   const intervalDef = question ? getIntervalDef(question.semitones) : null;
   const gbWarning =
     showScope &&
@@ -349,6 +417,18 @@ export function IntervalTrainer({
     crossesGtoB(question.anchor, question.targets);
 
   const promptText = (() => {
+    if (drill === 'shapes') {
+      const def = getIntervalDef(shapeSemitones);
+      return `${def.name} — its generic two-point shapes from ${root}`;
+    }
+    if (drill === 'build') {
+      const built = revealedCount >= formulaSpec.tones.length;
+      return built
+        ? `${root} ${formulaSpec.label} — ${formulaSpec.tones.map((t) => t.label).join(' ')}`
+        : `Building ${root} ${formulaSpec.label} — ${revealedTones
+            .map((t) => t.label)
+            .join(' ')}`;
+    }
     if (!question || !intervalDef) return '';
     const target =
       labelStyle === 'degree' ? intervalDef.degreeLabel : intervalDef.functionLabel;
@@ -536,6 +616,88 @@ export function IntervalTrainer({
         </div>
       )}
 
+      {drill === 'shapes' && (
+        <>
+          <div className={styles.chips} role="group" aria-label="Interval">
+            {INTERVALS.filter((i) => i.semitones > 0 && i.semitones < 12).map((def) => {
+              const on = shapeSemitones === def.semitones;
+              return (
+                <button
+                  key={def.semitones}
+                  type="button"
+                  className={on ? styles.chipOn : styles.chip}
+                  aria-pressed={on}
+                  style={on ? { borderColor: getIntervalColor(def.semitones) } : undefined}
+                  onClick={() => setShapeSemitones(def.semitones)}
+                  title={def.name}
+                >
+                  {labelStyle === 'degree' ? def.degreeLabel : def.functionLabel}
+                </button>
+              );
+            })}
+          </div>
+          <ul className={styles.legend} aria-label="Shape relationships">
+            {dyadShapes.map((shape) => (
+              <li key={shape.relationship} className={styles.legendItem}>
+                <span className={styles.legendName}>
+                  {getDyadRelationshipLabel(shape.relationship)}
+                </span>
+                <span className={styles.legendDetail}>
+                  {shape.fretOffset === 0
+                    ? 'same fret'
+                    : `${shape.fretOffset > 0 ? '+' : ''}${shape.fretOffset} fret${
+                        Math.abs(shape.fretOffset) === 1 ? '' : 's'
+                      }`}
+                  {shape.crossesGB && ' · crosses G→B'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {drill === 'build' && (
+        <>
+          <div className={styles.presets} role="group" aria-label="Build target">
+            {FORMULA_TARGETS.map((target) => (
+              <button
+                key={target.id}
+                type="button"
+                className={formulaTargetId === target.id ? styles.chipOn : styles.preset}
+                aria-pressed={formulaTargetId === target.id}
+                onClick={() => setFormulaTargetId(target.id)}
+              >
+                {target.label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.chips} role="group" aria-label="Formula">
+            {formulaSpec.tones.map((tone, index) => {
+              const shown = index < revealedCount;
+              const cls = !shown
+                ? styles.chip
+                : tone.altered
+                  ? styles.chipAltered
+                  : styles.chipOn;
+              return (
+                <button
+                  key={`${tone.interval}-${index}`}
+                  type="button"
+                  className={cls}
+                  style={shown ? { borderColor: getIntervalColor(tone.interval) } : undefined}
+                  onClick={() => setBuildStep(index + 1)}
+                  title={
+                    tone.altered ? `${tone.label} — altered from major` : tone.label
+                  }
+                >
+                  {tone.label}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+
       <div className={styles.promptRow}>
         <div className={styles.promptMain}>
           <p
@@ -557,7 +719,7 @@ export function IntervalTrainer({
         </div>
 
         <div className={styles.controls}>
-          {drill !== 'shell' && (
+          {(drill === 'find' || drill === 'identify' || drill === 'learn') && (
             <button
               type="button"
               className={styles.btn}
@@ -567,6 +729,41 @@ export function IntervalTrainer({
             >
               Play
             </button>
+          )}
+          {drill === 'shapes' && (
+            <button
+              type="button"
+              className={styles.btn}
+              onClick={handleShapePlay}
+              disabled={audio.muted}
+              title={audio.muted ? 'Unmute to hear the interval' : 'Hear the interval'}
+            >
+              Play
+            </button>
+          )}
+          {drill === 'build' && (
+            <>
+              <button
+                type="button"
+                className={styles.btn}
+                onClick={() => setBuildStep((s) => Math.max(1, s - 1))}
+                disabled={revealedCount <= 1}
+                title="Remove the last tone"
+              >
+                Peel
+              </button>
+              <button
+                type="button"
+                className={styles.btn}
+                onClick={() =>
+                  setBuildStep((s) => Math.min(formulaSpec.tones.length, s + 1))
+                }
+                disabled={revealedCount >= formulaSpec.tones.length}
+                title="Add the next interval"
+              >
+                Add tone
+              </button>
+            </>
           )}
           {drill === 'shell' && question?.anchor && (
             <button
@@ -590,7 +787,7 @@ export function IntervalTrainer({
               Reveal
             </button>
           )}
-          {drill !== 'learn' && (
+          {(drill === 'find' || drill === 'identify' || drill === 'shell') && (
             <button type="button" className={styles.btnPrimary} onClick={nextQuestion}>
               Next
             </button>
@@ -625,7 +822,7 @@ export function IntervalTrainer({
         </div>
       )}
 
-      {drill !== 'identify' && (
+      {(drill === 'find' || drill === 'shell') && (
         <div className={styles.scoreRow}>
           <span className={styles.scoreItem}>
             Score {score.correct}/{score.total}
@@ -635,14 +832,14 @@ export function IntervalTrainer({
         </div>
       )}
 
-      {showBoard && question && (
+      {showBoard && (question || drill === 'shapes' || drill === 'build') && (
         <Fretboard
           positions={boardPositions}
           title={promptText}
           notation={notation}
           noteColors={noteColors}
           showNoteLabels
-          intervalLabeling={{ root: question.root, style: labelStyle }}
+          intervalLabeling={{ root: boardRoot, style: labelStyle }}
           onCellClick={
             drill === 'find'
               ? handleFindClick
@@ -650,7 +847,15 @@ export function IntervalTrainer({
                 ? handleShellClick
                 : undefined
           }
-          onPlayNote={drill === 'learn' ? handleLearnPlay : undefined}
+          onPlayNote={
+            drill === 'learn'
+              ? handleLearnPlay
+              : drill === 'shapes'
+                ? handleShapePlay
+                : drill === 'build'
+                  ? handleBuildPlay
+                  : undefined
+          }
         />
       )}
     </div>

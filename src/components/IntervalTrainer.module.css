@@ -190,6 +190,50 @@
   border-width: 2px;
 }
 
+.chipAltered {
+  composes: chip;
+  background: rgba(192, 138, 46, 0.16);
+  color: var(--fretboard-control-text-active);
+  border-width: 2px;
+  border-color: #c08a2e;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--fretboard-control-border);
+  border-radius: var(--radius-control);
+  min-width: 7rem;
+}
+
+.legendName {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--fretboard-control-text-hover);
+}
+
+.legendDetail {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  color: var(--fretboard-control-text);
+  opacity: 0.8;
+}
+
 .promptRow {
   display: flex;
   flex-wrap: wrap;

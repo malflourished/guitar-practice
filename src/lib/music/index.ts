@@ -35,6 +35,21 @@ export {
   type DrillScope,
 } from './intervalGeometry';
 export {
+  getDyadRelationshipLabel,
+  getIntervalDyadShapes,
+  type DyadRelationship,
+  type IntervalDyadShape,
+} from './intervalShapes';
+export {
+  FORMULA_TARGETS,
+  buildFormulaSpec,
+  getFormulaTarget,
+  type FormulaKind,
+  type FormulaSpec,
+  type FormulaTarget,
+  type FormulaTone,
+} from './intervalFormulas';
+export {
   SHELL_QUALITIES,
   getColorTonePitchClasses,
   getShellDef,
