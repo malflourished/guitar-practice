@@ -15,6 +15,7 @@ import {
   getFormulaTarget,
   getGuideToneMotion,
   planGuideTones,
+  pickShellRoot,
   getIntervalColor,
   getIntervalDef,
   getIntervalDyadShapes,
@@ -380,15 +381,6 @@ export function IntervalTrainer({
   const changeIndex = Math.min(changesStep, changesSteps.length - 1);
   const changeStep = changesSteps[changeIndex] ?? null;
 
-  const changeAnchor = useMemo<FretPosition | null>(() => {
-    if (!changeStep) return null;
-    const anchors = getRootAnchors(changeStep.root);
-    const comfy = anchors.filter((a) => a.fret >= 3 && a.fret <= 12);
-    const pool = comfy.length ? comfy : anchors;
-    if (pool.length === 0) return null;
-    return [...pool].sort((a, b) => b.string - a.string || a.fret - b.fret)[0];
-  }, [changeStep]);
-
   // Guide tones for the whole progression, on the D and G strings, so each
   // chord's 3rd and 7th sit next to the previous chord's.
   const guidePlan = useMemo(() => {
@@ -402,6 +394,14 @@ export function IntervalTrainer({
       : 5;
     return planGuideTones(changesSteps, anchorFret);
   }, [changesSteps]);
+
+  // Each chord's root sits under its guide tones, on the low E or A string, so
+  // the three notes make a shell voicing a hand can hold.
+  const changeAnchor = useMemo<FretPosition | null>(() => {
+    const placement = guidePlan[changeIndex];
+    if (!changeStep || !placement) return null;
+    return pickShellRoot(changeStep.root, placement);
+  }, [changeStep, guidePlan, changeIndex]);
 
   const changesPositions = useMemo<FretPosition[]>(() => {
     const placement = guidePlan[changeIndex];

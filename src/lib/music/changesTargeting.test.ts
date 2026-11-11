@@ -4,6 +4,7 @@ import {
   getChangesProgression,
   CHANGES_PROGRESSIONS,
   getGuideToneMotion,
+  pickShellRoot,
   planGuideTones,
 } from './changesTargeting';
 import { getRootAnchors } from './intervalGeometry';
@@ -112,6 +113,39 @@ describe('planGuideTones', () => {
     expect(plan[0].seventh).toBeNull();
     expect([2, 3]).toContain(plan[0].third.string);
   });
+});
+
+describe('pickShellRoot', () => {
+  it('puts each root of C major ii-V-I under its guide tones', () => {
+    const { steps, plan } = planFor('C', 'major-251');
+    const rootOf = (i: number) => {
+      const root = pickShellRoot(steps[i].root, plan[i])!;
+      return [root.string, root.fret, root.note];
+    };
+    // Dm7: low E string 10. G7: A string 10, not low E fret 3. Cmaj7: low E string 8.
+    expect(rootOf(0)).toEqual([5, 10, 'D']);
+    expect(rootOf(1)).toEqual([4, 10, 'G']);
+    expect(rootOf(2)).toEqual([5, 8, 'C']);
+  });
+
+  for (const progression of CHANGES_PROGRESSIONS) {
+    it(`keeps the root within 2 frets of both guide tones in ${progression.label}, in all 12 keys`, () => {
+      for (const key of ALL_NOTES) {
+        const { steps, plan } = planFor(key, progression.id);
+        plan.forEach((p, i) => {
+          const root = pickShellRoot(steps[i].root, p)!;
+          expect([4, 5]).toContain(root.string);
+          expect(root.note).toBe(steps[i].root);
+          for (const tone of [p.third, p.seventh!]) {
+            expect(
+              Math.abs(tone.fret - root.fret),
+              `${key} ${progression.id} step ${i}`,
+            ).toBeLessThanOrEqual(2);
+          }
+        });
+      }
+    });
+  }
 });
 
 describe('getGuideToneMotion held', () => {

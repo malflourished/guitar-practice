@@ -55,6 +55,7 @@ export {
   buildChangesStepView,
   getChangesProgression,
   planGuideTones,
+  pickShellRoot,
   getGuideToneMotion,
   type ChangesProgressionDef,
   type ChangesStepView,

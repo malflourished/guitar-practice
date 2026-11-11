@@ -9,12 +9,12 @@ This file is the plan of record. It came out of a full review of the app on 2026
 
 | # | Work package | Status | Depends on | Who should do it |
 |---|---|---|---|---|
-| A | Single-screen layout | Next, once B and F have landed (A moves files they edit) | B, F | the strongest model, or an experienced front-end developer: it needs design judgment |
-| B | Teaching fixes (five small ones) | **In progress**, handed off 2026-11-11 | nothing | any capable model: fully specified and test-backed |
+| A | Single-screen layout | **Next up.** B and F have landed, so nothing blocks it | nothing | the strongest model, or an experienced front-end developer: it needs design judgment |
+| B | Teaching fixes (five small ones) | Done and reviewed, 2026-11-11 | nothing | any capable model: fully specified and test-backed |
 | C | Chord shapes and small triads | Ready | nothing | a strong model, and a guitarist should check the fingerings |
 | D | Discover mode | Ready after A | A (needs the new frame) | a capable model: the content is written and the behaviour is specified |
 | E | Practice that adapts, jam loop | Ready after A | A | a capable model |
-| F | Look: analog texture | Treatment chosen. **In progress**: making it the default, handed off 2026-11-11 | nothing | any capable model: the values are decided |
+| F | Look: analog texture | Default look done and reviewed, 2026-11-11. Open: measure its cost on real hardware | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
@@ -109,6 +109,7 @@ Within those rules the details are the implementer's call. Keep the current visu
 - [ ] Below about 1100 px wide or 680 px tall the side panel becomes a drawer over the neck, not a stacked block.
 - [ ] No text under 12 px in anything that gets moved. About two-thirds of the font sizes in the app are below that today (most common: `0.62rem`).
 - [ ] Give the three hidden gestures a visible control or a hint while re-homing them: Cmd-drag on the position slider, Cmd-click on Labels, and clicking Vibrato a second time to flip the canvas.
+- [ ] Give the Texture switch its own place. In the dock it sits beside Vibrato and Scholar in the same button style, so it reads as a third theme.
 
 **Done when.**
 
@@ -294,3 +295,4 @@ Scholar: clean and Print.
 - **2026-11-11.** Owner chose the look: Subtle on Vibrato, Print on Scholar. A Subtle and Tube blend is parked. "Hidden gestures" moved from package B to package A, because A re-homes those controls. Packages B and F were handed to separate sessions on a cheaper model; A follows when they land.
 - **2026-11-11.** Analog texture made the default look: Subtle on Vibrato, Print on Scholar, on for everyone, with a Texture on/off button in the theme dock. The lab panel stays as a hidden tuning tool on the backquote key.
 - **2026-11-11.** Package B done: changes drill guide tones on the D and G strings (I–vi in the turnaround needs one 3-fret move, the pitches allow nothing smaller), key panel spelled by key, dyad shapes limited to 4 frets, active CAGED letter in text colour (14.5:1 or better), selected pill stronger than hover.
+- **2026-11-11.** Packages B and F reviewed against the running app and confirmed. One addition from the review: the Changes drill now shows each chord's root on the low E or A string under its guide tones (`pickShellRoot`), so root, 3rd and 7th make a shell voicing. Before, G7's root sat at fret 3 while its guide tones were at frets 9 and 10.

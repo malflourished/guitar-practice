@@ -307,6 +307,35 @@ export function planGuideTones(
   return best ?? greedyPlan(candidates, firstAnchorFret);
 }
 
+/** The bass strings a shell voicing's root sits on: low E (5), then A (4). */
+const ROOT_STRINGS = [5, 4] as const;
+
+/**
+ * Where to show a chord's root so that root, 3rd and 7th make a shell voicing
+ * a hand can hold: on the low E or A string, as close as possible to the guide
+ * tones. Picking the root on its own can leave it seven frets away from them
+ * (G on the low E string at fret 3 under a 3rd and 7th at frets 9 and 10).
+ */
+export function pickShellRoot(
+  root: NoteName,
+  placement: GuideTonePlacement,
+): FretPosition | null {
+  const centre =
+    (placement.third.fret + (placement.seventh?.fret ?? placement.third.fret)) / 2;
+  let best: FretPosition | null = null;
+  let bestDistance = Infinity;
+  for (const string of ROOT_STRINGS) {
+    for (const fret of fretsFor(string, root)) {
+      const distance = Math.abs(fret - centre);
+      if (distance < bestDistance) {
+        best = { string, fret, note: getNoteAt(string, fret) };
+        bestDistance = distance;
+      }
+    }
+  }
+  return best;
+}
+
 export interface GuideToneMotion {
   /** Smallest semitone move from one of `prev`'s color tones to a `curr` tone. */
   semitones: number;
