@@ -1,4 +1,4 @@
-import type { FretPosition, NeckViewMode } from '../../types/music';
+import type { FretPosition } from '../../types/music';
 import type { Position } from './positions';
 
 /** Stable identity for a fretboard cell. */
@@ -20,21 +20,25 @@ export interface NeckViewLayers {
 }
 
 /**
- * Compute the onion-skin layers for a neck view.
+ * Compute the onion-skin layers for a span of positions.
  *
- * The active region renders normally (handled by the caller); this returns the
- * dimmed context boxes around it. Ghost cells already covered by the active box
- * (or a nearer ghost) are dropped so each fretboard cell renders exactly once.
- * Overlap keys mark active-box notes that also live in an adjacent box — the
- * shared rungs you pivot on when shifting position.
+ * `rangeStart`..`rangeEnd` (inclusive) are the regions visible at once. The
+ * active region renders normally (handled by the caller); this returns the
+ * dimmed context boxes around it within the span. Ghost cells already covered
+ * by the active box (or a nearer ghost) are dropped so each fretboard cell
+ * renders exactly once. Overlap keys mark active-box notes that also live in an
+ * adjacent box — the shared rungs you pivot on when shifting position.
  */
 export function buildNeckViewLayers(
   regions: Position[],
   activeIndex: number,
-  mode: NeckViewMode,
+  rangeStart: number,
+  rangeEnd: number,
 ): NeckViewLayers {
   const active = regions[activeIndex];
-  if (!active || mode === 'single' || regions.length < 2) {
+  const start = Math.max(0, Math.min(rangeStart, rangeEnd));
+  const end = Math.min(regions.length - 1, Math.max(rangeStart, rangeEnd));
+  if (!active || start === end || regions.length < 2) {
     return { ghosts: [], overlapKeys: new Set() };
   }
 
@@ -42,6 +46,7 @@ export function buildNeckViewLayers(
 
   const overlapKeys = new Set<string>();
   for (const neighborIndex of [activeIndex - 1, activeIndex + 1]) {
+    if (neighborIndex < start || neighborIndex > end) continue;
     const neighbor = regions[neighborIndex];
     if (!neighbor) continue;
     for (const position of neighbor.positions) {
@@ -63,16 +68,16 @@ export function buildNeckViewLayers(
     if (positions.length > 0) ghosts.push({ positions, tier });
   };
 
+  // Nearer boxes first so they win cell ownership during dedupe.
   for (const neighborIndex of [activeIndex - 1, activeIndex + 1]) {
+    if (neighborIndex < start || neighborIndex > end) continue;
     const neighbor = regions[neighborIndex];
     if (neighbor) addGhost(neighbor, 'near');
   }
 
-  if (mode === 'full') {
-    for (let index = 0; index < regions.length; index++) {
-      if (Math.abs(index - activeIndex) <= 1) continue;
-      addGhost(regions[index], 'far');
-    }
+  for (let index = start; index <= end; index++) {
+    if (Math.abs(index - activeIndex) <= 1) continue;
+    addGhost(regions[index], 'far');
   }
 
   return { ghosts, overlapKeys };
@@ -89,20 +94,22 @@ export interface RegionBadge {
 }
 
 /**
- * One badge per region for connected/full views, so each box is identified on
- * the board itself ("G", "E", … or "1", "2", …). Skips regions outside the
- * view (non-adjacent boxes in connected mode).
+ * One badge per visible region in the span, so each box is identified on the
+ * board itself ("G", "E", … or "1", "2", …). Returns nothing when only the
+ * active box is shown (a collapsed, single-position span).
  */
 export function buildRegionBadges(
   regions: Position[],
   activeIndex: number,
-  mode: NeckViewMode,
+  rangeStart: number,
+  rangeEnd: number,
 ): RegionBadge[] {
-  if (mode === 'single' || regions.length < 2) return [];
+  const start = Math.max(0, Math.min(rangeStart, rangeEnd));
+  const end = Math.min(regions.length - 1, Math.max(rangeStart, rangeEnd));
+  if (start === end || regions.length < 2) return [];
 
   const badges: RegionBadge[] = [];
-  for (let index = 0; index < regions.length; index++) {
-    if (mode === 'connected' && Math.abs(index - activeIndex) > 1) continue;
+  for (let index = start; index <= end; index++) {
     const region = regions[index];
     badges.push({
       index,

@@ -1,5 +1,6 @@
 import type { NotationPreference, ProgressionChordView } from '../lib/music';
-import { CHORD_DIAGRAM_LABEL_STYLE, ChordDiagram } from './ChordDiagram';
+import { ChordDiagram } from './ChordDiagram';
+import { CHORD_DIAGRAM_LABEL_STYLE } from '../lib/chordDiagramLayout';
 import styles from './ProgressionStrip.module.css';
 
 export type { ProgressionChordView };

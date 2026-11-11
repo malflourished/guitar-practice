@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Fretboard } from './components/Fretboard';
 import { PositionSlider } from './components/PositionSlider';
+import { DisplayToggles } from './components/DisplayToggles';
 import { AudioControls, DEFAULT_TEMPO } from './components/AudioControls';
 import { DebugPanel } from './components/DebugPanel';
-import { AmbientBackground } from './components/AmbientBackground';
+import { AmbientBackground, type AmbientMotion } from './components/AmbientBackground';
 import { KeySelector } from './components/KeySelector';
 import { KeyContext } from './components/KeyContext';
 import { useInstrument } from './hooks/useInstrument';
@@ -19,17 +20,12 @@ import {
 } from './lib/audio/pitch';
 import { buildTraversalRun } from './lib/audio/traversal';
 import { ALL_NOTES, NOTE_COLORS } from './lib/colors';
-import {
-  getFretboardSubtitle,
-  getFretboardTitle,
-  getRootNote,
-} from './lib/displayTitle';
+import { getFretboardTitle, getRootNote } from './lib/displayTitle';
 import {
   getBackgroundKeyForMode,
   getKeyBackgroundStyle,
-  type KeyBackgroundStyle,
 } from './lib/keyPalette';
-import { getAmbientShape } from './lib/ambientShapes';
+import { PracticeSession } from './components/PracticeSession';
 import {
   buildChordPositionViews,
   buildChordPositions,
@@ -80,32 +76,33 @@ import {
 } from './components/SettingsList';
 import { ChordPositionStrip } from './components/ChordPositionStrip';
 import { ProgressionStrip } from './components/ProgressionStrip';
+import { IntervalTrainer } from './components/IntervalTrainer';
 import { TheoryPanel } from './components/TheoryPanel';
 import { TheoryNavigator } from './components/TheoryNavigator';
 import { TheoryStage } from './components/TheoryStage';
 import { APP_NAME } from './lib/brand';
 import glass from './styles/glass.module.css';
-import { useColorBoundary } from './hooks/useColorBoundary';
 import { useDebugSettings } from './hooks/useDebugSettings';
 import './App.css';
 
-/** Vibrato dark canvas: shell uses dark type over these vivid keys (Db = C#). */
-const SHELL_DARK_TEXT_KEYS = new Set<NoteName>(['C', 'C#']);
-
 function isSingleRootMode(mode: StudyMode): boolean {
   return (
+    mode === 'practice' ||
     mode === 'chords' ||
     mode === 'scales' ||
     mode === 'progressions' ||
+    mode === 'intervals' ||
     mode === 'theory'
   );
 }
 
 const STUDY_MODES = [
+  'practice',
   'notes',
   'chords',
   'scales',
   'progressions',
+  'intervals',
   'theory',
 ] as const;
 
@@ -161,8 +158,6 @@ function loadNoteColors(): Record<NoteName, string> {
 }
 
 function App() {
-  const fretboardAnchorRef = useRef<HTMLDivElement>(null);
-  const colorBoundary = useColorBoundary(fretboardAnchorRef);
   const [activeNoteList, setActiveNoteList] = usePersistentState<NoteName[]>(
     'active-notes',
     ['C'],
@@ -185,7 +180,7 @@ function App() {
   );
   const [studyMode, setStudyMode] = usePersistentState<StudyMode>(
     'study-mode',
-    'notes',
+    'practice',
     oneOf(STUDY_MODES),
   );
   const [scaleQuality, setScaleQuality] = usePersistentState<ScaleQuality>(
@@ -263,6 +258,7 @@ function App() {
     loadNoteColors,
   );
 
+  const [ambientMotion, setAmbientMotion] = usePersistentState<AmbientMotion>('ambient-motion', 'flow', oneOf(['flow', 'calm', 'still'] as const));
   const debug = useDebugSettings();
   const { uiTheme, vibratoCanvas, selectUiTheme } = useUiTheme();
 
@@ -427,6 +423,7 @@ function App() {
   const neckViewEnabled =
     studyMode === 'scales' ||
     studyMode === 'chords' ||
+    studyMode === 'progressions' ||
     theoryDemoSupportsNeckView;
 
   const neckView = useNeckView(positionScope, displayRegions, {
@@ -670,20 +667,10 @@ function App() {
     );
   };
 
+  const stopPlayback = audio.stopAll;
   useEffect(() => {
-    if (
-      audio.playingId !== 'progression-ascending' &&
-      audio.playingId !== 'progression-descending'
-    ) {
-      setLadderAnchor(null);
-    }
-  }, [audio.playingId]);
-
-  useEffect(() => {
-    audio.stopAll();
-    setLadderAnchor(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- stop playback on progression context change only
-  }, [studyMode, progressionId, rootNote, audio.stopAll]);
+    if (studyMode !== 'practice') stopPlayback();
+  }, [studyMode, progressionId, rootNote, stopPlayback]);
 
   const spellingMap = useMemo(() => {
     if (studyMode === 'notes' || (studyMode === 'theory' && !theoryShowFretboard)) {
@@ -768,25 +755,6 @@ function App() {
     ],
   );
 
-  const subtitle = useMemo(() => {
-    const base = getFretboardSubtitle(
-      studyMode,
-      studyMode === 'progressions'
-        ? activeProgression.theory
-        : studyMode === 'theory'
-          ? activeTheoryTopic.theory
-          : null,
-    );
-    if (ladderActive && ladderDirection) {
-      const hint =
-        ladderDirection === 'ascending'
-          ? "Ladder playback climbs the neck from the I chord's position."
-          : 'Ladder playback starts at the highest position and works down from the I chord.';
-      return `${base} ${hint}`;
-    }
-    return base;
-  }, [studyMode, activeProgression, activeTheoryTopic, ladderActive, ladderDirection]);
-
   const currentStepRole = useMemo(() => {
     if (studyMode !== 'progressions' || !activeProgressionStep) return undefined;
     return activeProgression.theory.functions?.find(
@@ -797,7 +765,7 @@ function App() {
   // The mode the current key reads as — drives the key-context panel and the
   // ambient background tint.
   const effectiveKeyMode: KeyMode =
-    studyMode === 'scales'
+    studyMode === 'practice' ? 'minor' : studyMode === 'scales'
       ? MINOR_FAMILY_SCALES.has(scaleQuality)
         ? 'minor'
         : 'major'
@@ -812,11 +780,6 @@ function App() {
     [studyMode, activeNotes, keyCenter],
   );
 
-  const ambientShape = useMemo(
-    () => getAmbientShape(backgroundKey),
-    [backgroundKey],
-  );
-
   const ambientStyle = useMemo(
     () =>
       getKeyBackgroundStyle(
@@ -827,33 +790,10 @@ function App() {
     [backgroundKey, effectiveKeyMode, noteColors],
   );
 
-  const [committedAmbientStyle, setCommittedAmbientStyle] =
-    useState<KeyBackgroundStyle>(ambientStyle);
-
-  const [committedBackgroundKey, setCommittedBackgroundKey] = useState(
-    backgroundKey,
-  );
-
-  const backgroundKeyRef = useRef(backgroundKey);
-  backgroundKeyRef.current = backgroundKey;
-
-  const handleAmbientCommit = (style: CSSProperties) => {
-    setCommittedAmbientStyle(style as KeyBackgroundStyle);
-    setCommittedBackgroundKey(backgroundKeyRef.current);
-  };
-
   const rootContrastMode =
     uiTheme === 'scholar' || (uiTheme === 'vibrato' && vibratoCanvas === 'light')
       ? 'light'
       : 'dark';
-
-  const shellContrastMode =
-    uiTheme === 'vibrato' &&
-    vibratoCanvas === 'dark' &&
-    committedBackgroundKey !== null &&
-    SHELL_DARK_TEXT_KEYS.has(committedBackgroundKey)
-      ? 'light'
-      : undefined;
 
   const handleApplyKey = (note: NoteName, action: 'select' | 'deselect' | 'set') => {
     if (action === 'set') {
@@ -874,6 +814,8 @@ function App() {
   };
 
   const handleStudyModeChange = (mode: StudyMode) => {
+    if (mode === studyMode) return;
+    audio.stopAll();
     setStudyMode(mode);
     if (isSingleRootMode(mode)) {
       if (studyMode === 'chords' && mode !== 'chords' && rootNote !== keyCenter) {
@@ -910,7 +852,7 @@ function App() {
     setTheoryShowFretboard(show);
     const demoView = activeTheoryTopic.fretboardDemo?.neckView;
     if (show && demoView) {
-      neckView.setViewMode(demoView);
+      neckView.applySpanPreset(demoView);
     }
   };
 
@@ -922,7 +864,7 @@ function App() {
       setScaleQuality(link.scaleQuality);
     }
     if (link.neckView) {
-      neckView.setViewMode(link.neckView);
+      neckView.applySpanPreset(link.neckView);
     }
     setTheoryShowFretboard(false);
   };
@@ -1013,8 +955,9 @@ function App() {
     positionRegions.length > 0 &&
     (studyMode !== 'theory' || theoryShowFretboard);
   const showTheoryStage = studyMode === 'theory';
+  const showIntervalTrainer = studyMode === 'intervals';
   const showFretboard =
-    studyMode !== 'theory' || theoryShowFretboard;
+    studyMode !== 'practice' && studyMode !== 'intervals' && (studyMode !== 'theory' || theoryShowFretboard);
 
   return (
     <div
@@ -1028,25 +971,19 @@ function App() {
       }
       style={
         uiTheme === 'vibrato'
-          ? (committedAmbientStyle as CSSProperties)
+          ? (ambientStyle as CSSProperties)
           : undefined
       }
     >
       <AmbientBackground
         style={ambientStyle as CSSProperties}
-        colorBoundary={colorBoundary}
-        family={ambientShape.family}
-        onCommit={handleAmbientCommit}
+        motion={ambientMotion}
+        light={vibratoCanvas === 'light'}
+        enabled={uiTheme === 'vibrato'}
       />
-      <UiThemeSelector
-        uiTheme={uiTheme}
-        vibratoCanvas={vibratoCanvas}
-        onUiThemeChange={selectUiTheme}
-      />
-      <div className="app" data-focus={focusMode ? 'true' : undefined}>
+      <div className="app" data-practice={studyMode === 'practice' ? 'true' : undefined} data-focus={focusMode ? 'true' : undefined}>
         <div
           className="shell"
-          data-contrast={shellContrastMode}
         >
           <p className="wordmark" aria-label={APP_NAME.slice(0, -1)}>
             {APP_NAME.slice(0, -1)}
@@ -1061,7 +998,7 @@ function App() {
                 />
               </SettingsRow>
 
-              <SettingsRow label="Key">
+              {studyMode !== 'practice' && <SettingsRow label="Key">
                 <KeySelector
                   activeNotes={activeNotes}
                   notation={notation}
@@ -1069,7 +1006,7 @@ function App() {
                   onApplyKey={handleApplyKey}
                   onNotationChange={setNotation}
                 />
-              </SettingsRow>
+              </SettingsRow>}
 
               <StudyModeControls
                 studyMode={studyMode}
@@ -1109,7 +1046,7 @@ function App() {
               )}
             </SettingsSection>
 
-            {singleRootMode && (
+            {singleRootMode && studyMode !== 'practice' && (
               <SettingsSection title="This key">
                 <KeyContext
                   keyRoot={keyCenter}
@@ -1164,7 +1101,9 @@ function App() {
           </SettingsList>
         </div>
 
-        <div className="fretboardStage" ref={fretboardAnchorRef}>
+        <div className="fretboardStage">
+          {studyMode === 'practice' && <PracticeSession root={rootNote} notation={notation} audio={audio} onRootChange={note => handleApplyKey(note, 'set')} />}
+          {audio.error && studyMode !== 'practice' && <p className="audioError" role="alert">{audio.error} <button onClick={() => audio.setInstrument(audio.instrument)}>Retry sound</button></p>}
           {showFretboard && (
             <div className="focusRow">
               <button
@@ -1184,6 +1123,7 @@ function App() {
           )}
           {showTheoryStage ? (
             <TheoryStage
+              key={activeTheoryTopic.id}
               topic={activeTheoryTopic}
               selectedRoot={rootNote}
               keyMode={keyMode}
@@ -1197,17 +1137,30 @@ function App() {
               }
             />
           ) : null}
+          {showIntervalTrainer ? (
+            <IntervalTrainer
+              root={rootNote}
+              notation={notation}
+              noteColors={noteColors}
+              audio={audio}
+            />
+          ) : null}
           {showFretboard ? (
             <>
+              {showPositionSlider && (
+                <PositionSlider
+                  regions={displayRegions}
+                  selectedIndex={positionIndex}
+                  onChange={setPositionIndex}
+                  spanEndIndex={neckView.spanEndIndex}
+                  onSpanEndChange={neckView.setSpanEndIndex}
+                  allowRange={neckViewEnabled}
+                  disabled={ladderActive || traversalActive}
+                />
+              )}
               <Fretboard
                 positions={positions}
                 title={title}
-                subtitle={subtitle}
-                subtitleVariant={
-                  studyMode === 'progressions' || studyMode === 'theory'
-                    ? 'theory'
-                    : 'default'
-                }
                 notation={notation}
                 noteLabels={spellingMap}
                 mutedStrings={mutedStrings}
@@ -1229,38 +1182,6 @@ function App() {
                   traversalActive ? undefined : setPositionIndex
                 }
               />
-              {showPositionSlider && (
-                <PositionSlider
-                  regions={displayRegions}
-                  selectedIndex={positionIndex}
-                  onChange={setPositionIndex}
-                  showFingers={showFingers}
-                  onFingersToggle={() => setShowFingers((prev) => !prev)}
-                  showNoteLabels={showNoteLabels}
-                  fullDotOpacity={fullDotOpacity}
-                  onNoteLabelsToggle={() => setShowNoteLabels((prev) => !prev)}
-                  onFullDotOpacityToggle={() =>
-                    setFullDotOpacity((prev) => !prev)
-                  }
-                  showChordTones={supportsChordTones ? showChordTones : undefined}
-                  onChordTonesToggle={
-                    supportsChordTones
-                      ? () => setShowChordTones((prev) => !prev)
-                      : undefined
-                  }
-                  viewMode={neckViewEnabled ? neckView.viewMode : undefined}
-                  onViewModeChange={
-                    neckViewEnabled ? neckView.setViewMode : undefined
-                  }
-                  harmonyLayer={
-                    studyMode === 'scales' ? harmonyLayer : undefined
-                  }
-                  onHarmonyLayerChange={
-                    studyMode === 'scales' ? setHarmonyLayer : undefined
-                  }
-                  disabled={ladderActive || traversalActive}
-                />
-              )}
               <div className="soundRow">
                 <AudioControls
                   instrument={audio.instrument}
@@ -1294,6 +1215,32 @@ function App() {
                   onPlayProgression={handlePlayProgression}
                   onPlayProgressionLadder={handlePlayProgressionLadder}
                 />
+                {showPositionSlider && (
+                  <DisplayToggles
+                    showFingers={showFingers}
+                    onFingersToggle={() => setShowFingers((prev) => !prev)}
+                    showNoteLabels={showNoteLabels}
+                    fullDotOpacity={fullDotOpacity}
+                    onNoteLabelsToggle={() => setShowNoteLabels((prev) => !prev)}
+                    onFullDotOpacityToggle={() =>
+                      setFullDotOpacity((prev) => !prev)
+                    }
+                    showChordTones={
+                      supportsChordTones ? showChordTones : undefined
+                    }
+                    onChordTonesToggle={
+                      supportsChordTones
+                        ? () => setShowChordTones((prev) => !prev)
+                        : undefined
+                    }
+                    harmonyLayer={
+                      studyMode === 'scales' ? harmonyLayer : undefined
+                    }
+                    onHarmonyLayerChange={
+                      studyMode === 'scales' ? setHarmonyLayer : undefined
+                    }
+                  />
+                )}
               </div>
               {studyMode === 'chords' && chordPositionViews.length > 0 && (
                 <ChordPositionStrip
@@ -1341,6 +1288,13 @@ function App() {
           />
         )}
       </div>
+      <UiThemeSelector
+        uiTheme={uiTheme}
+        vibratoCanvas={vibratoCanvas}
+        onUiThemeChange={selectUiTheme}
+        motion={ambientMotion}
+        onMotionChange={setAmbientMotion}
+      />
     </div>
   );
 }

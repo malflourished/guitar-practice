@@ -1,11 +1,13 @@
 .wrap {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 0.6rem;
 }
 
 .modeRow {
   display: flex;
+  justify-content: flex-end;
   gap: 0.35rem;
 }
 
@@ -22,12 +24,16 @@
 }
 
 .chips {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.35rem;
+  width: 100%;
 }
 
 .chip {
+  flex: 0 0 auto;
+  min-width: 62px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -67,6 +73,7 @@
 .links {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.3rem 0.85rem;
 }
 

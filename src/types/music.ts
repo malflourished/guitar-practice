@@ -22,10 +22,12 @@ export interface FretPosition {
 }
 
 export type StudyMode =
+  | 'practice'
   | 'notes'
   | 'chords'
   | 'scales'
   | 'progressions'
+  | 'intervals'
   | 'theory';
 
 /**
@@ -74,6 +76,19 @@ export interface TheoryTopic {
 /** Major or natural minor — the key context for a progression. */
 export type KeyMode = 'major' | 'minor';
 
+/** A compact reference table embedded in a theory section. */
+export interface TheoryTable {
+  columns: string[];
+  rows: string[][];
+}
+
+/** A subheaded block of prose with an optional reference table. */
+export interface TheorySectionBlock {
+  heading: string;
+  body: string[];
+  table?: TheoryTable;
+}
+
 /** Educational copy attached to a practice item (progression, scale, etc.). */
 export interface TheoryContent {
   title: string;
@@ -81,6 +96,8 @@ export interface TheoryContent {
   summary: string;
   /** Longer explanation paragraphs for the sidebar panel. */
   body: string[];
+  /** Subheaded prose blocks, each with an optional reference table. */
+  sections?: TheorySectionBlock[];
   examples?: { label: string; chords: string }[];
   functions?: { numeral: string; role: string }[];
 }

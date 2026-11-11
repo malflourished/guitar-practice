@@ -9,6 +9,8 @@ interface NoteMarkerProps {
   isRoot: boolean;
   fullOpacity?: boolean;
   variant?: 'fretboard' | 'diagram';
+  /** Inline fill (interval mode function colors); overrides the themed fill. */
+  fill?: string;
 }
 
 function trianglePoints(
@@ -49,6 +51,7 @@ export function NoteMarker({
   isRoot,
   fullOpacity = false,
   variant = 'fretboard',
+  fill,
 }: NoteMarkerProps) {
   const emphasize = fullOpacity || isRoot;
   const className = emphasize
@@ -59,9 +62,18 @@ export function NoteMarker({
       ? styles.markerDiagram
       : styles.marker;
 
+  // Interval mode tints the marker with a function color. Solid shapes take a
+  // fill; rings (compound tones) take the color on their stroke instead.
+  const fillStyle =
+    fill !== undefined
+      ? shape === 'ring'
+        ? { stroke: fill }
+        : { fill, stroke: fill }
+      : undefined;
+
   if (shape === 'square') {
     const rect = squareRect(cx, cy, radius);
-    return <rect {...rect} className={className} />;
+    return <rect {...rect} className={className} style={fillStyle} />;
   }
 
   if (shape === 'triangle-up') {
@@ -69,6 +81,7 @@ export function NoteMarker({
       <polygon
         points={trianglePoints(cx, cy, radius, 'up')}
         className={className}
+        style={fillStyle}
       />
     );
   }
@@ -78,12 +91,19 @@ export function NoteMarker({
       <polygon
         points={trianglePoints(cx, cy, radius, 'down')}
         className={className}
+        style={fillStyle}
       />
     );
   }
 
   if (shape === 'diamond') {
-    return <polygon points={diamondPoints(cx, cy, radius)} className={className} />;
+    return (
+      <polygon
+        points={diamondPoints(cx, cy, radius)}
+        className={className}
+        style={fillStyle}
+      />
+    );
   }
 
   if (shape === 'ring') {
@@ -95,8 +115,12 @@ export function NoteMarker({
         : variant === 'diagram'
           ? styles.markerRingDiagram
           : styles.markerRing;
-    return <circle cx={cx} cy={cy} r={radius} className={ringClass} />;
+    return (
+      <circle cx={cx} cy={cy} r={radius} className={ringClass} style={fillStyle} />
+    );
   }
 
-  return <circle cx={cx} cy={cy} r={radius} className={className} />;
+  return (
+    <circle cx={cx} cy={cy} r={radius} className={className} style={fillStyle} />
+  );
 }

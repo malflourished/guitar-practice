@@ -4,7 +4,6 @@ import type {
   ScaleQuality,
   StudyMode,
 } from '../types/music';
-import { ambientMaskUrl, getAmbientShape } from './ambientShapes';
 import { ALL_NOTES } from './colors';
 
 export interface KeyBackgroundStyle {
@@ -13,16 +12,7 @@ export interface KeyBackgroundStyle {
   '--blob-3': string;
   '--accent-color': string;
   '--hero-color': string;
-  '--ambient-mask': string;
-  '--ambient-fill-angle': string;
-  '--ambient-body-x': string;
-  '--ambient-body-y': string;
-  '--ambient-hook-x': string;
-  '--ambient-hook-y': string;
-  '--ambient-right-width': string;
 }
-
-const NEUTRAL_SHAPE = getAmbientShape(null);
 
 const NEUTRAL_BACKGROUND: KeyBackgroundStyle = {
   '--blob-1': '#e83810',
@@ -30,13 +20,6 @@ const NEUTRAL_BACKGROUND: KeyBackgroundStyle = {
   '--blob-3': '#ffb020',
   '--accent-color': 'var(--foreground-accent)',
   '--hero-color': 'var(--foreground-primary)',
-  '--ambient-mask': ambientMaskUrl(null),
-  '--ambient-fill-angle': `${NEUTRAL_SHAPE.layout.fillAngle}deg`,
-  '--ambient-body-x': `${NEUTRAL_SHAPE.layout.bodyX}%`,
-  '--ambient-body-y': `${NEUTRAL_SHAPE.layout.bodyY}%`,
-  '--ambient-hook-x': `${NEUTRAL_SHAPE.layout.hookX}%`,
-  '--ambient-hook-y': `${NEUTRAL_SHAPE.layout.hookY}%`,
-  '--ambient-right-width': `${NEUTRAL_SHAPE.layout.rightWidth}%`,
 };
 
 function parseHex(hex: string): [number, number, number] {
@@ -197,12 +180,9 @@ export function getKeyBackgroundStyle(
   const isMinor = isMinorQuality(quality);
 
   const blob1 = vibrance(base);
-  const blob2 = vibrance(shiftHue(base, isMinor ? -18 : 16));
-  const blob3 = vibrance(
-    shiftLightness(shiftHue(base, isMinor ? -30 : 30), isMinor ? -0.06 : 0.08),
-  );
-
-  const shape = getAmbientShape(root);
+  const blob2 = shiftLightness(vibrance(shiftHue(base, isMinor ? -24 : 24)), 0.12);
+  // A cooler or warmer pastel edge gives each key a small chromatic counterpoint.
+  const blob3 = shiftSaturation(shiftLightness(shiftHue(base, isMinor ? 125 : 140), 0.28), -0.3);
 
   return {
     '--blob-1': blob1,
@@ -210,12 +190,5 @@ export function getKeyBackgroundStyle(
     '--blob-3': blob3,
     '--accent-color': 'var(--foreground-accent)',
     '--hero-color': 'var(--foreground-primary)',
-    '--ambient-mask': ambientMaskUrl(root),
-    '--ambient-fill-angle': `${shape.layout.fillAngle}deg`,
-    '--ambient-body-x': `${shape.layout.bodyX}%`,
-    '--ambient-body-y': `${shape.layout.bodyY}%`,
-    '--ambient-hook-x': `${shape.layout.hookX}%`,
-    '--ambient-hook-y': `${shape.layout.hookY}%`,
-    '--ambient-right-width': `${shape.layout.rightWidth}%`,
   };
 }

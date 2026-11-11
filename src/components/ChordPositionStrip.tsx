@@ -1,7 +1,8 @@
 import type { ChordQuality, NoteName } from '../types/music';
 import type { ChordPositionView } from '../lib/music/chordPositionViews';
 import type { NotationPreference } from '../lib/music';
-import { CHORD_DIAGRAM_LABEL_STYLE, ChordDiagram } from './ChordDiagram';
+import { ChordDiagram } from './ChordDiagram';
+import { CHORD_DIAGRAM_LABEL_STYLE } from '../lib/chordDiagramLayout';
 import styles from './ProgressionStrip.module.css';
 
 interface ChordPositionStripProps {

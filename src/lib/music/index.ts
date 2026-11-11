@@ -8,9 +8,65 @@ export {
 } from './chords';
 export {
   getChordToneForNote,
+  getIntervalShape,
   type ChordToneInfo,
   type ChordToneShape,
 } from './chordTones';
+export {
+  INTERVALS,
+  INTERVAL_COLORS,
+  getIntervalColor,
+  getIntervalDef,
+  getIntervalLabel,
+  getIntervalMarker,
+  getIntervalTextColor,
+  intervalBetween,
+  noteAtInterval,
+  type IntervalDef,
+  type IntervalMarker,
+  type IntervalQuality,
+} from './intervals';
+export {
+  crossesGtoB,
+  getDirectedTargets,
+  getOneStringShapes,
+  getPlayableAnchors,
+  getRootAnchors,
+  type DrillScope,
+} from './intervalGeometry';
+export {
+  getDyadRelationshipLabel,
+  getIntervalDyadShapes,
+  type DyadRelationship,
+  type IntervalDyadShape,
+} from './intervalShapes';
+export {
+  FORMULA_TARGETS,
+  buildFormulaSpec,
+  getFormulaTarget,
+  type FormulaKind,
+  type FormulaSpec,
+  type FormulaTarget,
+  type FormulaTone,
+} from './intervalFormulas';
+export {
+  CHANGES_PROGRESSIONS,
+  buildChangesProgression,
+  buildChangesStepView,
+  getChangesProgression,
+  getGuideToneMotion,
+  type ChangesProgressionDef,
+  type ChangesStepView,
+  type GuideToneMotion,
+} from './changesTargeting';
+export {
+  SHELL_QUALITIES,
+  getColorTonePitchClasses,
+  getShellDef,
+  getShellPitchClasses,
+  isShellComplete,
+  type ShellDef,
+} from './shellVoicings';
 export {
   getDiatonicQuality,
   getDiatonicRoot,
@@ -109,6 +165,15 @@ export {
   nextCircleKey,
   prevCircleKey,
 } from './circleOfFifths';
+export {
+  getChordWheelWedges,
+  getDiatonicHighlights,
+  getSelectedWheelIndex,
+  isChordWheelHighlight,
+  type ChordWheelHighlight,
+  type ChordWheelRing,
+  type ChordWheelWedge,
+} from './chordWheel';
 export {
   DEFAULT_THEORY_TOPIC_ID,
   THEORY_SECTIONS,

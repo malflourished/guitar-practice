@@ -1,0 +1,55 @@
+.toggleGroup {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.fingersButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.85rem;
+  background: transparent;
+  border: 1px solid var(--fretboard-control-border);
+  border-radius: var(--radius-control);
+  color: var(--fretboard-control-text);
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--duration-key) var(--ease-calm),
+    color var(--duration-key) var(--ease-calm),
+    border-color var(--duration-key) var(--ease-calm);
+}
+
+.fingersButton:hover {
+  background: var(--fretboard-control-bg-hover);
+  border-color: var(--fretboard-control-border-active);
+  color: var(--fretboard-control-text-hover);
+}
+
+.fingersButtonActive {
+  composes: fingersButton;
+  background: var(--fretboard-control-bg-active);
+  border-color: var(--fretboard-control-border-active);
+  color: var(--fretboard-control-text-active);
+}
+
+.fingersButtonOpacityActive {
+  composes: fingersButtonActive;
+  box-shadow: 0 0 0 1px var(--fretboard-control-border-active);
+}
+
+@media (max-width: 768px) {
+  .fingersButton {
+    padding: 0.4rem 0.7rem;
+  }
+}

@@ -10,28 +10,7 @@ import {
 import { NoteMarker } from './NoteMarker';
 import styles from './ChordDiagram.module.css';
 
-const L = {
-  fretLabel: 14,
-  gridPad: 5,
-  right: 6,
-  markerRow: 17,
-  stringGap: 13.5,
-  fretGap: 21,
-  bottom: 10,
-};
-
-const gridLeft = L.fretLabel + L.gridPad;
-const gridWidth = (STRING_COUNT - 1) * L.stringGap;
-const nutY = L.markerRow + 9;
-const VIEW_WIDTH = gridLeft + gridWidth + L.right;
-
-/** Nudge strip labels from item center to the string-grid center (see neckCenterX). */
-const CHORD_DIAGRAM_LABEL_SHIFT =
-  ((gridLeft + gridWidth / 2) / VIEW_WIDTH - 0.5) * 100;
-
-export const CHORD_DIAGRAM_LABEL_STYLE = {
-  transform: `translateX(${CHORD_DIAGRAM_LABEL_SHIFT}%)`,
-} as const;
+import { L, gridLeft, gridWidth, nutY, VIEW_WIDTH } from '../lib/chordDiagramLayout';
 
 const DOT_RADIUS = 4.25;
 const NUT_HEIGHT = 5;

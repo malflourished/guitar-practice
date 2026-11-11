@@ -47,6 +47,11 @@ function shapeForInterval(interval: number): ChordToneShape {
   return 'circle';
 }
 
+/** The marker shape for a raw semitone distance (shared with interval mode). */
+export function getIntervalShape(semitones: number): ChordToneShape {
+  return shapeForInterval(((semitones % 12) + 12) % 12);
+}
+
 /**
  * Match a note to the highest chord-tone interval at its pitch class.
  * Compound extensions (9/11/13) win over their octave equivalents.

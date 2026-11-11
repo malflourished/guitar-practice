@@ -34,11 +34,49 @@ function TheoryPanelContent({
         </p>
       ) : null}
 
-      {theory.body.map((paragraph) => (
-        <p key={paragraph} className={styles.paragraph}>
+      {theory.body.map((paragraph, index) => (
+        <p key={`body-${index}`} className={styles.paragraph}>
           {paragraph}
         </p>
       ))}
+
+      {theory.sections && theory.sections.length > 0
+        ? theory.sections.map((section, sectionIndex) => (
+            <div key={`section-${sectionIndex}`} className={styles.section}>
+              <h3 className={styles.subheading}>{section.heading}</h3>
+              {section.body.map((paragraph, index) => (
+                <p
+                  key={`section-${sectionIndex}-${index}`}
+                  className={styles.paragraph}
+                >
+                  {paragraph}
+                </p>
+              ))}
+              {section.table ? (
+                <div className={styles.tableWrap}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        {section.table.columns.map((column, columnIndex) => (
+                          <th key={`col-${columnIndex}`}>{column}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {section.table.rows.map((row, rowIndex) => (
+                        <tr key={`row-${rowIndex}`}>
+                          {row.map((cell, cellIndex) => (
+                            <td key={`cell-${cellIndex}`}>{cell}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
+            </div>
+          ))
+        : null}
 
       {theory.examples && theory.examples.length > 0 ? (
         <>
