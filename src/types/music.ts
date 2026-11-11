@@ -22,6 +22,7 @@ export interface FretPosition {
 }
 
 export type StudyMode =
+  | 'practice'
   | 'notes'
   | 'chords'
   | 'scales'

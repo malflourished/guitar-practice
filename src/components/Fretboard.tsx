@@ -34,6 +34,8 @@ const ACTIVE_RING_PAD = 6 * NOTE_DOT_SCALE;
 const SMALL_LABEL_RADIUS = 11 * NOTE_DOT_SCALE;
 
 interface FretboardProps {
+  /** A readable practice window; omitted for the complete neck. */
+  fretRange?: [number, number];
   positions: FretPosition[];
   title: string;
   notation: NotationPreference;
@@ -70,6 +72,7 @@ interface FretboardProps {
 }
 
 export function Fretboard({
+  fretRange,
   positions,
   title,
   notation,
@@ -94,13 +97,12 @@ export function Fretboard({
     activePosition?.string === string && activePosition?.fret === fret;
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [pulseGeneration, setPulseGeneration] = useState(0);
 
   useEffect(() => {
-    if (activePosition) {
-      setPulseGeneration((generation) => generation + 1);
-    }
-  }, [activePosition?.string, activePosition?.fret]);
+    containerRef.current?.querySelectorAll(`.${styles.activeRing}`).forEach(ring => {
+      ring.getAnimations().forEach(animation => { animation.currentTime = 0; });
+    });
+  }, [activePosition]);
 
   useEffect(() => {
     const element = containerRef.current;
@@ -118,8 +120,12 @@ export function Fretboard({
   }, []);
 
   const scaleLength = scaleLengthForTargetWidth(containerWidth);
+  const firstFret = fretRange ? Math.max(1, fretRange[0]) : 1;
+  const lastFret = fretRange ? Math.min(FRET_COUNT, fretRange[1]) : FRET_COUNT;
   const boardWidth = totalBoardWidth(scaleLength);
   const playableWidth = boardPlayableWidth(FRET_COUNT, scaleLength);
+  const windowFretWidth = playableWidth / (lastFret - firstFret + 1);
+  const visibleFret = (fret: number) => fret === 0 ? firstFret === 1 : fret >= firstFret && fret <= lastFret;
   const boardOriginX = FRETBOARD_LAYOUT.leftPadding + FRETBOARD_LAYOUT.nutWidth;
   const stringEndX = boardOriginX + playableWidth;
   const hasBadges = regionBadges.length > 0;
@@ -129,10 +135,10 @@ export function Fretboard({
     stringsBottomY + FRETBOARD_LAYOUT.bottomPadding + 8 + (hasBadges ? 24 : 0);
 
   const fretWireX = (fret: number) =>
-    boardOriginX + fretDistanceFromNut(fret, scaleLength);
+    boardOriginX + (fretRange ? (fret - firstFret + 1) * windowFretWidth : fretDistanceFromNut(fret, scaleLength));
 
   const fretCenterX = (fret: number) =>
-    boardOriginX + fretCenterOffset(fret, scaleLength);
+    boardOriginX + (fretRange ? (fret - firstFret + 0.5) * windowFretWidth : fretCenterOffset(fret, scaleLength));
 
   const stringY = (stringIndex: number) =>
     FRETBOARD_LAYOUT.topPadding + stringIndex * FRETBOARD_LAYOUT.stringGap;
@@ -141,7 +147,7 @@ export function Fretboard({
     NOTE_DOT_SCALE *
     Math.min(
       FRETBOARD_LAYOUT.maxNoteRadius,
-      fretSpaceWidth(fret, scaleLength) * 0.42,
+      (fretRange ? windowFretWidth : fretSpaceWidth(fret, scaleLength)) * 0.42,
     );
 
   const chordToneContext =
@@ -168,8 +174,8 @@ export function Fretboard({
     return noteLabels?.get(note) ?? formatNoteDisplay(note, notation);
   };
 
-  const openPositions = positions.filter((p) => p.fret === 0);
-  const frettedPositions = positions.filter((p) => p.fret > 0);
+  const openPositions = positions.filter((p) => p.fret === 0 && visibleFret(0));
+  const frettedPositions = positions.filter((p) => p.fret > 0 && visibleFret(p.fret));
 
   const dotClass = (note: NoteName) => {
     if (fullDotOpacity) return styles.noteDotRoot;
@@ -280,7 +286,7 @@ export function Fretboard({
             className={styles.svg}
             viewBox={`0 0 ${boardWidth} ${boardHeight}`}
             preserveAspectRatio="xMidYMid meet"
-            role="img"
+            role={onCellClick || onPlayNote ? 'group' : 'img'}
             aria-label={title}
           >
             <line
@@ -293,10 +299,10 @@ export function Fretboard({
                 8
               }
               className={styles.fretLine}
-              strokeWidth={3}
+              strokeWidth={firstFret === 1 ? 3 : 1}
             />
 
-            {Array.from({ length: FRET_COUNT }, (_, i) => i + 1).map((fret) => (
+            {Array.from({ length: FRET_COUNT }, (_, i) => i + 1).filter(visibleFret).map((fret) => (
               <g key={`fret-${fret}`}>
                 <line
                   x1={fretWireX(fret)}
@@ -340,7 +346,7 @@ export function Fretboard({
               </g>
             ))}
 
-            {SINGLE_MARKER_FRETS.map((fret) => (
+            {SINGLE_MARKER_FRETS.filter(visibleFret).map((fret) => (
               <circle
                 key={`marker-${fret}`}
                 cx={fretCenterX(fret)}
@@ -350,7 +356,7 @@ export function Fretboard({
               />
             ))}
 
-            {DOUBLE_MARKER_FRETS.flatMap((fret) =>
+            {DOUBLE_MARKER_FRETS.filter(visibleFret).flatMap((fret) =>
               [1.5, 3.5].map((stringOffset) => (
                 <circle
                   key={`marker-${fret}-${stringOffset}`}
@@ -381,7 +387,7 @@ export function Fretboard({
                   layer.tier === 'near' ? styles.ghostNear : styles.ghostFar
                 }
               >
-                {layer.positions.map((position) => {
+                {layer.positions.filter(p => visibleFret(p.fret)).map((position) => {
                   const cx =
                     position.fret === 0
                       ? FRETBOARD_LAYOUT.openLaneX
@@ -408,12 +414,16 @@ export function Fretboard({
               return (
                 <g
                   key={`open-${string}`}
+                  role={onPlayNote ? 'button' : undefined}
+                  tabIndex={onPlayNote ? 0 : undefined}
+                  aria-label={`${note}, open ${STRING_LABELS[string]} string`}
+                  onKeyDown={event => { if (onPlayNote && ['Enter', ' '].includes(event.key)) { event.preventDefault(); onPlayNote(position); } }}
                   onClick={onPlayNote ? () => onPlayNote(position) : undefined}
                   style={onPlayNote ? { cursor: 'pointer' } : undefined}
                 >
                   {isActive(string, 0) && (
                     <circle
-                      key={`pulse-open-${string}-${pulseGeneration}`}
+                      key={`pulse-open-${string}`}
                       cx={FRETBOARD_LAYOUT.openLaneX}
                       cy={stringY(string)}
                       r={OPEN_NOTE_RADIUS + ACTIVE_RING_PAD}
@@ -451,12 +461,16 @@ export function Fretboard({
               return (
                 <g
                   key={`note-${string}-${fret}`}
+                  role={onPlayNote ? 'button' : undefined}
+                  tabIndex={onPlayNote ? 0 : undefined}
+                  aria-label={`${note}, ${STRING_LABELS[string]} string, fret ${fret}`}
+                  onKeyDown={event => { if (onPlayNote && ['Enter', ' '].includes(event.key)) { event.preventDefault(); onPlayNote(position); } }}
                   onClick={onPlayNote ? () => onPlayNote(position) : undefined}
                   style={onPlayNote ? { cursor: 'pointer' } : undefined}
                 >
                   {isActive(string, fret) && (
                     <circle
-                      key={`pulse-${string}-${fret}-${pulseGeneration}`}
+                      key={`pulse-${string}-${fret}`}
                       cx={fretCenterX(fret)}
                       cy={stringY(string)}
                       r={radius + ACTIVE_RING_PAD}
@@ -490,13 +504,13 @@ export function Fretboard({
 
             {onCellClick &&
               Array.from({ length: STRING_COUNT }, (_, stringIndex) =>
-                Array.from({ length: FRET_COUNT + 1 }, (_, fret) => {
+                Array.from({ length: FRET_COUNT + 1 }, (_, fret) => fret).filter(visibleFret).map(fret => {
                   const cx =
                     fret === 0 ? FRETBOARD_LAYOUT.openLaneX : fretCenterX(fret);
                   const width =
                     fret === 0
                       ? OPEN_NOTE_RADIUS * 2.2
-                      : fretSpaceWidth(fret, scaleLength) * 0.92;
+                      : (fretRange ? windowFretWidth : fretSpaceWidth(fret, scaleLength)) * 0.92;
                   return (
                     <rect
                       key={`cell-${stringIndex}-${fret}`}
@@ -505,6 +519,10 @@ export function Fretboard({
                       width={width}
                       height={FRETBOARD_LAYOUT.stringGap}
                       fill="transparent"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${STRING_LABELS[stringIndex]} string, fret ${fret}`}
+                      onKeyDown={event => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); onCellClick(stringIndex, fret); } }}
                       style={{ cursor: 'pointer' }}
                       onClick={() => onCellClick(stringIndex, fret)}
                     />

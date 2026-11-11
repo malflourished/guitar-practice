@@ -35,6 +35,8 @@ import {
   type IntervalPlaybackDirection,
 } from '../lib/audio/intervalPlayback';
 import { Fretboard } from './Fretboard';
+import { usePersistentState } from '../hooks/usePersistentState';
+import { EMPTY_SCORE, validScore, recordResult } from '../lib/practice/score';
 import styles from './IntervalTrainer.module.css';
 
 type Drill =
@@ -105,15 +107,6 @@ interface Question {
   targets: FretPosition[];
 }
 
-interface Score {
-  correct: number;
-  total: number;
-  streak: number;
-  best: number;
-}
-
-const EMPTY_SCORE: Score = { correct: 0, total: 0, streak: 0, best: 0 };
-
 export function IntervalTrainer({
   root,
   notation,
@@ -138,7 +131,8 @@ export function IntervalTrainer({
   const [solved, setSolved] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [guessLabel, setGuessLabel] = useState<string | null>(null);
-  const [score, setScore] = useState<Score>(EMPTY_SCORE);
+  const [score, setScore] = usePersistentState('interval-score-v1', EMPTY_SCORE, validScore);
+  const resultRegistered = useRef(false);
 
   const playTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const clearPlayTimers = useCallback(() => {
@@ -169,6 +163,7 @@ export function IntervalTrainer({
     // Shapes, Build, and Changes are exploratory views, not graded questions.
     if (drill === 'shapes' || drill === 'build' || drill === 'changes') return;
 
+    resultRegistered.current = false;
     const qRoot = randomRoot ? pick(ALL_NOTES) : root;
     setFound([]);
     setSolved(false);
@@ -202,7 +197,7 @@ export function IntervalTrainer({
     // learn / find — Learn is deterministic (stable) so it never reshuffles
     // strings when you re-pick the same interval; Find randomizes the anchor.
     const semitones =
-      drill === 'learn' ? (question?.semitones ?? pick(enabledArray)) : pick(enabledArray);
+      drill === 'learn' && question && enabledArray.includes(question.semitones) ? question.semitones : pick(enabledArray);
     const anchors = getPlayableAnchors(qRoot, semitones, scope);
     const anchor = anchors.length
       ? drill === 'learn'
@@ -220,7 +215,7 @@ export function IntervalTrainer({
     enabledArray,
     scope,
     shellQuality,
-    question?.semitones,
+    question,
     playPromptInterval,
   ]);
 
@@ -229,7 +224,7 @@ export function IntervalTrainer({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- (re)generate a question when the drill knobs change
     nextQuestion();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- regenerate on these knobs only
-  }, [drill, scope, shellQuality, randomRoot, root]);
+  }, [drill, scope, shellQuality, randomRoot, root, enabled]);
 
   const learnSemitones = question?.semitones ?? 4;
 
@@ -263,15 +258,9 @@ export function IntervalTrainer({
   };
 
   const registerResult = (correct: boolean) => {
-    setScore((prev) => {
-      const streak = correct ? prev.streak + 1 : 0;
-      return {
-        correct: prev.correct + (correct ? 1 : 0),
-        total: prev.total + 1,
-        streak,
-        best: Math.max(prev.best, streak),
-      };
-    });
+    if (resultRegistered.current) return;
+    resultRegistered.current = true;
+    setScore(previous => recordResult(previous, correct));
   };
 
   const handleFindClick = (stringIndex: number, fret: number) => {
@@ -285,10 +274,8 @@ export function IntervalTrainer({
     const hit = question.targets.some((t) => samePosition(t, pos));
     const semis = (noteToSemitone(note) - noteToSemitone(question.root) + 12) % 12;
     setGuessLabel(getIntervalDef(semis).functionLabel);
-    if (hit) {
-      setSolved(true);
-      registerResult(true);
-    }
+    registerResult(hit);
+    if (hit) setSolved(true);
   };
 
   const handleShellClick = (stringIndex: number, fret: number) => {
@@ -304,24 +291,20 @@ export function IntervalTrainer({
     setGuessLabel(getIntervalDef(semis).functionLabel);
 
     if (notePc !== thirdPc && notePc !== seventhPc) {
+      registerResult(false);
       playNote(positionToMidi(pos));
       return;
     }
     playNote(positionToMidi(pos));
-    setFound((prev) => {
-      if (prev.some((p) => samePosition(p, pos))) return prev;
-      const next = [...prev, pos];
-      const pcs = new Set(next.map((p) => noteToSemitone(p.note)));
-      if (pcs.has(thirdPc) && pcs.has(seventhPc)) {
-        setSolved(true);
-        registerResult(true);
-        if (question.anchor) {
-          const voicing = [question.anchor, ...next];
-          if (!audio.muted) audio.strum(voicing);
-        }
-      }
-      return next;
-    });
+    if (found.some(p => samePosition(p, pos))) return;
+    const next = [...found, pos];
+    setFound(next);
+    const pcs = new Set(next.map(p => noteToSemitone(p.note)));
+    if (pcs.has(thirdPc) && pcs.has(seventhPc)) {
+      setSolved(true);
+      registerResult(true);
+      if (question.anchor && !audio.muted) audio.strum([question.anchor, ...next]);
+    }
   };
 
   const handleReveal = () => {
@@ -980,10 +963,10 @@ export function IntervalTrainer({
         </div>
       )}
 
-      {(drill === 'find' || drill === 'shell') && (
+      {(drill === 'find' || drill === 'shell' || drill === 'identify') && (
         <div className={styles.scoreRow}>
           <span className={styles.scoreItem}>
-            Score {score.correct}/{score.total}
+            First answers {score.correct}/{score.total}
           </span>
           <span className={styles.scoreItem}>Streak {score.streak}</span>
           <span className={styles.scoreItem}>Best {score.best}</span>

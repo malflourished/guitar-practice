@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "icon": "python3 scripts/prepare-icon.py",
-    "app:build": "npm run icon && npm run build && electron-builder --mac dir",
+    "app:build": "npm run build && electron-builder --mac dir",
     "app:install": "npm run app:build && cp -R release/mac-*/vibrato~.app /Applications/"
   },
   "dependencies": {

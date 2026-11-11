@@ -1,0 +1,14 @@
+{
+  "steel": {
+    "repository": "sfzinstruments/Discord-SFZ-GM-Bank",
+    "revision": "7a9c478fe331f94f246d33332f0adedb25bbbe27"
+  },
+  "nylon": {
+    "repository": "freepats/spanish-classical-guitar",
+    "revision": "6f4eb1b092acc88f5448cea1a0001bd07b971af8"
+  },
+  "clean": {
+    "repository": "freepats/electric-guitar-FSBS-clean",
+    "revision": "192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91"
+  }
+}

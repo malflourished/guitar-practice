@@ -1,0 +1,647 @@
+[
+  {
+    "bank": "steel",
+    "midi": 40,
+    "layer": "normal",
+    "file": "steel/MartinGM2_040__E2_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_040__E2_1.wav",
+    "sha256": "c76544cb3e03281a4983bfa009840431948c991dcaf9a863a6b8231257ce2f3b"
+  },
+  {
+    "bank": "steel",
+    "midi": 43,
+    "layer": "normal",
+    "file": "steel/MartinGM2_043__G2_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_043__G2_1.wav",
+    "sha256": "a28b4e271d67da317b1f5ee3cafd45cb50607aece6c76b0c2e736f1ca6e82d35"
+  },
+  {
+    "bank": "steel",
+    "midi": 46,
+    "layer": "normal",
+    "file": "steel/MartinGM2_046_Bb2_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_046_Bb2_1.wav",
+    "sha256": "f59bed4a1498b9a0a67b73c70db41edf0c71494265b238768b04de2b694a983b"
+  },
+  {
+    "bank": "steel",
+    "midi": 49,
+    "layer": "normal",
+    "file": "steel/MartinGM2_049_Db3_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_049_Db3_1.wav",
+    "sha256": "f383ca61b803783774ef89e35e162e94354d2f749ca5fb45665704efc5f63cd4"
+  },
+  {
+    "bank": "steel",
+    "midi": 52,
+    "layer": "normal",
+    "file": "steel/MartinGM2_052__E3_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_052__E3_1.wav",
+    "sha256": "5eebd74085c5e7f8f32635477bba1ec026f5c9aee365849e1c0cabe30a77ab38"
+  },
+  {
+    "bank": "steel",
+    "midi": 55,
+    "layer": "normal",
+    "file": "steel/MartinGM2_055__G3_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_055__G3_1.wav",
+    "sha256": "5101b1d3ede2caa129a96ac463936724b1ae954a3cace1f0a181c3e8b7cbf2e3"
+  },
+  {
+    "bank": "steel",
+    "midi": 58,
+    "layer": "normal",
+    "file": "steel/MartinGM2_058_Bb3_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_058_Bb3_1.wav",
+    "sha256": "dd46d1d4af04d55d72b1488fb83a3ec4817a994b1a94f141c11e2db8b6249769"
+  },
+  {
+    "bank": "steel",
+    "midi": 61,
+    "layer": "normal",
+    "file": "steel/MartinGM2_061_Db4_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_061_Db4_1.wav",
+    "sha256": "08d68fdf75e3bf4cb3eac1e046e02afe4e9d29ebbdf0ef8b741a2658f1d48199"
+  },
+  {
+    "bank": "steel",
+    "midi": 64,
+    "layer": "normal",
+    "file": "steel/MartinGM2_064__E4_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_064__E4_1.wav",
+    "sha256": "a1de2ee3b39839a8f15d7d3a0577a6de3a02331daadfae55723894fde58b324b"
+  },
+  {
+    "bank": "steel",
+    "midi": 68,
+    "layer": "normal",
+    "file": "steel/MartinGM2_068_Ab4_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_068_Ab4_1.wav",
+    "sha256": "2968f497f0893e1e91d63269ce6ea0f09823cd2be503cd9f6caf39b540d653b2"
+  },
+  {
+    "bank": "steel",
+    "midi": 71,
+    "layer": "normal",
+    "file": "steel/MartinGM2_071__B4_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_071__B4_1.wav",
+    "sha256": "50147610cae7fa961195185cd6c2eafb4e3f26ddfe0e1edcfb85c480e058a3bf"
+  },
+  {
+    "bank": "steel",
+    "midi": 74,
+    "layer": "normal",
+    "file": "steel/MartinGM2_074__D5_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_074__D5_1.wav",
+    "sha256": "92b05e80077dd70f84a2a4e9b568cf0beafa1b35838e2e5419213bf10ba7abf1"
+  },
+  {
+    "bank": "steel",
+    "midi": 77,
+    "layer": "normal",
+    "file": "steel/MartinGM2_077__F5_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_077__F5_1.wav",
+    "sha256": "5df718ed12d9c55606407425266445c5275b6f2763487a0d5c81b98c449877e0"
+  },
+  {
+    "bank": "steel",
+    "midi": 80,
+    "layer": "normal",
+    "file": "steel/MartinGM2_080_Ab5_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_080_Ab5_1.wav",
+    "sha256": "e1a6c22e75a8eecac20a13050664f8384babc8f69db92c776e2182f78f405884"
+  },
+  {
+    "bank": "steel",
+    "midi": 83,
+    "layer": "normal",
+    "file": "steel/MartinGM2_083__B5_1.mp3",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/Discord-SFZ-GM-Bank/7a9c478fe331f94f246d33332f0adedb25bbbe27/Discord%20GM/Melodic/026-Acoustic%20Guitar%20%28steel%29/MartinGM2_083__B5_1.wav",
+    "sha256": "f8e23be6d87f2a597c9723e1b3ca471f4302d2c3ec650c96a954f73a38d8abc2"
+  },
+  {
+    "bank": "nylon",
+    "midi": 40,
+    "layer": "normal",
+    "file": "nylon/E2.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/E2.flac",
+    "sha256": "14989c939685c216c81146368932c3b604339f86cfd279a8f3313ec19782e910"
+  },
+  {
+    "bank": "nylon",
+    "midi": 43,
+    "layer": "normal",
+    "file": "nylon/G2.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/G2.flac",
+    "sha256": "fcff55bebac829352f3e52edc3a4fedbea49a636321f86ecd2d62d79901947f6"
+  },
+  {
+    "bank": "nylon",
+    "midi": 47,
+    "layer": "normal",
+    "file": "nylon/B2.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/B2.flac",
+    "sha256": "9943ecf3b271b2a9f28e9b2593b1cf836fa26856f12976e7025b80b77d05f1ee"
+  },
+  {
+    "bank": "nylon",
+    "midi": 50,
+    "layer": "normal",
+    "file": "nylon/D3.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/D3.flac",
+    "sha256": "23f7039d02ec520e7c678addaf3cb6e05c778b679f526d295c092b3f80a882b0"
+  },
+  {
+    "bank": "nylon",
+    "midi": 52,
+    "layer": "normal",
+    "file": "nylon/E3.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/E3.flac",
+    "sha256": "705c982911c59965341a2c129f69ff7f57d57c0c9f4a5d0e4bad6dfa743c386b"
+  },
+  {
+    "bank": "nylon",
+    "midi": 55,
+    "layer": "normal",
+    "file": "nylon/G3.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/G3.flac",
+    "sha256": "961f626fe2d3d8a164c2084b71b237bad38f68faa4ee646af321b27b367fd6fe"
+  },
+  {
+    "bank": "nylon",
+    "midi": 59,
+    "layer": "normal",
+    "file": "nylon/B3.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/B3.flac",
+    "sha256": "4ded2d61995125ee9e6c43fa9a6b5c0919ec2978834363701976b16013e23157"
+  },
+  {
+    "bank": "nylon",
+    "midi": 62,
+    "layer": "normal",
+    "file": "nylon/D4.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/D4.flac",
+    "sha256": "9b8420380806f622517433da9b5c34af308f4bc712745e7476ca927cc9a2590c"
+  },
+  {
+    "bank": "nylon",
+    "midi": 64,
+    "layer": "normal",
+    "file": "nylon/E4.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/E4.flac",
+    "sha256": "ee47d5d17ea4c9c5fc85fb76cf97bad99567a64af230aa4610ad6e9fe1175361"
+  },
+  {
+    "bank": "nylon",
+    "midi": 67,
+    "layer": "normal",
+    "file": "nylon/G4.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/G4.flac",
+    "sha256": "0bda2befcb1b289e4e84e8b3f9777f45c9502c08ad58f29ad790da4865e790a8"
+  },
+  {
+    "bank": "nylon",
+    "midi": 71,
+    "layer": "normal",
+    "file": "nylon/B4.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/B4.flac",
+    "sha256": "04cc607b3b4743b02370eadc0e9c33741231dc2e1a506849b3b61daa5a4d6740"
+  },
+  {
+    "bank": "nylon",
+    "midi": 74,
+    "layer": "normal",
+    "file": "nylon/D5.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/D5.flac",
+    "sha256": "297fa79b2914f8b52fbf70b8e973ce51edc38e3d7afe261c08710e56220dfaca"
+  },
+  {
+    "bank": "nylon",
+    "midi": 76,
+    "layer": "normal",
+    "file": "nylon/E5.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/E5.flac",
+    "sha256": "87edc1bc3699f20268b8ad1d57e7e87277a944c9705930d4260c772034fac0e2"
+  },
+  {
+    "bank": "nylon",
+    "midi": 79,
+    "layer": "normal",
+    "file": "nylon/G5.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/G5.flac",
+    "sha256": "46fd99780f82486224f46aa145c7795f5b4c76f831871fa63d0142f8efb9b1d3"
+  },
+  {
+    "bank": "nylon",
+    "midi": 81,
+    "layer": "normal",
+    "file": "nylon/A5.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/spanish-classical-guitar/6f4eb1b092acc88f5448cea1a0001bd07b971af8/samples/A5.flac",
+    "sha256": "5e31c23c8e3b4d7f23186bbef2a113155a7c84bf40f13a07a81f9ee67aaec33f"
+  },
+  {
+    "bank": "clean",
+    "midi": 40,
+    "layer": "normal",
+    "file": "clean/E2_s1_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/E2_s1_01.flac",
+    "sha256": "d0ca456a038c80a7fc655dc8834379f3e464ac452acf88f8ae489fbd749f9ee8",
+    "string": 5
+  },
+  {
+    "bank": "clean",
+    "midi": 40,
+    "layer": "normal",
+    "file": "clean/E2_s1_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/E2_s1_02.flac",
+    "sha256": "54bb8abdaed8b963fedaa1a8ab4ee1654b20a8989c463b031e7c5b59b01ce1a5",
+    "string": 5
+  },
+  {
+    "bank": "clean",
+    "midi": 40,
+    "layer": "soft",
+    "file": "clean/E2_s1_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/E2_s1_soft_01.flac",
+    "sha256": "987c7e9066a164f9f0284da377e9006e8fc2178fb662c06c26536f499f88a9a0",
+    "string": 5
+  },
+  {
+    "bank": "clean",
+    "midi": 41,
+    "layer": "normal",
+    "file": "clean/F2_s1_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/F2_s1_01.flac",
+    "sha256": "e1cb8f18fe026410d768483951d162e27c2f0f4c8208b884f87c431b5cfffdf5",
+    "string": 5
+  },
+  {
+    "bank": "clean",
+    "midi": 41,
+    "layer": "normal",
+    "file": "clean/F2_s1_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/F2_s1_02.flac",
+    "sha256": "3ac5e9c70e79f6af90e7b3aa09273e286424458ea21314a1b154f6aee4dc8412",
+    "string": 5
+  },
+  {
+    "bank": "clean",
+    "midi": 41,
+    "layer": "soft",
+    "file": "clean/F2_s1_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/F2_s1_soft_01.flac",
+    "sha256": "c5f5430c447aca95c0285757c54ecb710b15ef54f0c2f0a73b0b5689c4bdc770",
+    "string": 5
+  },
+  {
+    "bank": "clean",
+    "midi": 45,
+    "layer": "normal",
+    "file": "clean/A2_s2_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/A2_s2_01.flac",
+    "sha256": "3dad0a7d9932e40a9e3a2c0033cf4963a00b9071524abe973b67080b6dbbaee7",
+    "string": 4
+  },
+  {
+    "bank": "clean",
+    "midi": 45,
+    "layer": "normal",
+    "file": "clean/A2_s2_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/A2_s2_02.flac",
+    "sha256": "a93eb30d06cd51dc3cae41a08dcd8a079911bd99e5989eb59d479beb8022032b",
+    "string": 4
+  },
+  {
+    "bank": "clean",
+    "midi": 45,
+    "layer": "soft",
+    "file": "clean/A2_s2_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/A2_s2_soft_01.flac",
+    "sha256": "474959fa2f0183dd0626b04d0e766618bb1e05827c61de9f76b99f62a32e7439",
+    "string": 4
+  },
+  {
+    "bank": "clean",
+    "midi": 48,
+    "layer": "normal",
+    "file": "clean/C3_s2_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/C3_s2_01.flac",
+    "sha256": "c0763f88f957c2f9b7b1ecfeeccb89fea7afe56c11a0c90ec4a3d7d1f47970c7",
+    "string": 4
+  },
+  {
+    "bank": "clean",
+    "midi": 48,
+    "layer": "normal",
+    "file": "clean/C3_s2_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/C3_s2_02.flac",
+    "sha256": "7995bb0840c222a5ad7e1bb0ba9057e5572a4a2f6ec1d141d3a8d185c1f7af67",
+    "string": 4
+  },
+  {
+    "bank": "clean",
+    "midi": 48,
+    "layer": "soft",
+    "file": "clean/C3_s2_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/C3_s2_soft_01.flac",
+    "sha256": "b299d6bd9f6ff37f96ab6572241a2af70fdd828fafacf26dcebf2b4d06f3738f",
+    "string": 4
+  },
+  {
+    "bank": "clean",
+    "midi": 50,
+    "layer": "normal",
+    "file": "clean/D3_s3_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/D3_s3_01.flac",
+    "sha256": "475d97b525e8a1130f8a41a3a86fe0edff4fe899c8b9288109d2a608dc7928aa",
+    "string": 3
+  },
+  {
+    "bank": "clean",
+    "midi": 50,
+    "layer": "normal",
+    "file": "clean/D3_s3_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/D3_s3_02.flac",
+    "sha256": "0b185ce5a6d19ce629bc05b38bba99284e7d66e460e03cefd5b852cfac5c4a4e",
+    "string": 3
+  },
+  {
+    "bank": "clean",
+    "midi": 50,
+    "layer": "soft",
+    "file": "clean/D3_s3_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/D3_s3_soft_01.flac",
+    "sha256": "7626e5d0c4c2ed917649cbfd436055026fb74ac6ca658ec6e7d2a72d340f0bbf",
+    "string": 3
+  },
+  {
+    "bank": "clean",
+    "midi": 52,
+    "layer": "normal",
+    "file": "clean/E3_s3_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/E3_s3_01.flac",
+    "sha256": "870689adfef16291686a059452a948703da70991e99f4d5852ede1bce5096479",
+    "string": 3
+  },
+  {
+    "bank": "clean",
+    "midi": 52,
+    "layer": "normal",
+    "file": "clean/E3_s3_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/E3_s3_02.flac",
+    "sha256": "d9e3131c3173172f1ad4471b56092a8415b51de6c99bebfe53126d712ca53c7d",
+    "string": 3
+  },
+  {
+    "bank": "clean",
+    "midi": 52,
+    "layer": "soft",
+    "file": "clean/E3_s3_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/E3_s3_soft_01.flac",
+    "sha256": "f4c1b04c64370e8d2f30d810a0e00a1b32c68be89cfe18e370bad373d0d72e39",
+    "string": 3
+  },
+  {
+    "bank": "clean",
+    "midi": 55,
+    "layer": "normal",
+    "file": "clean/G3_s4_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/G3_s4_01.flac",
+    "sha256": "03b3e07d3ecd6bb0b012c9c340c041726f3c4fdc08e119277b6bd06858d5987f",
+    "string": 2
+  },
+  {
+    "bank": "clean",
+    "midi": 55,
+    "layer": "normal",
+    "file": "clean/G3_s4_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/G3_s4_02.flac",
+    "sha256": "d061973c28c281de2709b714e3c4311d2016bb95def22a64d13c07920b6f7f85",
+    "string": 2
+  },
+  {
+    "bank": "clean",
+    "midi": 55,
+    "layer": "soft",
+    "file": "clean/G3_s4_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/G3_s4_soft_01.flac",
+    "sha256": "e8c3c08ac08106ea5828e06bcb096ce21f6fc8839096bef0cad001ecc5f9722d",
+    "string": 2
+  },
+  {
+    "bank": "clean",
+    "midi": 59,
+    "layer": "normal",
+    "file": "clean/B3_s5_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/B3_s5_01.flac",
+    "sha256": "648f7fc2b66224cdca53dd7fec7e254f1ec14895b8b501d7d665d54608b91c99",
+    "string": 1
+  },
+  {
+    "bank": "clean",
+    "midi": 59,
+    "layer": "normal",
+    "file": "clean/B3_s5_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/B3_s5_02.flac",
+    "sha256": "c65c2f5bc45f8968a7c4d3d212bacfff799043913bce347c8f3075b49c7efcb4",
+    "string": 1
+  },
+  {
+    "bank": "clean",
+    "midi": 59,
+    "layer": "soft",
+    "file": "clean/B3_s5_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/B3_s5_soft_01.flac",
+    "sha256": "e8a6dd7e5a17abf7d7d9c02efb5b41acbe9b01bfae6206fd031b89c5ee879ee5",
+    "string": 1
+  },
+  {
+    "bank": "clean",
+    "midi": 61,
+    "layer": "normal",
+    "file": "clean/Cs4_s5_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/C%234_s5_01.flac",
+    "sha256": "11d6f50f1a0833174dcd98d1fe0eec600d3d9402b440e3e7b322a31a89808d56",
+    "string": 1
+  },
+  {
+    "bank": "clean",
+    "midi": 61,
+    "layer": "normal",
+    "file": "clean/Cs4_s5_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/C%234_s5_02.flac",
+    "sha256": "65581e2adaf12a338c089124bcaae62a39a05e932a9ae083047cb439ecc73343",
+    "string": 1
+  },
+  {
+    "bank": "clean",
+    "midi": 61,
+    "layer": "soft",
+    "file": "clean/Cs4_s5_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/C%234_s5_soft_01.flac",
+    "sha256": "a72f26f53932d8cd15aee4b8fa1bdd12b5900b20e70810562d5ba42283297eee",
+    "string": 1
+  },
+  {
+    "bank": "clean",
+    "midi": 64,
+    "layer": "normal",
+    "file": "clean/E4_s6_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/E4_s6_01.flac",
+    "sha256": "eef85c9b346ede2c3de0fc5e3503764d80c3a9418e3db8ed86cfa895c392a13a",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 64,
+    "layer": "normal",
+    "file": "clean/E4_s6_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/E4_s6_02.flac",
+    "sha256": "2422c41ceafc95ef4695753f360de251a3bcfec47f8ba406aadc7d0bd3e4f41f",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 64,
+    "layer": "soft",
+    "file": "clean/E4_s6_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/E4_s6_soft_01.flac",
+    "sha256": "4abc4db2ddc06240ea47aab3529b9e5ea16b708c03ebc9c4888d534388fb016d",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 67,
+    "layer": "normal",
+    "file": "clean/G4_s6_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/G4_s6_01.flac",
+    "sha256": "2d61fd8b8bfd8305914b1ab0e08d14a9c94cc69dfd132d023253be0842e25d24",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 67,
+    "layer": "normal",
+    "file": "clean/G4_s6_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/G4_s6_02.flac",
+    "sha256": "0516eb4101d45c155d0b0c217713c1c760f0d9459ca6d8173cb85b61323c007f",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 71,
+    "layer": "normal",
+    "file": "clean/B4_s6_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/B4_s6_01.flac",
+    "sha256": "50f2650e591eeb07b10fb1c10048c7058f1f209fe2980c57937eb4c3454b36f9",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 71,
+    "layer": "normal",
+    "file": "clean/B4_s6_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/B4_s6_02.flac",
+    "sha256": "4a1310403aaa0f29cb3ea27358bafeb65c2c72d564e12eed1232d206a9ae5768",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 74,
+    "layer": "normal",
+    "file": "clean/D5_s6_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/D5_s6_01.flac",
+    "sha256": "32e20877b12b7c2b3300233c46dea4850cf314f7786a76890c663ff9ddff67f9",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 74,
+    "layer": "normal",
+    "file": "clean/D5_s6_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/D5_s6_02.flac",
+    "sha256": "164753a1a1b15c3d1da6a999844e0c69177e1662a742879692cabe2cd5f33a3d",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 74,
+    "layer": "soft",
+    "file": "clean/D5_s6_soft_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/D5_s6_soft_01.flac",
+    "sha256": "fd637bc40df23a190da21b5f8849e284f66146352b70b3494a51cd11adf5eace",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 77,
+    "layer": "normal",
+    "file": "clean/F5_s6_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/F5_s6_01.flac",
+    "sha256": "be9518f5d63b48dbc3ae3ecdd558c95a02bebb404b4d7b6151eb563421841d4b",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 77,
+    "layer": "normal",
+    "file": "clean/F5_s6_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/F5_s6_02.flac",
+    "sha256": "ae563aea58704764e5b9ed461f11decc860de9c4edcacafc731dc59568aa097a",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 80,
+    "layer": "normal",
+    "file": "clean/Gs5_s6_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/G%235_s6_01.flac",
+    "sha256": "f243c61a0da63ff13e07777ee3f9d62195514cea29ebdb95969d8a9d7a48e7c5",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 80,
+    "layer": "normal",
+    "file": "clean/Gs5_s6_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/G%235_s6_02.flac",
+    "sha256": "51f8db61a818802da7e7669e0b14543d00eacdee888e4cd16c9c09c3974c70be",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 82,
+    "layer": "normal",
+    "file": "clean/As5_s6_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/A%235_s6_01.flac",
+    "sha256": "77943709a778e56ee1237fe08e521c3c2c142cf21cfa8e7d5ab3a2142729d3d0",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 82,
+    "layer": "normal",
+    "file": "clean/As5_s6_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/A%235_s6_02.flac",
+    "sha256": "c83e512a76cdbed7075e8278787394a3662ccf7b28ac1af0f442b2c531069f7a",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 85,
+    "layer": "normal",
+    "file": "clean/Cs6_s6_01.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/C%236_s6_01.flac",
+    "sha256": "0026a73add192132dd58ef74ae3088f884ecf3065ca96ad03df48c745e1f8ec8",
+    "string": 0
+  },
+  {
+    "bank": "clean",
+    "midi": 85,
+    "layer": "normal",
+    "file": "clean/Cs6_s6_02.mp3",
+    "source": "https://raw.githubusercontent.com/freepats/electric-guitar-FSBS-clean/192cf0d9bf2c4ba6ead8e3524ba3f78818e4fe91/samples/bridge/C%236_s6_02.flac",
+    "sha256": "43daf79bca493adf4269258a192312c5f1995720b65832c84fad2ede1a1e3919",
+    "string": 0
+  }
+]

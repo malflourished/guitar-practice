@@ -16,6 +16,7 @@ import { SettingsRow } from './SettingsList';
 import styles from './StudyModeControls.module.css';
 
 const STUDY_MODES: { id: StudyMode; label: string }[] = [
+  { id: 'practice', label: 'Practice' },
   { id: 'notes', label: 'Notes' },
   { id: 'chords', label: 'Chords' },
   { id: 'scales', label: 'Scales' },

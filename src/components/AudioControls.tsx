@@ -56,10 +56,6 @@ function TempoField({ tempo, onTempoChange }: TempoFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!editing) setDraft(String(tempo));
-  }, [tempo, editing]);
-
-  useEffect(() => {
     if (editing) {
       inputRef.current?.focus();
       inputRef.current?.select();
@@ -113,7 +109,7 @@ function TempoField({ tempo, onTempoChange }: TempoFieldProps) {
       type="button"
       className={styles.tempoButton}
       aria-label={`Tempo ${tempo} beats per minute. Click to edit.`}
-      onClick={() => setEditing(true)}
+      onClick={() => { setDraft(String(tempo)); setEditing(true); }}
     >
       {tempo} BPM
     </button>
