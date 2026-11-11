@@ -7,15 +7,17 @@ This file is the plan of record. It came out of a full review of the app on 2026
 
 ## Status
 
-| # | Work package | Status | Depends on |
-|---|---|---|---|
-| A | Single-screen layout | **Next up** | nothing |
-| B | Teaching fixes (six small ones) | Ready, can run in parallel with A | nothing |
-| C | Chord shapes and small triads | Ready | nothing |
-| D | Discover mode | Ready after A | A (needs the new frame) |
-| E | Practice that adapts, jam loop | Ready after A | A |
-| F | Look: analog texture | Mock-ups ready. **Waiting for the owner** to pick a treatment | owner sign-off |
-| G | Later: hands-free, listening, tunings | Not started | A |
+| # | Work package | Status | Depends on | Who should do it |
+|---|---|---|---|---|
+| A | Single-screen layout | Next, once B and F have landed (A moves files they edit) | B, F | the strongest model, or an experienced front-end developer: it needs design judgment |
+| B | Teaching fixes (five small ones) | **In progress**, handed off 2026-11-11 | nothing | any capable model: fully specified and test-backed |
+| C | Chord shapes and small triads | Ready | nothing | a strong model, and a guitarist should check the fingerings |
+| D | Discover mode | Ready after A | A (needs the new frame) | a capable model: the content is written and the behaviour is specified |
+| E | Practice that adapts, jam loop | Ready after A | A | a capable model |
+| F | Look: analog texture | Treatment chosen. **In progress**: making it the default, handed off 2026-11-11 | nothing | any capable model: the values are decided |
+| G | Later: hands-free, listening, tunings | Not started | A | to be decided |
+
+The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
 
 ## How to work on this
 
@@ -106,6 +108,7 @@ Within those rules the details are the implementer's call. Keep the current visu
 - [ ] Practice: everything needed during a block is visible at once (neck, timer, transport, rating).
 - [ ] Below about 1100 px wide or 680 px tall the side panel becomes a drawer over the neck, not a stacked block.
 - [ ] No text under 12 px in anything that gets moved. About two-thirds of the font sizes in the app are below that today (most common: `0.62rem`).
+- [ ] Give the three hidden gestures a visible control or a hint while re-homing them: Cmd-drag on the position slider, Cmd-click on Labels, and clicking Vibrato a second time to flip the canvas.
 
 **Done when.**
 
@@ -127,7 +130,7 @@ Paste in the dev-tools console for each mode and window size. `page` must equal 
 
 ## B. Teaching fixes
 
-Six places where the picture contradicts the lesson. Each is small and independent.
+Five places where the picture contradicts the lesson. Each is small and independent.
 
 - [ ] **Changes drill shows guide tones that jump around.** `changesPositions` in `src/components/IntervalTrainer.tsx` picks each chord's 3rd and 7th relative to that chord's own root. In C, for ii–V–I, it shows Dm7 as F (high-e string, fret 13) and C (B string, 13), then G7 as B (high-e, 7) and F (B, 6), then Cmaj7 as E and B both on the high-e string, while the caption says "Common tone held". The lesson of this drill is the opposite: the guide tones barely move.
   **Fix:** choose positions by the smallest movement from the previous chord, on one pair of adjacent strings.
@@ -141,7 +144,6 @@ Six places where the picture contradicts the lesson. Each is small and independe
   **Fix:** use the theme's main text colour. Contrast at least 4.5:1 in Vibrato dark, Vibrato light and Scholar.
 - [ ] **Hover looks more "on" than selected.** In `src/styles/glass.module.css`, `.pill:hover` uses `--glass-bg-hover` (0.14 alpha) and `.pillSelected` uses `--glass-bg` (0.06).
   **Fix:** selected is always the strongest state.
-- [ ] **Hidden gestures.** Cmd-drag on the position slider, Cmd-click on Labels, and clicking Vibrato a second time to flip the canvas are not shown anywhere. Give each a visible control or a hint.
 
 ---
 
@@ -206,7 +208,7 @@ Research on musicians is small but points toward mixing material within a sessio
 
 ## F. Look: analog texture
 
-**Waiting for the owner.** No change to the look until they have seen and approved mock-ups.
+**Chosen by the owner on 2026-11-11: Subtle on Vibrato, Print on Scholar.** Any change to the look beyond those two treatments still needs the owner's sign-off.
 
 **Direction, in the owner's words (2026-11-11):** "there's a minimalist futurism that I'm really into"; the Scholar theme (dark grey on off-white) is the reference. The 80s feeling should come from the medium, not from 80s objects: "televisions, tube amps and the way that screens looked", "film grain", "additional layers of noise that helps diffuse the cleanliness". And: "I don't want to fight the technology we have now", so "a filter of some kind ... to give it an analog look while keeping the minimalism".
 
@@ -221,9 +223,18 @@ Research on musicians is small but points toward mixing material within a sessio
 **Rejected, do not revive:** a "studio rack" concept with chamfered panels, LEDs, dot-matrix readouts and extended-sans legends. The owner's verdict: "generic 80s".
 
 - [x] Mock-ups for the owner: the analog lab and the three images below.
-- [ ] Owner picks a treatment for each theme (a preset, or dial values).
+- [x] Owner picks a treatment for each theme. Decided after trying the lab in the installed app: "Subtle is really nice", "print looks great on Scholar".
+- [ ] Make that the default look: on for everyone, chosen by theme, with one Texture on/off setting in the theme dock. Keep the lab panel as a hidden tuning tool.
 - [ ] Measure what it costs on real hardware (see limits below).
-- [ ] Build it as one layer with one user setting, and remove the lab panel.
+
+**The chosen values** (0 to 100, as in `PRESETS` in `src/lab/AnalogLab.tsx`):
+
+| Theme | Preset | grain | glow | fade | warmth | vignette | raster | motion |
+|---|---|---|---|---|---|---|---|---|
+| Vibrato, dark and light canvas | Subtle | 26 | 30 | 8 | 30 | 20 | 0 | 50 |
+| Scholar | Print | 60 | 36 | 10 | 50 | 14 | 0 | 0 |
+
+**Parked at the owner's request** ("make a note of it in case I want to bring it up again"): a blend of Subtle and Tube. Subtle as the base, a little of Tube's raster and falloff, and Glow kept low, because Tube's glow washes out the note letters ("lower the glow a little bit for some legibility"). Also "a subtle softness from a tube": a slight overall softening, which the lab has no dial for yet.
 
 ### The analog lab (a prototype inside the app, off by default)
 
@@ -278,3 +289,4 @@ Scholar: clean and Print.
 - **2026-11-11.** Owner approved the review's plan and chose the single-screen layout as the first piece of work. Rejected the first concept's styling as "generic 80s". Set the look direction: minimalist futurism plus analog texture, mock-ups before any change.
 - **2026-11-11.** Branch `vibrato-next` created. This roadmap and the Discover starter content added.
 - **2026-11-11.** Analog lab prototype added for package F, off by default, with comparison images. Full-frame glow uses a filter on the root element because a blurred overlay cannot be screen-blended in Chromium (the blur replaces the page instead of adding to it).
+- **2026-11-11.** Owner chose the look: Subtle on Vibrato, Print on Scholar. A Subtle and Tube blend is parked. "Hidden gestures" moved from package B to package A, because A re-homes those controls. Packages B and F were handed to separate sessions on a cheaper model; A follows when they land.
