@@ -1,0 +1,1128 @@
+{
+  "about": "Starter content for the Discover mode (see docs/ROADMAP.md, work package 4). Written for a concept page on 2026-11-11 and checked by script: formulas agree with interval lists, numerals agree with offsets. Intervals and offsets are semitones above the key root. Adapt the shape to the app's own types when building.",
+  "sounds": [
+    {
+      "tag": "Lydian dom",
+      "name": "Lydian dominant",
+      "f": [
+        "1",
+        "2",
+        "3",
+        "♯4",
+        "5",
+        "6",
+        "♭7"
+      ],
+      "iv": [
+        0,
+        2,
+        4,
+        6,
+        7,
+        9,
+        10
+      ],
+      "pad": [
+        0,
+        4,
+        7,
+        10
+      ],
+      "vibe": "Bright and sly. Major on top with a blues wink underneath.",
+      "ear": "The ♯4 and the ♭7 in the same phrase. Neither one wants to resolve.",
+      "over": "A 7 or 9 chord that is not the V of the key: a IV7 or a ♭VII7. Fourth mode of melodic minor.",
+      "heard": "The Simpsons theme"
+    },
+    {
+      "tag": "Mixo ♭6",
+      "name": "Mixolydian ♭6",
+      "f": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "♭6",
+        "♭7"
+      ],
+      "iv": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        8,
+        10
+      ],
+      "pad": [
+        0,
+        4,
+        7
+      ],
+      "vibe": "Heroic up top, wistful underneath. The film-score major.",
+      "ear": "A major 3rd and a ♭6 in one breath: sunshine with a shadow across it.",
+      "over": "A plain major triad, or a I chord that keeps falling to iv. Fifth mode of melodic minor."
+    },
+    {
+      "tag": "Phrygian dom",
+      "name": "Phrygian dominant",
+      "f": [
+        "1",
+        "♭2",
+        "3",
+        "4",
+        "5",
+        "♭6",
+        "♭7"
+      ],
+      "iv": [
+        0,
+        1,
+        4,
+        5,
+        7,
+        8,
+        10
+      ],
+      "pad": [
+        0,
+        4,
+        7
+      ],
+      "vibe": "Flamenco heat. Tense and proud.",
+      "ear": "The three-fret gap between ♭2 and 3, and the ♭2 falling home to the root.",
+      "over": "A major chord rocking to the major chord a fret above it (I to ♭II). It is harmonic minor started from its 5th."
+    },
+    {
+      "tag": "Dbl harmonic",
+      "name": "Double harmonic",
+      "f": [
+        "1",
+        "♭2",
+        "3",
+        "4",
+        "5",
+        "♭6",
+        "7"
+      ],
+      "iv": [
+        0,
+        1,
+        4,
+        5,
+        7,
+        8,
+        11
+      ],
+      "pad": [
+        0,
+        4,
+        7
+      ],
+      "vibe": "Surf-noir and snake-charmer at once.",
+      "ear": "Two wide gaps (♭2 to 3, ♭6 to 7), each sitting next to a half step.",
+      "over": "A major triad drone. Tremolo-pick it on one string.",
+      "heard": "Dick Dale, “Misirlou”"
+    },
+    {
+      "tag": "Hungarian min",
+      "name": "Hungarian minor",
+      "f": [
+        "1",
+        "2",
+        "♭3",
+        "♯4",
+        "5",
+        "♭6",
+        "7"
+      ],
+      "iv": [
+        0,
+        2,
+        3,
+        6,
+        7,
+        8,
+        11
+      ],
+      "pad": [
+        0,
+        3,
+        7
+      ],
+      "vibe": "Gothic and theatrical. Minor with two raised eyebrows.",
+      "ear": "The ♯4 leaning up into the 5, and the 7 leaning up into the root.",
+      "over": "A minor triad drone. Harmonic minor with the 4th pushed up a fret."
+    },
+    {
+      "tag": "Hirajoshi",
+      "name": "Hirajoshi",
+      "f": [
+        "1",
+        "2",
+        "♭3",
+        "5",
+        "♭6"
+      ],
+      "iv": [
+        0,
+        2,
+        3,
+        7,
+        8
+      ],
+      "pad": [
+        0,
+        7
+      ],
+      "vibe": "Koto tuning. Stark, spacious, a little cold.",
+      "ear": "Two tight half steps (2 to ♭3, 5 to ♭6) with wide silence between them.",
+      "over": "Root and fifth only. Play fewer notes than feels comfortable."
+    },
+    {
+      "tag": "In-sen",
+      "name": "In-sen",
+      "f": [
+        "1",
+        "♭2",
+        "4",
+        "5",
+        "♭7"
+      ],
+      "iv": [
+        0,
+        1,
+        5,
+        7,
+        10
+      ],
+      "pad": [
+        0,
+        7
+      ],
+      "vibe": "Suspended and mysterious. No 3rd, so neither major nor minor.",
+      "ear": "The ♭2 pressing against the root while the 4 and 5 stay wide open.",
+      "over": "An open-fifth drone, or a sus4 chord."
+    },
+    {
+      "tag": "Minor 6 pent",
+      "name": "Minor 6 pentatonic",
+      "f": [
+        "1",
+        "♭3",
+        "4",
+        "5",
+        "6"
+      ],
+      "iv": [
+        0,
+        3,
+        5,
+        7,
+        9
+      ],
+      "pad": [
+        0,
+        3,
+        7,
+        9
+      ],
+      "vibe": "Your blues box, one note smarter.",
+      "ear": "The 6 where your hand expects the ♭7.",
+      "over": "Minor 6 and minor 7 chords. In a blues, play it from the key note over the IV chord: the 6 is that chord’s 3rd."
+    },
+    {
+      "tag": "Dominant pent",
+      "name": "Dominant pentatonic",
+      "f": [
+        "1",
+        "2",
+        "3",
+        "5",
+        "♭7"
+      ],
+      "iv": [
+        0,
+        2,
+        4,
+        7,
+        10
+      ],
+      "pad": [
+        0,
+        4,
+        7,
+        10
+      ],
+      "vibe": "Sweet and salty. Country bends with a jazz accent.",
+      "ear": "Major pentatonic with the 6 traded for a ♭7.",
+      "over": "Any dominant 7 or 9 chord. Bend the 2 up to the 3."
+    },
+    {
+      "tag": "Whole tone",
+      "name": "Whole tone",
+      "f": [
+        "1",
+        "2",
+        "3",
+        "♯4",
+        "♯5",
+        "♭7"
+      ],
+      "iv": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10
+      ],
+      "pad": [
+        0,
+        4,
+        8
+      ],
+      "vibe": "Dream sequence. Gravity switched off.",
+      "ear": "No half steps anywhere, so nothing pulls toward home.",
+      "over": "Augmented and 7♯5 chords. Every shape repeats two frets up: slide one idea up the neck.",
+      "heard": "Stevie Wonder, “You Are the Sunshine of My Life” (intro)"
+    },
+    {
+      "tag": "H–W diminished",
+      "name": "Half–whole diminished",
+      "f": [
+        "1",
+        "♭2",
+        "♯2",
+        "3",
+        "♯4",
+        "5",
+        "6",
+        "♭7"
+      ],
+      "iv": [
+        0,
+        1,
+        3,
+        4,
+        6,
+        7,
+        9,
+        10
+      ],
+      "pad": [
+        0,
+        4,
+        7,
+        10
+      ],
+      "vibe": "Coiled and angular. Tension with a pattern to it.",
+      "ear": "Half step, whole step, forever. Eight notes, no resting place.",
+      "over": "A dominant 7 that is about to resolve (13♭9). Every shape repeats three frets up."
+    },
+    {
+      "tag": "Augmented",
+      "name": "Augmented scale",
+      "f": [
+        "1",
+        "♯2",
+        "3",
+        "5",
+        "♯5",
+        "7"
+      ],
+      "iv": [
+        0,
+        3,
+        4,
+        7,
+        8,
+        11
+      ],
+      "pad": [
+        0,
+        4,
+        7,
+        11
+      ],
+      "vibe": "Shimmering and alien. Science-fiction major.",
+      "ear": "Three major triads a major third apart, hiding in six notes.",
+      "over": "A maj7 or maj7♯5 chord. Every shape repeats four frets up."
+    }
+  ],
+  "moves": [
+    {
+      "tag": "Creep lift",
+      "name": "I – III – IV – iv",
+      "ch": [
+        {
+          "n": "I",
+          "o": 0,
+          "q": "maj"
+        },
+        {
+          "n": "III",
+          "o": 4,
+          "q": "maj"
+        },
+        {
+          "n": "IV",
+          "o": 5,
+          "q": "maj"
+        },
+        {
+          "n": "iv",
+          "o": 5,
+          "q": "min"
+        }
+      ],
+      "vibe": "Yearning. A door opens, then the light changes.",
+      "why": "III is major where the key expects minor, and the last chord is IV turned minor, borrowed from the parallel key.",
+      "over": "Trace one inner line on a single string: 5, ♯5, 6, ♭6, back to 5. It is the melody hiding inside the chords.",
+      "heard": "Radiohead, “Creep”"
+    },
+    {
+      "tag": "Mario cadence",
+      "name": "♭VI – ♭VII – I",
+      "ch": [
+        {
+          "n": "♭VI",
+          "o": 8,
+          "q": "maj"
+        },
+        {
+          "n": "♭VII",
+          "o": 10,
+          "q": "maj"
+        },
+        {
+          "n": "I",
+          "o": 0,
+          "q": "maj",
+          "b": 8
+        }
+      ],
+      "vibe": "Victory fanfare.",
+      "why": "Two major chords borrowed from the parallel minor climb by whole steps into a major home.",
+      "over": "Minor pentatonic over the first two chords, then land hard on the major 3rd when I arrives.",
+      "heard": "Super Mario Bros. (stage clear)"
+    },
+    {
+      "tag": "Andalusian",
+      "name": "i – ♭VII – ♭VI – V",
+      "ch": [
+        {
+          "n": "i",
+          "o": 0,
+          "q": "min"
+        },
+        {
+          "n": "♭VII",
+          "o": 10,
+          "q": "maj"
+        },
+        {
+          "n": "♭VI",
+          "o": 8,
+          "q": "maj"
+        },
+        {
+          "n": "V",
+          "o": 7,
+          "q": "maj"
+        }
+      ],
+      "vibe": "Flamenco descent.",
+      "why": "The bass walks down four steps to a major V, which snaps you back to the top.",
+      "over": "Natural minor all the way down. On the V chord raise the ♭7 to 7: that one note is harmonic minor.",
+      "heard": "Ray Charles, “Hit the Road Jack”"
+    },
+    {
+      "tag": "Dorian vamp",
+      "name": "i7 – IV7",
+      "ch": [
+        {
+          "n": "i7",
+          "o": 0,
+          "q": "m7"
+        },
+        {
+          "n": "IV7",
+          "o": 5,
+          "q": "dom7"
+        }
+      ],
+      "vibe": "A smoky groove that never needs to resolve.",
+      "why": "The IV chord is major, so the key’s 6th is natural. That single note is the whole Dorian sound.",
+      "over": "Minor pentatonic plus the natural 6, which is also the 3rd of the IV chord. Aim for it in bar two.",
+      "heard": "Santana, “Oye Como Va”"
+    },
+    {
+      "tag": "Lydian float",
+      "name": "Imaj7 – II/I",
+      "ch": [
+        {
+          "n": "Imaj7",
+          "o": 0,
+          "q": "maj7"
+        },
+        {
+          "n": "II/I",
+          "o": 2,
+          "q": "maj",
+          "bass": 0
+        }
+      ],
+      "vibe": "Weightless. Wide-eyed wonder.",
+      "why": "A major triad one whole step up, over the same bass note, puts the ♯4 on top.",
+      "over": "Lydian. Hang on the ♯4 and never let it fall to the 4.",
+      "heard": "Joe Satriani, “Flying in a Blue Dream”"
+    },
+    {
+      "tag": "Add9 stacks",
+      "name": "Iadd9 – vi(add9) – IVadd9 – Vadd9",
+      "ch": [
+        {
+          "n": "Iadd9",
+          "o": 0,
+          "q": "add9"
+        },
+        {
+          "n": "vi(add9)",
+          "o": 9,
+          "q": "madd9"
+        },
+        {
+          "n": "IVadd9",
+          "o": 5,
+          "q": "add9"
+        },
+        {
+          "n": "Vadd9",
+          "o": 7,
+          "q": "add9"
+        }
+      ],
+      "vibe": "Glassy 1983 arpeggios.",
+      "why": "Every chord wears a 9th, so the changes blur into one shimmering texture.",
+      "over": "Do not solo: arpeggiate. Stack two fifths (root, 5th, 9th) at frets +0, +2, +4 on three neighbouring low strings.",
+      "heard": "The Police, “Every Breath You Take”"
+    },
+    {
+      "tag": "Villain mediant",
+      "name": "i – ♭vi",
+      "ch": [
+        {
+          "n": "i",
+          "o": 0,
+          "q": "min"
+        },
+        {
+          "n": "♭vi",
+          "o": 8,
+          "q": "min"
+        }
+      ],
+      "vibe": "Imperial menace.",
+      "why": "Two minor triads a major third apart share exactly one note. Everything else slides a half step.",
+      "over": "No single scale covers both. Hold the shared note (the ♭3 of the key) and arpeggiate around it.",
+      "heard": "John Williams, “The Imperial March”"
+    },
+    {
+      "tag": "Major-3rd cycle",
+      "name": "Imaj7 – ♭VImaj7 – IIImaj7",
+      "ch": [
+        {
+          "n": "Imaj7",
+          "o": 0,
+          "q": "maj7"
+        },
+        {
+          "n": "♭VImaj7",
+          "o": 8,
+          "q": "maj7"
+        },
+        {
+          "n": "IIImaj7",
+          "o": 4,
+          "q": "maj7"
+        }
+      ],
+      "vibe": "Kaleidoscope. Three keys split the octave.",
+      "why": "The roots fall by major thirds until they land back home.",
+      "over": "Take one small idea and move it down four frets with each chord.",
+      "heard": "John Coltrane, “Giant Steps” (its three key centres)"
+    },
+    {
+      "tag": "City pop",
+      "name": "IVmaj7 – III7 – vi7 – v7 I7",
+      "ch": [
+        {
+          "n": "IVmaj7",
+          "o": 5,
+          "q": "maj7"
+        },
+        {
+          "n": "III7",
+          "o": 4,
+          "q": "dom7"
+        },
+        {
+          "n": "vi7",
+          "o": 9,
+          "q": "m7"
+        },
+        {
+          "n": "v7",
+          "o": 7,
+          "q": "m7",
+          "b": 2
+        },
+        {
+          "n": "I7",
+          "o": 0,
+          "q": "dom7",
+          "b": 2
+        }
+      ],
+      "vibe": "Neon sunset, 1984.",
+      "why": "III7 is the V of vi. The last bar is a ii–V that drops you straight back onto IV.",
+      "over": "Major scale. Raise the 5 to ♯5 over III7, and lower the 7 to ♭7 over the last bar.",
+      "heard": "Grover Washington Jr. and Bill Withers, “Just the Two of Us”"
+    },
+    {
+      "tag": "Backdoor",
+      "name": "Imaj7 – iv7 – ♭VII7 – Imaj7",
+      "ch": [
+        {
+          "n": "Imaj7",
+          "o": 0,
+          "q": "maj7"
+        },
+        {
+          "n": "iv7",
+          "o": 5,
+          "q": "m7"
+        },
+        {
+          "n": "♭VII7",
+          "o": 10,
+          "q": "dom7"
+        },
+        {
+          "n": "Imaj7",
+          "o": 0,
+          "q": "maj7"
+        }
+      ],
+      "vibe": "The side entrance home. Warm, soulful.",
+      "why": "iv7 – ♭VII7 is a ii–V borrowed from the key a minor third up. It resolves up a whole step instead of down a fifth.",
+      "over": "Minor pentatonic through the middle two bars, then land on the major 3rd."
+    },
+    {
+      "tag": "Tritone sub",
+      "name": "ii7 – ♭II7 – Imaj7",
+      "ch": [
+        {
+          "n": "ii7",
+          "o": 2,
+          "q": "m7"
+        },
+        {
+          "n": "♭II7",
+          "o": 1,
+          "q": "dom7"
+        },
+        {
+          "n": "Imaj7",
+          "o": 0,
+          "q": "maj7",
+          "b": 8
+        }
+      ],
+      "vibe": "A chromatic glide into home. Bossa after dark.",
+      "why": "♭II7 shares its 3rd and 7th with V7: same tension, but the bass slides down by half steps.",
+      "over": "Follow the bass: 2, ♭2, 1. Over ♭II7 try Lydian dominant from its root.",
+      "heard": "Jobim, “The Girl from Ipanema”"
+    },
+    {
+      "tag": "Line cliché",
+      "name": "i – i(maj7) – i7 – i6",
+      "ch": [
+        {
+          "n": "i",
+          "o": 0,
+          "q": "min"
+        },
+        {
+          "n": "i(maj7)",
+          "o": 0,
+          "q": "mM7"
+        },
+        {
+          "n": "i7",
+          "o": 0,
+          "q": "m7"
+        },
+        {
+          "n": "i6",
+          "o": 0,
+          "q": "m6"
+        }
+      ],
+      "vibe": "Torch song. Spy film.",
+      "why": "The chord never moves. One voice walks down: root, 7, ♭7, 6.",
+      "over": "Find that falling line on one string and let it be the melody.",
+      "heard": "“My Funny Valentine”"
+    }
+  ],
+  "lenses": [
+    {
+      "id": "dial",
+      "tag": "Brightness dial",
+      "name": "Brightness dial",
+      "start": 0,
+      "blurb": "Seven modes, brightest to darkest. Each step flattens exactly one note.",
+      "prompt": "Hold the drone. Step down one notch at a time and play only the note that just changed against the root.",
+      "variants": [
+        {
+          "label": "Lydian",
+          "iv": [
+            0,
+            2,
+            4,
+            6,
+            7,
+            9,
+            11
+          ],
+          "lb": {
+            "6": "♯4"
+          },
+          "pad": [
+            0,
+            7
+          ],
+          "note": "Brightest. The ♯4 floats above the 5th."
+        },
+        {
+          "label": "Ionian",
+          "iv": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11
+          ],
+          "pad": [
+            0,
+            7
+          ],
+          "note": "♯4 drops to 4. The plain major scale."
+        },
+        {
+          "label": "Mixolydian",
+          "iv": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            10
+          ],
+          "pad": [
+            0,
+            7
+          ],
+          "note": "7 drops to ♭7. Major with a blues edge."
+        },
+        {
+          "label": "Dorian",
+          "iv": [
+            0,
+            2,
+            3,
+            5,
+            7,
+            9,
+            10
+          ],
+          "pad": [
+            0,
+            7
+          ],
+          "note": "3 drops to ♭3. Minor now, but the 6 keeps it warm."
+        },
+        {
+          "label": "Aeolian",
+          "iv": [
+            0,
+            2,
+            3,
+            5,
+            7,
+            8,
+            10
+          ],
+          "pad": [
+            0,
+            7
+          ],
+          "note": "6 drops to ♭6. Natural minor."
+        },
+        {
+          "label": "Phrygian",
+          "iv": [
+            0,
+            1,
+            3,
+            5,
+            7,
+            8,
+            10
+          ],
+          "pad": [
+            0,
+            7
+          ],
+          "note": "2 drops to ♭2. Dark and Spanish."
+        },
+        {
+          "label": "Locrian",
+          "iv": [
+            0,
+            1,
+            3,
+            5,
+            6,
+            8,
+            10
+          ],
+          "pad": [
+            0
+          ],
+          "note": "5 drops to ♭5. Even home is unstable."
+        }
+      ]
+    },
+    {
+      "id": "string",
+      "tag": "One string",
+      "name": "One string",
+      "start": 2,
+      "blurb": "Mick Goodrick’s first lesson: improvise along a single string.",
+      "prompt": "Pick a string and play melodies along it with one finger. Box licks stop working, and you start hearing distances.",
+      "variants": [
+        {
+          "label": "e string",
+          "iv": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11
+          ],
+          "strings": [
+            0
+          ],
+          "pad": [
+            0,
+            7
+          ]
+        },
+        {
+          "label": "B string",
+          "iv": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11
+          ],
+          "strings": [
+            1
+          ],
+          "pad": [
+            0,
+            7
+          ]
+        },
+        {
+          "label": "G string",
+          "iv": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11
+          ],
+          "strings": [
+            2
+          ],
+          "pad": [
+            0,
+            7
+          ]
+        },
+        {
+          "label": "D string",
+          "iv": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11
+          ],
+          "strings": [
+            3
+          ],
+          "pad": [
+            0,
+            7
+          ]
+        },
+        {
+          "label": "A string",
+          "iv": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11
+          ],
+          "strings": [
+            4
+          ],
+          "pad": [
+            0,
+            7
+          ]
+        },
+        {
+          "label": "E string",
+          "iv": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11
+          ],
+          "strings": [
+            5
+          ],
+          "pad": [
+            0,
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "id": "three",
+      "tag": "Three notes",
+      "name": "Three notes",
+      "deal": true,
+      "blurb": "A hand of three notes. Rhythm and phrasing do the rest.",
+      "prompt": "Deal three notes. Play only those, anywhere on the neck, for one minute. Change the rhythm, the octave and the attack before you ask for more notes."
+    },
+    {
+      "id": "swap",
+      "tag": "Pentatonic swap",
+      "name": "Pentatonic swap",
+      "start": 1,
+      "blurb": "The box you already know, started from a different note of the chord.",
+      "prompt": "Over a maj7 chord, play a minor pentatonic box from each of these notes. Same fingering, new colours.",
+      "variants": [
+        {
+          "label": "From the 6th",
+          "iv": [
+            9,
+            0,
+            2,
+            4,
+            7
+          ],
+          "pad": [
+            0,
+            4,
+            7,
+            11
+          ],
+          "note": "The usual one, the relative minor box: R 2 3 5 6. Safe and sweet."
+        },
+        {
+          "label": "From the 3rd",
+          "iv": [
+            4,
+            7,
+            9,
+            11,
+            2
+          ],
+          "pad": [
+            0,
+            4,
+            7,
+            11
+          ],
+          "note": "No root at all: 2 3 5 6 7. It sounds like the top half of the chord."
+        },
+        {
+          "label": "From the 7th",
+          "iv": [
+            11,
+            2,
+            4,
+            6,
+            9
+          ],
+          "lb": {
+            "6": "♯4"
+          },
+          "pad": [
+            0,
+            4,
+            7,
+            11
+          ],
+          "note": "Adds the ♯4: 2 3 ♯4 6 7. Instant Lydian from a blues box."
+        }
+      ]
+    },
+    {
+      "id": "pairs",
+      "tag": "Triad pairs",
+      "name": "Triad pairs",
+      "start": 0,
+      "blurb": "Two neighbouring major triads, alternated. Structured, modern, and hard to play a cliché with.",
+      "prompt": "Play one triad going up and the other coming down, and keep leapfrogging up the neck.",
+      "variants": [
+        {
+          "label": "I + II",
+          "iv": [
+            0,
+            4,
+            7,
+            2,
+            6,
+            9
+          ],
+          "lb": {
+            "6": "♯4"
+          },
+          "pad": [
+            0,
+            4,
+            7,
+            11
+          ],
+          "note": "Over a maj7 chord: the Lydian pair."
+        },
+        {
+          "label": "♭VII + I",
+          "iv": [
+            10,
+            2,
+            5,
+            0,
+            4,
+            7
+          ],
+          "pad": [
+            0,
+            4,
+            7,
+            10
+          ],
+          "note": "Over a dominant 7 chord: the Mixolydian pair."
+        },
+        {
+          "label": "♭III + IV",
+          "iv": [
+            3,
+            7,
+            10,
+            5,
+            9,
+            0
+          ],
+          "pad": [
+            0,
+            3,
+            7,
+            10
+          ],
+          "note": "Over a minor 7 chord: the Dorian pair."
+        }
+      ]
+    },
+    {
+      "id": "slip",
+      "tag": "Side-slip",
+      "name": "Side-slip",
+      "start": 0,
+      "blurb": "Go outside on purpose, then come home.",
+      "prompt": "Play a phrase in the box. Shift the same fingering up one fret for two beats (the dashed rings), then drop back and land on a chord tone.",
+      "variants": [
+        {
+          "label": "Minor pentatonic",
+          "iv": [
+            0,
+            3,
+            5,
+            7,
+            10
+          ],
+          "ghost": [
+            1,
+            4,
+            6,
+            8,
+            11
+          ],
+          "pad": [
+            0,
+            3,
+            7,
+            10
+          ]
+        }
+      ]
+    }
+  ],
+  "sparks": [
+    "Leave two full beats of silence after every phrase.",
+    "Play only on the G and B strings.",
+    "Start every phrase on the “and” of 2.",
+    "Play a phrase. Now play it again a third higher.",
+    "End every phrase on the 3rd of the chord.",
+    "One string, one finger.",
+    "Sing the next phrase first, then find it.",
+    "Slide into every note from one fret below.",
+    "Play as quietly as you can. Then one note loud.",
+    "No note shorter than a half note.",
+    "Take the rhythm of your own name. Put any notes on it.",
+    "Stay inside four frets. Do not leave.",
+    "Skip a string on every jump.",
+    "Repeat one bar four times. Change exactly one note each time.",
+    "Start where you would normally end.",
+    "Bend up to every chord tone instead of fretting it.",
+    "Two bars climbing, two bars falling.",
+    "Play the same three notes in five different places."
+  ]
+}

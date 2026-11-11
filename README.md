@@ -2,6 +2,8 @@
 
 A guitar practice companion built with React, TypeScript, Tone.js, and Electron.
 
+**Picking up work?** The plan, with what is done and what is next, is in [docs/ROADMAP.md](docs/ROADMAP.md). Current work happens on the `vibrato-next` branch.
+
 ## Daily practice
 
 The Practice tab guides a ten-minute session in any of the twelve minor keys:
@@ -58,7 +60,7 @@ The app is written to `release/` using the committed icon. `npm run app:install`
 
 ## GitHub builds
 
-The **Build Vibrato** workflow runs lint, tests, the web build, and the Apple Silicon Mac package on pull requests and pushes to `main` or `codex/*` branches. Each successful run provides `Vibrato-macOS-AppleSilicon` and `Vibrato-web` artifacts for 30 days.
+The **Build Vibrato** workflow runs lint, tests, the web build, and the Apple Silicon Mac package on pull requests and pushes to `main`, `vibrato-next`, or `codex/*` branches. Each successful run provides `Vibrato-macOS-AppleSilicon` and `Vibrato-web` artifacts for 30 days.
 
 Download the Mac artifact from the run's **Artifacts** section, unzip it, then unzip the enclosed `Vibrato-macOS-AppleSilicon.zip` to get `vibrato~.app`. The inner archive preserves executable permissions and app-bundle symlinks. These development builds are unsigned and not notarized; the workflow has no signing credentials.
 

@@ -2,7 +2,7 @@ name: Build Vibrato
 
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main, 'codex/**', vibrato-next]
   pull_request:
   workflow_dispatch:
 
