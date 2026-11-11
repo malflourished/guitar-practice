@@ -14,6 +14,7 @@ import {
   getDyadRelationshipLabel,
   getFormulaTarget,
   getGuideToneMotion,
+  planGuideTones,
   getIntervalColor,
   getIntervalDef,
   getIntervalDyadShapes,
@@ -388,14 +389,29 @@ export function IntervalTrainer({
     return [...pool].sort((a, b) => b.string - a.string || a.fret - b.fret)[0];
   }, [changeStep]);
 
+  // Guide tones for the whole progression, on the D and G strings, so each
+  // chord's 3rd and 7th sit next to the previous chord's.
+  const guidePlan = useMemo(() => {
+    const first = changesSteps[0];
+    if (!first) return [];
+    const anchors = getRootAnchors(first.root);
+    const comfy = anchors.filter((a) => a.fret >= 3 && a.fret <= 12);
+    const pool = comfy.length ? comfy : anchors;
+    const anchorFret = pool.length
+      ? [...pool].sort((a, b) => b.string - a.string || a.fret - b.fret)[0].fret
+      : 5;
+    return planGuideTones(changesSteps, anchorFret);
+  }, [changesSteps]);
+
   const changesPositions = useMemo<FretPosition[]>(() => {
-    if (!changeStep || !changeAnchor) return [];
-    const third = getDirectedTargets(changeAnchor, changeStep.third, 'position')[0];
-    const seventh = getDirectedTargets(changeAnchor, changeStep.seventh, 'position')[0];
+    const placement = guidePlan[changeIndex];
+    if (!changeStep || !changeAnchor || !placement) return [];
     return dedupe(
-      [changeAnchor, third, seventh].filter(Boolean) as FretPosition[],
+      [changeAnchor, placement.third, placement.seventh].filter(
+        Boolean,
+      ) as FretPosition[],
     );
-  }, [changeStep, changeAnchor]);
+  }, [changeStep, changeAnchor, guidePlan, changeIndex]);
 
   // Keep the step index in range when the progression or key changes.
   useEffect(() => {
@@ -470,7 +486,12 @@ export function IntervalTrainer({
         : question?.root ?? root;
   const guideMotion =
     drill === 'changes' && changeIndex > 0 && changeStep
-      ? getGuideToneMotion(changesSteps[changeIndex - 1], changeStep)
+      ? getGuideToneMotion(
+          changesSteps[changeIndex - 1],
+          changeStep,
+          guidePlan[changeIndex - 1],
+          guidePlan[changeIndex],
+        )
       : null;
   const intervalDef = question ? getIntervalDef(question.semitones) : null;
   const gbWarning =
@@ -814,9 +835,11 @@ export function IntervalTrainer({
           )}
           {guideMotion && (
             <p className={styles.guess}>
-              {guideMotion.semitones === 0
+              {guideMotion.held
                 ? `Common tone held: ${guideMotion.fromLabel} → ${guideMotion.toLabel}`
-                : `Voice-leading: ${guideMotion.fromLabel} → ${guideMotion.toLabel} moves ${guideMotion.semitones} semitone${
+                : guideMotion.semitones === 0
+                  ? `Same note, new spot: ${guideMotion.fromLabel} → ${guideMotion.toLabel}`
+                  : `Voice-leading: ${guideMotion.fromLabel} → ${guideMotion.toLabel} moves ${guideMotion.semitones} semitone${
                     guideMotion.semitones === 1 ? '' : 's'
                   }`}
             </p>

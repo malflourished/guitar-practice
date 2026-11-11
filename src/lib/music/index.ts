@@ -54,9 +54,11 @@ export {
   buildChangesProgression,
   buildChangesStepView,
   getChangesProgression,
+  planGuideTones,
   getGuideToneMotion,
   type ChangesProgressionDef,
   type ChangesStepView,
+  type GuideTonePlacement,
   type GuideToneMotion,
 } from './changesTargeting';
 export {
