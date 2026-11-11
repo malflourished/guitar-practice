@@ -1,5 +1,6 @@
 import type { AmbientMotion } from './AmbientBackground';
 import type { UiTheme, VibratoCanvas } from '../types/ui';
+import { setTexture, useTexture } from '../lab/analogStore';
 import styles from './UiThemeSelector.module.css';
 
 const UI_THEMES: { id: UiTheme; label: string }[] = [
@@ -21,6 +22,7 @@ export function UiThemeSelector({
   vibratoCanvas,
   onUiThemeChange,
 }: UiThemeSelectorProps) {
+  const texture = useTexture();
   return (
     <div className={styles.dock}>
       <div className={styles.themes} role="group" aria-label="Interface style">
@@ -43,6 +45,15 @@ export function UiThemeSelector({
         </button>
       ))}
       </div>
+      <button
+        type="button"
+        className={texture.on ? styles.themeButtonSelected : styles.themeButton}
+        aria-pressed={texture.on}
+        aria-label="Texture"
+        onClick={() => setTexture((current) => ({ ...current, on: !current.on }))}
+      >
+        Texture
+      </button>
       {uiTheme === 'vibrato' && <select className={styles.motion} aria-label="Background motion" value={motion} onChange={e => onMotionChange(e.target.value as AmbientMotion)}><option value="flow">Lava · flow</option><option value="calm">Lava · calm</option><option value="still">Lava · still</option></select>}
     </div>
   );

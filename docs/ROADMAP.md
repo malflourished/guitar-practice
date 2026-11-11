@@ -224,7 +224,7 @@ Research on musicians is small but points toward mixing material within a sessio
 
 - [x] Mock-ups for the owner: the analog lab and the three images below.
 - [x] Owner picks a treatment for each theme. Decided after trying the lab in the installed app: "Subtle is really nice", "print looks great on Scholar".
-- [ ] Make that the default look: on for everyone, chosen by theme, with one Texture on/off setting in the theme dock. Keep the lab panel as a hidden tuning tool.
+- [x] Make that the default look: on for everyone, chosen by theme, with one Texture on/off setting in the theme dock. Keep the lab panel as a hidden tuning tool.
 - [ ] Measure what it costs on real hardware (see limits below).
 
 **The chosen values** (0 to 100, as in `PRESETS` in `src/lab/AnalogLab.tsx`):
@@ -236,14 +236,16 @@ Research on musicians is small but points toward mixing material within a sessio
 
 **Parked at the owner's request** ("make a note of it in case I want to bring it up again"): a blend of Subtle and Tube. Subtle as the base, a little of Tube's raster and falloff, and Glow kept low, because Tube's glow washes out the note letters ("lower the glow a little bit for some legibility"). Also "a subtle softness from a tube": a slight overall softening, which the lab has no dial for yet.
 
-### The analog lab (a prototype inside the app, off by default)
+### The default look and the Texture setting
 
-A filter is best judged on the real app, and over a few practice sessions, not in a picture. So the mock-up is a switch in the app itself.
+The texture is on by default, for new and existing users. The layer picks its levels from the theme (the table above) and follows theme changes.
 
-- **Open it:** press the backquote key (`` ` ``), or load `http://localhost:5173/?lab=analog`. Hold **B** to see the app without the treatment.
-- **Until it is opened it does nothing.** The app renders exactly as before, with no extra elements on the page.
-- **Controls:** four presets (Subtle, Film, Tube, Print) and seven dials. The dials change meaning with the theme: Glow becomes Ink spread on Scholar, Grain becomes Paper tooth. **Copy** gives the current settings as one line of text.
-- **Code:** `src/lab/AnalogLab.tsx` and `src/lab/AnalogLab.css`, mounted by one line in `src/main.tsx`. Deleting those removes it.
+- **Texture setting:** a "Texture" button in the theme dock. Off removes every layer and the root filter. Saved under `vibrato:texture`; state saved by the old prototype (`vibrato:analog-lab`) is ignored.
+- **Hold B** to see the app without the treatment.
+- **Hidden tuning panel:** the backquote key (`` ` ``) opens it. Its presets (Subtle, Film, Tube, Print) and seven dials override the theme's levels until the first preset, "theme", is picked. The dials change meaning with the theme: Glow becomes Ink spread on Scholar, Grain becomes Paper tooth. **Copy** gives the current settings as one line of text.
+- **Code:** `src/lab/AnalogLab.tsx` and `.css` (the layer and panel, mounted in `src/main.tsx`), `src/lab/analogLevels.ts` (levels and saved-state parsing, tested), `src/lab/analogStore.ts` (shared saved state), and the button in `src/components/UiThemeSelector.tsx`.
+
+The images below were made with the original prototype (clean, Subtle, Film, Tube).
 
 Vibrato, whole window: clean, Subtle, Film, Tube.
 
@@ -290,3 +292,4 @@ Scholar: clean and Print.
 - **2026-11-11.** Branch `vibrato-next` created. This roadmap and the Discover starter content added.
 - **2026-11-11.** Analog lab prototype added for package F, off by default, with comparison images. Full-frame glow uses a filter on the root element because a blurred overlay cannot be screen-blended in Chromium (the blur replaces the page instead of adding to it).
 - **2026-11-11.** Owner chose the look: Subtle on Vibrato, Print on Scholar. A Subtle and Tube blend is parked. "Hidden gestures" moved from package B to package A, because A re-homes those controls. Packages B and F were handed to separate sessions on a cheaper model; A follows when they land.
+- **2026-11-11.** Analog texture made the default look: Subtle on Vibrato, Print on Scholar, on for everyone, with a Texture on/off button in the theme dock. The lab panel stays as a hidden tuning tool on the backquote key.

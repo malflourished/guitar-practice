@@ -1,37 +1,20 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { CSSProperties } from 'react';
 import './AnalogLab.css';
+import { DIALS, PRESETS, effectiveLevels, type Dial } from './analogLevels';
+import { setTexture, useTexture } from './analogStore';
 
 /**
- * Analog lab: a PROTOTYPE for the look work in docs/ROADMAP.md (package F).
+ * The analog texture layer: the app's default look (docs/ROADMAP.md, package F).
  *
- * Off by default, and it renders nothing until it is switched on. Press the
- * backquote key (`) to open the panel, or load the app with ?lab=analog.
- * Deleting src/lab and its one line in main.tsx removes it completely.
+ * Minimal interface, texture in the medium it is seen through. Vibrato is
+ * emitted light (glow that bleeds, grain that moves) and uses the Subtle
+ * levels; Scholar is ink on paper (fixed paper tooth, ink spread, warm stock)
+ * and uses Print. The "Texture" switch in the theme dock turns it off.
  *
- * The idea being tested: keep the interface clean and minimal, and put the
- * texture in the medium it is seen through. Each theme gets the medium it
- * resembles: Vibrato is emitted light (glow that bleeds, grain that moves),
- * Scholar is ink on paper (fixed paper tooth, ink spread, warm stock).
+ * Hidden tuning tool: the backquote key (`) opens a panel whose presets and
+ * dials override the theme's levels until the "theme" preset is picked.
  */
-
-const DIALS = ['grain', 'glow', 'fade', 'warmth', 'vignette', 'raster', 'motion'] as const;
-type Dial = (typeof DIALS)[number];
-type Levels = Record<Dial, number>;
-type Medium = 'tube' | 'slide' | 'paper';
-
-interface LabState extends Levels {
-  on: boolean;
-  open: boolean;
-  preset: string;
-}
-
-const PRESETS: Record<string, Levels> = {
-  subtle: { grain: 26, glow: 30, fade: 8, warmth: 30, vignette: 20, raster: 0, motion: 50 },
-  film: { grain: 46, glow: 50, fade: 18, warmth: 70, vignette: 34, raster: 0, motion: 60 },
-  tube: { grain: 20, glow: 72, fade: 12, warmth: 10, vignette: 46, raster: 36, motion: 85 },
-  print: { grain: 60, glow: 36, fade: 10, warmth: 50, vignette: 14, raster: 0, motion: 0 },
-};
 
 /** The same dial means a different thing in each medium. [light, paper] */
 const DIAL_NAMES: Record<Dial, [string, string]> = {
@@ -56,34 +39,9 @@ const THEME_NAMES: Record<Medium, string> = {
   paper: 'scholar',
 };
 
-const STORAGE_KEY = 'vibrato:analog-lab';
+type Medium = 'tube' | 'slide' | 'paper';
 
-function loadState(): LabState {
-  const state: LabState = { on: false, open: false, preset: 'off', ...PRESETS.subtle };
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
-    if (parsed && typeof parsed === 'object') {
-      const stored = parsed as Record<string, unknown>;
-      for (const dial of DIALS) {
-        const value = stored[dial];
-        if (typeof value === 'number' && value >= 0 && value <= 100) state[dial] = value;
-      }
-      if (typeof stored.on === 'boolean') state.on = stored.on;
-      if (typeof stored.open === 'boolean') state.open = stored.open;
-      if (typeof stored.preset === 'string') state.preset = stored.preset;
-    }
-  } catch {
-    // ignore storage read failures
-  }
-  if (new URLSearchParams(window.location.search).get('lab') === 'analog') {
-    state.open = true;
-    if (!state.on) {
-      state.on = true;
-      state.preset = state.preset === 'off' ? 'subtle' : state.preset;
-    }
-  }
-  return state;
-}
+const PRESET_NAMES = ['theme', ...Object.keys(PRESETS)];
 
 function readMedium(): Medium {
   const root = document.querySelector<HTMLElement>('.themeRoot');
@@ -93,11 +51,11 @@ function readMedium(): Medium {
 }
 
 function subscribeMedium(notify: () => void): () => void {
-  const root = document.querySelector('.themeRoot');
-  if (!root) return () => {};
+  // Watch the whole document: the theme root may not exist yet, or may be replaced.
   const observer = new MutationObserver(notify);
-  observer.observe(root, {
+  observer.observe(document.documentElement, {
     attributes: true,
+    subtree: true,
     attributeFilter: ['data-ui-theme', 'data-vibrato-canvas'],
   });
   return () => observer.disconnect();
@@ -150,24 +108,19 @@ function isTyping(target: EventTarget | null): boolean {
 }
 
 export default function AnalogLab() {
-  const [state, setState] = useState<LabState>(loadState);
+  const texture = useTexture();
+  const [open, setOpen] = useState(false);
   const [comparing, setComparing] = useState(false);
   const medium = useSyncExternalStore(subscribeMedium, readMedium);
   const layersRef = useRef<HTMLDivElement>(null);
   const fpsRef = useRef<HTMLSpanElement>(null);
   const summaryRef = useRef<HTMLInputElement>(null);
 
-  const active = state.on && !comparing;
-  const glowing = active && state.glow > 0;
-  const { on, open, motion } = state;
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // ignore storage write failures
-    }
-  }, [state]);
+  const on = texture.on;
+  const levels = effectiveLevels(texture, medium === 'paper' ? 'scholar' : 'vibrato');
+  const active = on && !comparing;
+  const glowing = active && levels.glow > 0;
+  const { motion } = levels;
 
   // ` shows or hides the panel. While the treatment is on, hold B to see the app without it.
   useEffect(() => {
@@ -175,13 +128,7 @@ export default function AnalogLab() {
       if (event.metaKey || event.ctrlKey || event.altKey || isTyping(event.target)) return;
       if (event.code === 'Backquote') {
         event.preventDefault();
-        setState((current) =>
-          current.open
-            ? { ...current, open: false }
-            : current.on
-              ? { ...current, open: true }
-              : { ...current, open: true, on: true, preset: current.preset === 'off' ? 'subtle' : current.preset },
-        );
+        setOpen((current) => !current);
       } else if (event.code === 'KeyB' && !event.repeat) {
         setComparing(true);
       }
@@ -251,21 +198,29 @@ export default function AnalogLab() {
 
   if (!on && !open) return null;
 
-  const glow = state.glow / 100;
-  const warmth = state.warmth / 100;
+  const glow = levels.glow / 100;
+  const warmth = levels.warmth / 100;
   const haloTint = `1 0 0 0 0  0 ${(1 - 0.28 * warmth).toFixed(3)} 0 0 0  0 0 ${(1 - 0.5 * warmth).toFixed(3)} 0 0  0 0 0 1 0`;
   const variables = Object.fromEntries(
-    DIALS.map((dial) => [`--a-${dial}`, String(state[dial] / 100)]),
+    DIALS.map((dial) => [`--a-${dial}`, String(levels[dial] / 100)]),
   ) as CSSProperties;
   const nameIndex = medium === 'tube' ? 0 : 1;
-  const summary = `analog on ${THEME_NAMES[medium]} · ${on ? state.preset : 'off'} · ${DIALS.map((dial) => `${dial} ${state[dial]}`).join(' · ')}`;
+  const summary = `texture ${on ? 'on' : 'off'} ${THEME_NAMES[medium]} · ${texture.preset} · ${DIALS.map((dial) => `${dial} ${levels[dial]}`).join(' · ')}`;
 
   const applyPreset = (name: string) => {
-    setState((current) =>
-      name === 'off'
-        ? { ...current, on: false, preset: 'off' }
-        : { ...current, ...PRESETS[name], on: true, preset: name },
+    setTexture((current) =>
+      name === 'theme'
+        ? { ...current, preset: 'theme', override: null }
+        : { ...current, preset: name, override: { ...PRESETS[name] } },
     );
+  };
+
+  const setDial = (dial: Dial, value: number) => {
+    setTexture((current) => ({
+      ...current,
+      preset: 'custom',
+      override: { ...(current.override ?? levels), [dial]: value },
+    }));
   };
 
   const copySummary = () => {
@@ -321,25 +276,28 @@ export default function AnalogLab() {
         </div>
       )}
       {open && (
-        <aside className="analog-panel" aria-label="Analog lab, a prototype">
+        <aside className="analog-panel" aria-label="Texture tuning">
           <header>
-            <strong>Analog lab</strong>
-            <span>prototype</span>
+            <strong>Texture</strong>
+            <span>tuning</span>
             <button
               type="button"
               aria-label="Hide the panel"
-              onClick={() => setState((current) => ({ ...current, open: false }))}
+              onClick={() => setOpen(false)}
             >
               ×
             </button>
           </header>
-          <p className="analog-medium">{MEDIUM_NAMES[medium]}</p>
+          <p className="analog-medium">
+            {MEDIUM_NAMES[medium]}
+            {!on && ' · Texture is off in the dock'}
+          </p>
           <div className="analog-presets">
-            {['off', ...Object.keys(PRESETS)].map((name) => (
+            {PRESET_NAMES.map((name) => (
               <button
                 key={name}
                 type="button"
-                aria-pressed={on ? state.preset === name : name === 'off'}
+                aria-pressed={texture.preset === name}
                 onClick={() => applyPreset(name)}
               >
                 {name}
@@ -353,14 +311,13 @@ export default function AnalogLab() {
                 type="range"
                 min={0}
                 max={100}
-                value={state[dial]}
+                value={levels[dial]}
                 disabled={dial === 'motion' && medium === 'paper'}
                 onChange={(event) => {
-                  const value = Number(event.target.value);
-                  setState((current) => ({ ...current, [dial]: value, on: true, preset: 'custom' }));
+                  setDial(dial, Number(event.target.value));
                 }}
               />
-              <output>{state[dial]}</output>
+              <output>{levels[dial]}</output>
             </label>
           ))}
           <div className="analog-actions">

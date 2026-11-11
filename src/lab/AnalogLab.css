@@ -1,4 +1,4 @@
-/* Analog lab prototype. See AnalogLab.tsx and docs/ROADMAP.md (package F). */
+/* Analog texture layer and its tuning panel. See AnalogLab.tsx and docs/ROADMAP.md (package F). */
 
 /* The wrapper makes no box, so each layer blends with the page itself. */
 .analog {
