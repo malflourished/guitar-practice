@@ -62,11 +62,19 @@
   cursor: not-allowed;
 }
 
+/* Selected is the strongest state: hover's fill plus a doubled border, and it
+   keeps that look while hovered. */
 .pillSelected {
   composes: pill;
-  background: var(--glass-bg);
+  background: var(--glass-bg-hover);
   border-color: var(--glass-border);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
   color: var(--text-primary);
+}
+
+.pillSelected:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
 }
 
 .keyTile {
