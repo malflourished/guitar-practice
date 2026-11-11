@@ -1,5 +1,6 @@
 import type {
   ChordQuality,
+  KeyMode,
   Letter,
   NoteName,
   ScaleQuality,
@@ -133,4 +134,17 @@ export function buildSpellingMap(
     map.set(pitchClassNote, formatSpelled(note));
   }
   return map;
+}
+
+/**
+ * Spell the notes of a key by its own scale (C minor gives Eb, Ab, Bb; E major
+ * gives F#, G#), the way the fretboard labels do. Keyed by sharp NoteName.
+ */
+export function getKeySpellingMap(
+  keyRoot: NoteName,
+  keyMode: KeyMode,
+  preference: NotationPreference,
+): Map<NoteName, string> {
+  const spelledRoot = spelledRootFromNoteName(keyRoot, preference);
+  return buildSpellingMap(getSpelledScaleNotes(spelledRoot, keyMode));
 }

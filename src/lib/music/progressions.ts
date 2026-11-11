@@ -294,8 +294,10 @@ export function formatChordName(
   root: NoteName,
   quality: ChordQuality,
   notation: NotationPreference,
+  /** Key-aware root spelling; defaults to the global sharp/flat switch. */
+  rootSpelling?: string,
 ): string {
-  const rootLabel = formatNoteDisplay(root, notation);
+  const rootLabel = rootSpelling ?? formatNoteDisplay(root, notation);
   const suffix = CHORD_SUFFIX[quality];
   if (suffix !== undefined) {
     return `${rootLabel}${suffix}`;

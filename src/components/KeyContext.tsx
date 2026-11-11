@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import type { ChordQuality, KeyMode, NoteName } from '../types/music';
 import {
   formatChordName,
   formatNoteDisplay,
   getDiatonicQuality,
   getDiatonicRoot,
+  getKeySpellingMap,
   getRelativeMajor,
   getRelativeMinor,
   type NotationPreference,
@@ -49,11 +51,17 @@ export function KeyContext({
   onSelectRelative,
   onExplainChords,
 }: KeyContextProps) {
+  const spelling = useMemo(
+    () => getKeySpellingMap(keyRoot, keyMode, notation),
+    [keyRoot, keyMode, notation],
+  );
+  const spell = (note: NoteName) =>
+    spelling.get(note) ?? formatNoteDisplay(note, notation);
   const numerals = keyMode === 'major' ? MAJOR_NUMERALS : MINOR_NUMERALS;
   const relativeRoot =
     keyMode === 'major' ? getRelativeMinor(keyRoot) : getRelativeMajor(keyRoot);
   const relativeMode: KeyMode = keyMode === 'major' ? 'minor' : 'major';
-  const relativeLabel = `${formatNoteDisplay(relativeRoot, notation)} ${
+  const relativeLabel = `${spell(relativeRoot)} ${
     relativeMode === 'minor' ? 'minor' : 'major'
   }`;
 
@@ -87,12 +95,12 @@ export function KeyContext({
               key={numeral}
               type="button"
               className={styles.chip}
-              title={`Open ${formatChordName(root, quality, notation)} in Chords`}
+              title={`Open ${formatChordName(root, quality, notation, spell(root))} in Chords`}
               onClick={() => onSelectChord(root, quality)}
             >
               <span className={styles.chipNumeral}>{numeral}</span>
               <span className={styles.chipName}>
-                {formatChordName(root, quality, notation)}
+                {formatChordName(root, quality, notation, spell(root))}
               </span>
             </button>
           );

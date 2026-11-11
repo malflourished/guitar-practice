@@ -135,6 +135,7 @@ export {
 } from './scales';
 export {
   buildSpellingMap,
+  getKeySpellingMap,
   formatSpelled,
   getSpelledChordNotes,
   getSpelledScaleNotes,
