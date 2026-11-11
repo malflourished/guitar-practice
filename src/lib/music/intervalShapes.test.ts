@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FretPosition } from '../../types/music';
-import { getIntervalDyadShapes } from './intervalShapes';
+import { MAX_DYAD_REACH, getIntervalDyadShapes } from './intervalShapes';
 
 // Low E string (index 5), fret 5 = A.
 const lowEA: FretPosition = { string: 5, fret: 5, note: 'A' };
@@ -43,5 +43,26 @@ describe('getIntervalDyadShapes', () => {
     const highE: FretPosition = { string: 0, fret: 3, note: 'G' };
     const shapes = getIntervalDyadShapes(highE, 4);
     expect(shapes.every((s) => s.relationship === 'same-string')).toBe(true);
+  });
+
+  it('never offers a shape spanning more than 4 frets', () => {
+    for (let string = 0; string < 6; string += 1) {
+      for (let fret = 0; fret <= 12; fret += 1) {
+        const anchor: FretPosition = { string, fret, note: 'C' };
+        for (let semitones = 1; semitones <= 12; semitones += 1) {
+          for (const shape of getIntervalDyadShapes(anchor, semitones)) {
+            expect(Math.abs(shape.fretOffset)).toBeLessThanOrEqual(MAX_DYAD_REACH);
+          }
+        }
+      }
+    }
+  });
+
+  it('drops the six-fret string skip for a major 3rd', () => {
+    // Low E fret 7 (B): the major 3rd (D#) on the D string is fret 1, six
+    // frets back, so only the same-string and adjacent shapes remain.
+    const lowEB: FretPosition = { string: 5, fret: 7, note: 'B' };
+    const shapes = getIntervalDyadShapes(lowEB, 4);
+    expect(shapes.map((s) => s.relationship)).toEqual(['same-string', 'adjacent']);
   });
 });

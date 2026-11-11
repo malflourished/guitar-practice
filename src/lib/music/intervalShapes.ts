@@ -28,6 +28,9 @@ function midiOf(pos: FretPosition): number {
   return OPEN_STRING_MIDI[pos.string] + pos.fret;
 }
 
+/** Widest fret span a hand can reach comfortably; wider shapes are dropped. */
+export const MAX_DYAD_REACH = 4;
+
 const RELATIONSHIPS: { step: number; relationship: DyadRelationship }[] = [
   { step: 0, relationship: 'same-string' },
   { step: -1, relationship: 'adjacent' },
@@ -41,8 +44,9 @@ const RELATIONSHIPS: { step: number; relationship: DyadRelationship }[] = [
  * offset that defines its look, and whether it crosses the G–B seam (where the
  * offset differs by one fret from the all-fourths strings).
  *
- * Only physically reachable shapes (target on a real string and fret) are
- * returned, so small intervals near the nut or high anchors may yield fewer.
+ * Only physically reachable shapes are returned: the target must be on a real
+ * string and fret, and no more than MAX_DYAD_REACH frets from the root, so some
+ * intervals yield fewer than three.
  */
 export function getIntervalDyadShapes(
   anchor: FretPosition,
@@ -57,6 +61,7 @@ export function getIntervalDyadShapes(
     if (string < 0 || string >= STRING_COUNT) continue;
     const fret = targetMidi - OPEN_STRING_MIDI[string];
     if (fret < 0 || fret > FRET_COUNT) continue;
+    if (Math.abs(fret - anchor.fret) > MAX_DYAD_REACH) continue;
     const target: FretPosition = { string, fret, note: getNoteAt(string, fret) };
     const strings = new Set([anchor.string, string]);
     shapes.push({
