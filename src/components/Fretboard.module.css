@@ -145,7 +145,7 @@
 
 .regionBadgeActive {
   composes: regionBadge;
-  fill: var(--note-label-fill);
+  fill: var(--text-primary);
   opacity: 1;
   font-size: 13px;
 }
