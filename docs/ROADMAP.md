@@ -14,7 +14,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | C | Chord shapes and small triads | Ready | nothing |
 | D | Discover mode | Ready after A | A (needs the new frame) |
 | E | Practice that adapts, jam loop | Ready after A | A |
-| F | Look: analog texture | **Waiting for the owner** to approve mock-ups | owner sign-off |
+| F | Look: analog texture | Mock-ups ready. **Waiting for the owner** to pick a treatment | owner sign-off |
 | G | Later: hands-free, listening, tunings | Not started | A |
 
 ## How to work on this
@@ -220,9 +220,47 @@ Research on musicians is small but points toward mixing material within a sessio
 
 **Rejected, do not revive:** a "studio rack" concept with chamfered panels, LEDs, dot-matrix readouts and extended-sans legends. The owner's verdict: "generic 80s".
 
-- [ ] Mock-ups for the owner.
-- [ ] Owner picks a treatment.
-- [ ] Build it as one layer with one user setting.
+- [x] Mock-ups for the owner: the analog lab and the three images below.
+- [ ] Owner picks a treatment for each theme (a preset, or dial values).
+- [ ] Measure what it costs on real hardware (see limits below).
+- [ ] Build it as one layer with one user setting, and remove the lab panel.
+
+### The analog lab (a prototype inside the app, off by default)
+
+A filter is best judged on the real app, and over a few practice sessions, not in a picture. So the mock-up is a switch in the app itself.
+
+- **Open it:** press the backquote key (`` ` ``), or load `http://localhost:5173/?lab=analog`. Hold **B** to see the app without the treatment.
+- **Until it is opened it does nothing.** The app renders exactly as before, with no extra elements on the page.
+- **Controls:** four presets (Subtle, Film, Tube, Print) and seven dials. The dials change meaning with the theme: Glow becomes Ink spread on Scholar, Grain becomes Paper tooth. **Copy** gives the current settings as one line of text.
+- **Code:** `src/lab/AnalogLab.tsx` and `src/lab/AnalogLab.css`, mounted by one line in `src/main.tsx`. Deleting those removes it.
+
+Vibrato, whole window: clean, Subtle, Film, Tube.
+
+![Vibrato: clean, subtle, film and tube](design/analog-lab/vibrato-overview.jpg)
+
+The same four at actual size (view at 50% on a Retina display).
+
+![Vibrato at actual size](design/analog-lab/vibrato-detail.jpg)
+
+Scholar: clean and Print.
+
+![Scholar: clean and print](design/analog-lab/scholar.jpg)
+
+**How it is built.**
+
+| Layer | Vibrato dark: emitted light | Scholar and Vibrato light: ink on paper | Mechanism |
+|---|---|---|---|
+| Glow | bright things bleed warm light across panel edges | ink spreads a little into the paper | one SVG filter on the root element |
+| Grain | moves, 8 to 24 steps a second | fixed paper tooth | one 256 px noise tile blended over the window |
+| Black lift, warmth, falloff | milky blacks, warm highlights, darker corners | faded ink, cream stock, toned edges | full-window layers with blend modes |
+| Raster | faint scanlines and colour stripes | halftone dots | repeating gradients |
+
+**Known limits.**
+
+- The glow filter redraws the whole window. Its real cost (GPU, battery, older Macs) has not been measured. A hidden test window held 120 frames a second with it on, which only shows the main thread is not blocked. The panel shows a live frame rate.
+- At high Glow (the Tube preset) the letter on the white root dots washes out. Keep Glow near 50 or below, or exempt the dots.
+- Grain honours "reduce motion" and never moves on Scholar.
+- Not part of the lab: Scholar's page is already 2 px taller than a 900 px window (902).
 
 ---
 
@@ -239,3 +277,4 @@ Research on musicians is small but points toward mixing material within a sessio
 - **2026-11-10.** Owner asked for a full review: teaching, look and feel, new features.
 - **2026-11-11.** Owner approved the review's plan and chose the single-screen layout as the first piece of work. Rejected the first concept's styling as "generic 80s". Set the look direction: minimalist futurism plus analog texture, mock-ups before any change.
 - **2026-11-11.** Branch `vibrato-next` created. This roadmap and the Discover starter content added.
+- **2026-11-11.** Analog lab prototype added for package F, off by default, with comparison images. Full-frame glow uses a filter on the root element because a blurred overlay cannot be screen-blended in Chromium (the blur replaces the page instead of adding to it).
