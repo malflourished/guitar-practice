@@ -2,6 +2,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import manifest from '../../../public/audio/manifest.json';
+import sampleMap from './sampleMap.json';
 import { GUITAR_INSTRUMENTS, INSTRUMENT_SAMPLES, chooseSample } from './instruments';
 import { chordPattern, loopTempo, sequencePattern } from './pattern';
 import { ALL_NOTES } from '../colors';
@@ -16,6 +17,7 @@ describe('bundled guitar banks', () => {
       expect(sample.file).not.toMatch(/^https?:/);
       bytes += statSync(url).size;
     }
+    expect(sampleMap).toEqual(manifest.map(sample => Object.fromEntries(Object.entries(sample).filter(([key]) => !['source', 'sha256'].includes(key)))));
     expect(bytes).toBeLessThan(4_000_000);
     expect(manifest.length).toBeGreaterThan(60);
   });

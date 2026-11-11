@@ -95,6 +95,9 @@ def convert(job):
 with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
     samples = list(pool.map(convert, jobs))
 (OUT / 'manifest.json').write_text(json.dumps(samples, indent=2) + '\n')
+# Runtime imports belong in src; public keeps the complete attribution manifest.
+runtime = [{key: value for key, value in sample.items() if key not in ('source', 'sha256')} for sample in samples]
+(ROOT / 'src/lib/audio/sampleMap.json').write_text(json.dumps(runtime, indent=2) + '\n')
 print(f'Bundled {len(samples)} samples, {sum(p.stat().st_size for p in OUT.rglob("*.mp3")) / 1e6:.1f} MB')
 
 # Preserve each bank's original authorship and license notice beside the audio.

@@ -1,4 +1,4 @@
-import manifest from '../../../public/audio/manifest.json';
+import manifest from './sampleMap.json';
 
 export const GUITAR_INSTRUMENTS = [
   { name: 'acoustic_guitar_steel', label: 'Steel acoustic' },
