@@ -18,7 +18,7 @@
   border-radius: var(--radius-control);
   color: var(--fretboard-control-text);
   font-family: var(--font-sans);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 400;
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;
@@ -41,11 +41,6 @@
   background: var(--fretboard-control-bg-active);
   border-color: var(--fretboard-control-border-active);
   color: var(--fretboard-control-text-active);
-}
-
-.fingersButtonOpacityActive {
-  composes: fingersButtonActive;
-  box-shadow: 0 0 0 1px var(--fretboard-control-border-active);
 }
 
 @media (max-width: 768px) {

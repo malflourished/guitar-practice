@@ -22,7 +22,7 @@
 }
 
 .toggleIcon {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   transition: transform 0.2s ease;
 }
@@ -57,7 +57,7 @@
 
 .subheading {
   font-family: var(--font-sans);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;
@@ -87,7 +87,7 @@
 .table th {
   text-align: left;
   font-weight: 500;
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;
   color: var(--text-muted);
@@ -147,7 +147,7 @@
 
 .currentStepLabel {
   font-family: var(--font-sans);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;

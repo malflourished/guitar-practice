@@ -23,7 +23,7 @@
   border: none;
   color: var(--fretboard-control-text);
   font-family: var(--font-sans);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 400;
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;
@@ -106,7 +106,7 @@
 
 .tempoSuffix {
   font-family: var(--font-sans);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 400;
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;

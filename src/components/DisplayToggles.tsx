@@ -58,15 +58,10 @@ export function DisplayToggles({
       </button>
       <button
         type="button"
-        className={
-          fullDotOpacity
-            ? styles.fingersButtonOpacityActive
-            : showNoteLabels
-              ? styles.fingersButtonActive
-              : styles.fingersButton
-        }
-        aria-pressed={showNoteLabels || fullDotOpacity}
-        aria-label="Show note and finger labels. Command-click to show all dots at full opacity."
+        className={showNoteLabels ? styles.fingersButtonActive : styles.fingersButton}
+        aria-pressed={showNoteLabels}
+        aria-label="Show note and finger labels"
+        title="Show note and finger labels (⌘-click: solid dots)"
         onClick={(event) => {
           if (event.metaKey) {
             onFullDotOpacityToggle();
@@ -76,6 +71,16 @@ export function DisplayToggles({
         }}
       >
         Labels
+      </button>
+      <button
+        type="button"
+        className={fullDotOpacity ? styles.fingersButtonActive : styles.fingersButton}
+        aria-pressed={fullDotOpacity}
+        aria-label="Show every dot at full strength, not only the roots"
+        title="Every dot at full strength, not only the roots"
+        onClick={onFullDotOpacityToggle}
+      >
+        Solid
       </button>
       {onChordTonesToggle && (
         <button

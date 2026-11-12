@@ -13,6 +13,11 @@ const SCALE_ANCHORS: { id: ScaleAnchor; label: string }[] = [
 ];
 
 interface AudioControlsProps {
+  /**
+   * Which half to draw: the transport (play buttons, start note, tempo) or
+   * the sound (guitar, mute, volume). Both when omitted.
+   */
+  part?: 'transport' | 'sound';
   instrument: GuitarInstrumentName;
   volume: number;
   muted: boolean;
@@ -117,6 +122,7 @@ function TempoField({ tempo, onTempoChange }: TempoFieldProps) {
 }
 
 export function AudioControls({
+  part,
   instrument,
   volume,
   muted,
@@ -141,10 +147,16 @@ export function AudioControls({
   const playDisabled = !canPlay || muted;
   const playingProgression = playingId === 'progression';
   const showTempo = playbackMode === 'sequence' || playbackMode === 'progression';
+  const showTransport = part !== 'sound';
+  const showSound = part !== 'transport';
 
   return (
-    <div className={styles.row} role="group" aria-label="Audio">
-      {playbackMode === 'sequence' && scaleAnchor && onScaleAnchorChange && (
+    <div
+      className={styles.row}
+      role="group"
+      aria-label={part === 'sound' ? 'Sound' : part === 'transport' ? 'Playback' : 'Audio'}
+    >
+      {showTransport && playbackMode === 'sequence' && scaleAnchor && onScaleAnchorChange && (
         <div
           className={styles.anchorGroup}
           role="group"
@@ -168,7 +180,7 @@ export function AudioControls({
           ))}
         </div>
       )}
-      {playbackMode === 'sequence' ? (
+      {!showTransport ? null : playbackMode === 'sequence' ? (
         <div className={styles.playGroup} role="group" aria-label="Play scale">
           {(['ascending', 'descending'] as const).map((direction) => {
             const active = playingId === direction;
@@ -254,6 +266,7 @@ export function AudioControls({
         </button>
       )}
 
+      {showSound && (
       <select
         className={styles.select}
         aria-label="Instrument sound"
@@ -268,11 +281,13 @@ export function AudioControls({
           </option>
         ))}
       </select>
+      )}
 
-      {showTempo && (
+      {showTransport && showTempo && (
         <TempoField tempo={tempo} onTempoChange={onTempoChange} />
       )}
 
+      {showSound && (
       <button
         type="button"
         className={muted ? styles.iconButtonSelected : styles.iconButton}
@@ -282,7 +297,9 @@ export function AudioControls({
       >
         {muted ? 'Muted' : 'Sound'}
       </button>
+      )}
 
+      {showSound && (
       <input
         className={styles.slider}
         type="range"
@@ -292,6 +309,7 @@ export function AudioControls({
         aria-label="Volume"
         onChange={(event) => onVolumeChange(Number(event.target.value) / 100)}
       />
+      )}
     </div>
   );
 }

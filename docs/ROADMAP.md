@@ -9,7 +9,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 
 | # | Work package | Status | Depends on | Who should do it |
 |---|---|---|---|---|
-| A | Single-screen layout | **Next up.** B and F have landed, so nothing blocks it | nothing | the strongest model, or an experienced front-end developer: it needs design judgment |
+| A | Single-screen layout | Built and measured, 2026-11-11 (see [what was built](#what-was-built)). Waiting for the owner to try it | nothing | the strongest model, or an experienced front-end developer: it needs design judgment |
 | B | Teaching fixes (five small ones) | Done and reviewed, 2026-11-11 | nothing | any capable model: fully specified and test-backed |
 | C | Chord shapes and small triads | Ready | nothing | a strong model, and a guitarist should check the fingerings |
 | D | Discover mode | Ready after A | A (needs the new frame) | a capable model: the content is written and the behaviour is specified |
@@ -102,15 +102,15 @@ Within those rules the details are the implementer's call. Keep the current visu
 
 **Tasks.**
 
-- [ ] Make the shell a grid that fills `100dvh` with the four regions; `overflow: hidden` on the page.
-- [ ] Re-home each `SettingsList` section according to the table above.
-- [ ] Make the fretboard scale with the space it is given (string gap roughly 36 to 56 px), keeping labels readable.
-- [ ] Give the deck one height for all modes and drills.
-- [ ] Practice: everything needed during a block is visible at once (neck, timer, transport, rating).
-- [ ] Below about 1100 px wide or 680 px tall the side panel becomes a drawer over the neck, not a stacked block.
-- [ ] No text under 12 px in anything that gets moved. About two-thirds of the font sizes in the app are below that today (most common: `0.62rem`).
-- [ ] Give the three hidden gestures a visible control or a hint while re-homing them: Cmd-drag on the position slider, Cmd-click on Labels, and clicking Vibrato a second time to flip the canvas.
-- [ ] Give the Texture switch its own place. In the dock it sits beside Vibrato and Scholar in the same button style, so it reads as a third theme.
+- [x] Make the shell a grid that fills `100dvh` with the four regions; `overflow: hidden` on the page. `src/components/Frame.tsx`.
+- [x] Re-home each `SettingsList` section according to the table above. Two changes to the table, see [decisions](#decisions).
+- [x] Make the fretboard scale with the space it is given (string gap roughly 36 to 56 px), keeping labels readable. 36 px at 960×640, 55 at 1440×900, 64 at 1728×1080.
+- [x] Give the deck one height for all modes and drills. 232 px, 216 below 760 px tall.
+- [x] Practice: everything needed during a block is visible at once (neck, timer, transport, rating).
+- [x] Below about 1100 px wide or 680 px tall the side panel becomes a drawer over the neck, not a stacked block.
+- [x] No text under 12 px in anything that gets moved. About two-thirds of the font sizes in the app are below that today (most common: `0.62rem`). Done for CSS text; SVG text inside diagrams is not, see [not done](#not-done-or-not-checked).
+- [x] Give the three hidden gestures a visible control or a hint while re-homing them: Cmd-drag on the position slider, Cmd-click on Labels, and clicking Vibrato a second time to flip the canvas.
+- [x] Give the Texture switch its own place. In the dock it sits beside Vibrato and Scholar in the same button style, so it reads as a third theme.
 
 **Done when.**
 
@@ -127,6 +127,58 @@ Paste in the dev-tools console for each mode and window size. `page` must equal 
 ({ page: document.documentElement.scrollHeight, window: innerHeight,
    neckTop: Math.round(document.querySelector('.fretboardStage').getBoundingClientRect().top) })
 ```
+
+Since the frame clips its regions, `page` now always equals `window`; what can still go wrong is a control cut off at a region's edge. `scripts/check-layout.cjs` checks both, for every mode, Interval drill and Practice state, in any window size and theme. With `npm run dev` running:
+
+```sh
+./node_modules/.bin/electron scripts/check-layout.cjs                      # four sizes, dark
+./node_modules/.bin/electron scripts/check-layout.cjs --themes light,scholar --sizes 960x640 --shots all
+```
+
+Each line gives page and window height, the neck's top, the board's top, height and string gap, and the number of elements that spill out of their region (an open menu spills on purpose). Results and screenshots go to the system temp folder, `vibrato-layout-check`.
+
+### What was built
+
+Built on 2026-11-11. Every mode returns its parts as frame regions (`<Neck>`, `<Deck>`, `<SidePanel>` from `src/components/Frame.tsx`), and the frame's CSS grid places them, so the Interval trainer and Practice session keep their own state while their pieces sit in different regions.
+
+| Region | Holds |
+|---|---|
+| Top strip (52 px; 48 below 760 px tall) | wordmark (hidden below 1220 px wide), the seven modes, **Key** (a menu with the twelve key tiles and the ♯/♭ switch; not in Notes or Practice), **Theme** (a menu: Style, Canvas, Texture, Lava), **Panel** (shows or hides the side panel; not in Notes) |
+| Neck (everything left over) | a bar of fixed height (the position slider with **Span**, or the Interval prompt, or the Practice instruction) with **Focus** at its end; under it the board, the Theory diagram, the Identify answers, the ear-training card, or the Practice welcome and result |
+| Deck (232 px; 216 below 760 px tall) | the mode's own controls: Type and System, Progression and Chord, the note tiles in Notes, the drill tabs and options, the Theory diagram choice and links; then transport (start note, play buttons, tempo); then sound and view (guitar, mute, volume, Arpeggio, Fingers, Labels, **Solid**, Tones). In a Practice block: title, chord strip, timer, transport, Finish early, rating |
+| Side panel (22% of the width, 280–340 px; the only part that scrolls) | This key; chord positions (Chords); chords and About (Progressions); Topics and About (Theory); This session, Options and Sound (during a Practice block); Your recent practice (Practice start and end). Notes has none, so its neck is wider. Docked beside the neck from 1100×680 up, open by default and remembered. Below that it is a drawer over the neck: Panel opens it; Close, Esc or a click outside closes it |
+
+#### Decisions
+
+- **Tempo and transport went to the deck, not the top strip.** The seven mode buttons plus Key, Theme and Panel already fill the strip at 960 px, and what Play means changes with the mode.
+- **The key is a menu in the strip**, holding the same tiles as before. Notes keeps its tiles in the deck, because choosing notes is that mode's main control.
+- **The neck grows with the window, not only with its height.** The board fills the neck's height, with the string gap capped at window width ÷ 26: 36 px at 960, 55 at 1440, 64 at 1728. That is a little over "roughly 56" at 1728, so a larger window always gets a larger neck. Dots and letters grow at 60% of the gap's rate (`boardScale`, `labelScale` in `src/lib/fretLayout.ts`, tested).
+- **The strings themselves stay put, not only the neck's edge.** The neck bar has one height in every mode, and a filling board always reserves the CAGED letter row, so the top string is at the same height in every mode and drill.
+- **Focus** now hides the top strip and the side panel; neck and deck stay, so Play is still at hand. Esc leaves it.
+- **Build drill:** its fourteen targets are a select now. As buttons they wrapped to two rows and did not fit the deck.
+- **Practice:** the instruction sits in the bar above the board. During a block the session overview (blocks, progress), the metronome and ramp options and the practice sound settings are in the side panel.
+- **Hidden gestures:** a Span button beside the position slider (Cmd-drag still works); a Solid button beside Labels (Cmd-click on Labels still works); a Canvas row (Dark, Light) in the Theme menu, so picking Vibrato again no longer flips the canvas. Texture has its own On/Off row with "Hold B to compare".
+- **12 px:** 54 font sizes under `0.75rem` in the moved components were raised to `0.75rem`, and so were pills, selects and key tiles (`glass.module.css`). Fret numbers are 12 px and grow with the board.
+
+#### Measured
+
+`scripts/check-layout.cjs`, 2026-11-11, every mode, every Interval drill (and Identify with all twelve intervals), Practice start, all four blocks, review and finished, Theory with circle, wheel, text-only topic and fretboard. Vibrato dark, Vibrato light and Scholar.
+
+| Window | Page height | Neck top, every mode and drill | Top string, every mode | String gap | Board height | Controls cut off |
+|---|---|---|---|---|---|---|
+| 960×640 | 640, all 29 states | 64 | 121.6 | 36.9 px | 271 px | none |
+| 1280×720 | 720, all 29 states | 64 | 116.5 | 49.2 px | 361 px | none |
+| 1440×900 | 900, all 29 states | 74 | 179.9 | 55.4 px | 406 px | none |
+| 1728×1080 | 1080, all 29 states | 74 | 238.3 | 64 px | 469 px | none |
+
+The same numbers in all three themes (348 runs). Before this package, at 1440×900 the page was 900 to 2451 px tall and the neck's top moved between 175 and 1262 px depending on the mode; the board was 240 px tall at every window size. Focus moves the neck to the top of the window on purpose; the open Key and Theme menus hang below the strip on purpose.
+
+#### Not done, or not checked
+
+- **SVG text inside diagrams is still under 12 px:** the dot letters in chord diagrams (side panel), the circle of fifths and chord wheel labels, and on the main board the letters inside small dots (10 px at 960×640, growing with the board) and fret numbers 20–24 on a narrow board (10–11 px, so neighbours do not touch).
+- **Practice was measured paused,** not with sound running. The running state has the same layout.
+- **Checked in Electron's Chromium only,** not Safari or Firefox, and not below 960 px wide.
+- **The owner has not seen it yet.** Things to ask: is the side panel worth its width by default, is the Key menu quick enough, and is the neck's size right at 1440×900.
 
 ---
 
@@ -317,3 +369,4 @@ The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifth
 - **2026-11-11.** Packages B and F reviewed against the running app and confirmed. One addition from the review: the Changes drill now shows each chord's root on the low E or A string under its guide tones (`pickShellRoot`), so root, 3rd and 7th make a shell voicing. Before, G7's root sat at fret 3 while its guide tones were at frets 9 and 10.
 - **2026-11-11.** Owner asked to be told when a rule is musically wrong, and approved four follow-ups to package B. The shell-voicing root (`pickShellRoot`) had already landed. The other three: black-key roots spelled by the name that needs fewer accidentals (B♭ major, not A# major with C## and F##); the reach limit applied only across strings, so same-string shapes return; and the I–vi caption names the leap.
 - **2026-11-11.** Owner asked for an overhaul of the circle of fifths and chord wheel. Mock-up of one key dial added in `docs/design/key-wheel` (package H).
+- **2026-11-11.** Package A built: the page is one fixed frame (top strip, neck, deck, side panel) and never scrolls, measured in every mode, drill and Practice state at four window sizes and in all three themes. The neck fills the space left (string gap 36 px at 960×640 up to 64 at 1728×1080) and the strings sit at the same height in every mode. Changes to the plan: tempo and transport went to the deck, because the strip is full at 960 px; the key became a menu in the strip; the Build drill's targets became a select. `scripts/check-layout.cjs` added for future layout work. Not pushed until the owner confirms.

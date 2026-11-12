@@ -153,13 +153,19 @@ export function PositionSlider({
     ? `${regions[lowIndex].number}–${regions[highIndex].number} / ${count}`
     : `${region.number} / ${count}${region.shapeLabel ? ` · ${region.shapeLabel}` : ''}`;
 
+  // Visible control for the span (also Cmd-drag on the handle).
+  const toggleSpan = () => {
+    if (isOpen) {
+      onSpanEndChange?.(selectedIndex);
+    } else {
+      onSpanEndChange?.(selectedIndex < lastIndex ? selectedIndex + 1 : selectedIndex - 1);
+    }
+  };
+
   return (
     <div className={styles.bar}>
       <span className={styles.counter} aria-hidden="true">
         {counterText}
-        {canRange && !isOpen ? (
-          <span className={styles.hint}> · ⌘-drag to span positions</span>
-        ) : null}
       </span>
       <div
         ref={trackRef}
@@ -207,6 +213,20 @@ export function PositionSlider({
           onKeyDown={onPrimaryKeyDown}
         />
       </div>
+      {canRange ? (
+        <button
+          type="button"
+          className={isOpen ? styles.spanButtonActive : styles.spanButton}
+          aria-pressed={isOpen}
+          disabled={disabled}
+          title="Show neighbouring positions too (or ⌘-drag the handle)"
+          onClick={toggleSpan}
+        >
+          Span
+        </button>
+      ) : (
+        <span className={styles.spanSpacer} aria-hidden="true" />
+      )}
     </div>
   );
 }

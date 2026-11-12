@@ -1,16 +1,22 @@
+/* Fills the neck: title and summary on top, the diagram as large as the
+   remaining height allows. */
 .stage {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
   width: 100%;
-  max-width: var(--shell-max);
-  margin: 0 auto;
-  padding: 1.75rem 1.5rem 1.5rem;
+  padding: 0.25rem 1.5rem 1rem;
   box-sizing: border-box;
 }
 
 .header {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  margin-bottom: 1.25rem;
   text-align: center;
 }
 
@@ -28,12 +34,23 @@
   line-height: 1.55;
   color: var(--text-secondary);
   margin: 0 auto;
-  max-width: 36rem;
+  max-width: 40rem;
 }
 
-.stageCompact {
-  composes: stage;
-  padding-bottom: 0.5rem;
+.diagram {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* div: beats the diagrams' own width rule. */
+.diagram > div {
+  width: min(100cqw, 100cqh);
+  margin: 0;
 }
 
 .diagramToggle {
@@ -41,37 +58,20 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.5rem;
-  margin-bottom: 1rem;
 }
 
 .diagramToggleButton {
   composes: pill from '../styles/glass.module.css';
   text-transform: none;
   letter-spacing: normal;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .diagramToggleSelected {
   composes: pillSelected from '../styles/glass.module.css';
   text-transform: none;
   letter-spacing: normal;
-  font-size: 0.72rem;
-}
-
-.diagram {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1.25rem;
-}
-
-/* When the fretboard is shown below, shrink the diagram so both fit on screen. */
-.diagramCompact {
-  composes: diagram;
-  margin-bottom: 0.75rem;
-}
-
-.diagramCompact > * {
-  max-width: 24rem;
+  font-size: 0.75rem;
 }
 
 .actions {
@@ -85,18 +85,12 @@
   composes: pill from '../styles/glass.module.css';
   text-transform: none;
   letter-spacing: normal;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .actionButtonSelected {
   composes: pillSelected from '../styles/glass.module.css';
   text-transform: none;
   letter-spacing: normal;
-  font-size: 0.72rem;
-}
-
-@media (max-width: 768px) {
-  .stage {
-    padding: 1.25rem 1rem 1rem;
-  }
+  font-size: 0.75rem;
 }

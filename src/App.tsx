@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Fretboard } from './components/Fretboard';
 import { PositionSlider } from './components/PositionSlider';
 import { DisplayToggles } from './components/DisplayToggles';
-import { AudioControls, DEFAULT_TEMPO } from './components/AudioControls';
+import {
+  AudioControls,
+  DEFAULT_TEMPO,
+  type PlaybackMode,
+} from './components/AudioControls';
 import { DebugPanel } from './components/DebugPanel';
 import { AmbientBackground, type AmbientMotion } from './components/AmbientBackground';
 import { KeySelector } from './components/KeySelector';
@@ -12,6 +16,18 @@ import { useUiTheme } from './hooks/useUiTheme';
 import { useNeckView } from './hooks/useNeckView';
 import { oneOf, usePersistentState } from './hooks/usePersistentState';
 import { UiThemeSelector } from './components/UiThemeSelector';
+import { useMediaQuery } from './hooks/useMediaQuery';
+import {
+  Deck,
+  DeckRow,
+  Frame,
+  Neck,
+  SidePanel,
+  Strip,
+  StripEnd,
+} from './components/Frame';
+import type { SideState } from './components/frameContext';
+import { Popover } from './components/Popover';
 import {
   orderScalePositions,
   type ScaleAnchor,
@@ -35,6 +51,7 @@ import {
   buildSingleStringScale,
   buildSpellingMap,
   filterToChordTones,
+  formatNoteDisplay,
   getChordIntervals,
   getChordQualityLabel,
   getImpliedChordQuality,
@@ -64,22 +81,19 @@ import type {
   ScaleQuality,
   ScaleSystem,
   StudyMode,
+  TheoryDiagram,
 } from './types/music';
 import {
   StudyModeControls,
   StudyModeSelector,
 } from './components/StudyModeControls';
-import {
-  SettingsList,
-  SettingsSection,
-  SettingsRow,
-} from './components/SettingsList';
+import { SettingsSection } from './components/SettingsList';
 import { ChordPositionStrip } from './components/ChordPositionStrip';
 import { ProgressionStrip } from './components/ProgressionStrip';
 import { IntervalTrainer } from './components/IntervalTrainer';
 import { TheoryPanel } from './components/TheoryPanel';
 import { TheoryNavigator } from './components/TheoryNavigator';
-import { TheoryStage } from './components/TheoryStage';
+import { TheoryActions, TheoryStage } from './components/TheoryStage';
 import { APP_NAME } from './lib/brand';
 import glass from './styles/glass.module.css';
 import { useDebugSettings } from './hooks/useDebugSettings';
@@ -95,6 +109,9 @@ function isSingleRootMode(mode: StudyMode): boolean {
     mode === 'theory'
   );
 }
+
+/** Below this the side panel becomes a drawer over the neck. */
+const SIDE_DRAWER_QUERY = '(max-width: 1099px), (max-height: 679px)';
 
 const STUDY_MODES = [
   'practice',
@@ -260,7 +277,17 @@ function App() {
 
   const [ambientMotion, setAmbientMotion] = usePersistentState<AmbientMotion>('ambient-motion', 'flow', oneOf(['flow', 'calm', 'still'] as const));
   const debug = useDebugSettings();
-  const { uiTheme, vibratoCanvas, selectUiTheme } = useUiTheme();
+  const { uiTheme, vibratoCanvas, selectUiTheme, selectCanvas } = useUiTheme();
+
+  // Side panel: docked beside the neck on roomy windows (open or closed, as
+  // the player left it), a drawer over the neck on small ones.
+  const isDrawer = useMediaQuery(SIDE_DRAWER_QUERY);
+  const [sidePanelOpen, setSidePanelOpen] = usePersistentState(
+    'side-panel-open',
+    true,
+    isBoolean,
+  );
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -271,13 +298,15 @@ function App() {
   }, [noteColors]);
 
   useEffect(() => {
-    if (!focusMode) return;
+    if (!focusMode && !drawerOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setFocusMode(false);
+      if (event.key !== 'Escape') return;
+      setFocusMode(false);
+      setDrawerOpen(false);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [focusMode]);
+  }, [focusMode, drawerOpen]);
 
   const rootNote = useMemo(() => getRootNote(activeNotes), [activeNotes]);
 
@@ -295,6 +324,17 @@ function App() {
   );
 
   const theoryScaleQuality = activeTheoryTopic.fretboardDemo?.scaleQuality ?? 'major';
+
+  // The diagram picked for the current topic; a new topic starts on its own.
+  const [diagramChoice, setDiagramChoice] = useState<{
+    topicId: string;
+    view: TheoryDiagram;
+  } | null>(null);
+  const theoryDiagramView = activeTheoryTopic.diagram
+    ? diagramChoice?.topicId === activeTheoryTopic.id
+      ? diagramChoice.view
+      : activeTheoryTopic.diagram
+    : undefined;
 
   const activeProgression = useMemo(
     () => getProgressionById(progressionId) ?? PROGRESSIONS[0],
@@ -536,7 +576,7 @@ function App() {
     DEFAULT_TEMPO,
     isNumber,
   );
-  const playbackMode =
+  const playbackMode: PlaybackMode =
     studyMode === 'progressions'
       ? 'progression'
       : studyMode === 'chords'
@@ -963,6 +1003,366 @@ function App() {
   const showFretboard =
     studyMode !== 'practice' && studyMode !== 'intervals' && (studyMode !== 'theory' || theoryShowFretboard);
 
+  // --- The frame: top strip, neck, deck, side panel ---
+
+  const hasSide = studyMode !== 'notes';
+  const sideState: SideState =
+    !hasSide || focusMode
+      ? 'closed'
+      : isDrawer
+        ? drawerOpen
+          ? 'drawer'
+          : 'closed'
+        : sidePanelOpen
+          ? 'docked'
+          : 'closed';
+  const sideShown = sideState !== 'closed';
+  const toggleSide = () => {
+    if (isDrawer) setDrawerOpen((prev) => !prev);
+    else setSidePanelOpen((prev) => !prev);
+  };
+
+  const keyLabel = formatNoteDisplay(rootNote, notation);
+
+  const strip = (
+    <Strip>
+      <p className="wordmark" aria-label={APP_NAME.slice(0, -1)}>
+        {APP_NAME.slice(0, -1)}
+        <span className="wordmarkWave">{APP_NAME.at(-1)}</span>
+      </p>
+      <StudyModeSelector
+        studyMode={studyMode}
+        onStudyModeChange={handleStudyModeChange}
+      />
+      <StripEnd>
+        {singleRootMode && studyMode !== 'practice' && (
+          <Popover
+            label="Key"
+            buttonLabel={`Key ${keyLabel}. Change key`}
+            button={
+              <>
+                <span className="stripLabel">Key</span>
+                {keyLabel}
+              </>
+            }
+          >
+            {(close) => (
+              <div className="keyMenu">
+                <KeySelector
+                  activeNotes={activeNotes}
+                  notation={notation}
+                  singleRootMode
+                  onApplyKey={(note, action) => {
+                    handleApplyKey(note, action);
+                    if (action === 'set') close();
+                  }}
+                  onNotationChange={setNotation}
+                />
+              </div>
+            )}
+          </Popover>
+        )}
+        <UiThemeSelector
+          uiTheme={uiTheme}
+          vibratoCanvas={vibratoCanvas}
+          onUiThemeChange={selectUiTheme}
+          onCanvasChange={selectCanvas}
+          motion={ambientMotion}
+          onMotionChange={setAmbientMotion}
+        />
+        {hasSide && (
+          <button
+            type="button"
+            className={sideShown ? glass.pillSelected : glass.pill}
+            aria-pressed={sideShown}
+            title={sideShown ? 'Hide the side panel' : 'Show the side panel: this key, chord shapes, reading'}
+            onClick={toggleSide}
+          >
+            Panel
+          </button>
+        )}
+      </StripEnd>
+    </Strip>
+  );
+
+  const keyContext =
+    singleRootMode && studyMode !== 'practice' ? (
+      <SettingsSection title="This key">
+        <KeyContext
+          keyRoot={keyCenter}
+          keyMode={effectiveKeyMode}
+          notation={notation}
+          keyModeLocked={keyModeLocked}
+          onKeyModeChange={setKeyMode}
+          onSelectChord={handleContextSelectChord}
+          onSelectScale={handleContextSelectScale}
+          onSelectProgressions={handleContextSelectProgressions}
+          onSelectRelative={handleContextSelectRelative}
+          onExplainChords={handleContextExplainChords}
+        />
+      </SettingsSection>
+    ) : null;
+
+  const audioError =
+    audio.error && studyMode !== 'practice' ? (
+      <p className="audioError" role="alert">
+        {audio.error}{' '}
+        <button onClick={() => audio.setInstrument(audio.instrument)}>Retry sound</button>
+      </p>
+    ) : null;
+
+  const focusButton = showFretboard ? (
+    <button
+      type="button"
+      className={focusMode ? glass.pillSelected : glass.pill}
+      aria-pressed={focusMode}
+      title={
+        focusMode
+          ? 'Bring back the top bar and side panel (Esc)'
+          : 'Hide the top bar and side panel so the neck fills the window'
+      }
+      onClick={() => setFocusMode((prev) => !prev)}
+    >
+      {focusMode ? 'Exit focus' : 'Focus'}
+    </button>
+  ) : null;
+
+  const neck = (
+    <Neck
+      bar={
+        showPositionSlider ? (
+          <PositionSlider
+            regions={displayRegions}
+            selectedIndex={positionIndex}
+            onChange={setPositionIndex}
+            spanEndIndex={neckView.spanEndIndex}
+            onSpanEndChange={neckView.setSpanEndIndex}
+            allowRange={neckViewEnabled}
+            disabled={ladderActive || traversalActive}
+          />
+        ) : null
+      }
+      barEnd={focusButton}
+    >
+      {showFretboard ? (
+        <Fretboard
+          fill
+          positions={positions}
+          title={title}
+          notation={notation}
+          noteLabels={spellingMap}
+          mutedStrings={mutedStrings}
+          showFingers={showFingers}
+          showNoteLabels={showNoteLabels}
+          fullDotOpacity={fullDotOpacity}
+          showChordTones={supportsChordTones && showChordTones}
+          rootNote={highlightRoot}
+          chordQuality={supportsChordTones ? highlightChordQuality : null}
+          noteColors={noteColors}
+          onPlayNote={audio.muted ? undefined : audio.playPosition}
+          activePosition={audio.playingPosition}
+          ghostLayers={neckView.layers.ghosts}
+          overlapKeys={neckView.layers.overlapKeys}
+          regionBadges={neckView.badges}
+          onSelectRegion={traversalActive ? undefined : setPositionIndex}
+        />
+      ) : showTheoryStage ? (
+        <TheoryStage
+          topic={activeTheoryTopic}
+          selectedRoot={rootNote}
+          keyMode={keyMode}
+          diagramView={theoryDiagramView}
+          onSelectKey={handleTheoryKeySelect}
+        />
+      ) : null}
+      {audioError}
+    </Neck>
+  );
+
+  const audioProps = {
+    instrument: audio.instrument,
+    volume: audio.volume,
+    muted: audio.muted,
+    loading: audio.loading,
+    canPlay:
+      studyMode === 'progressions'
+        ? displayProgressionChordViews.some((chord) => chord.positions.length > 0)
+        : positions.length > 0,
+    playbackMode,
+    playingId: audio.playingId,
+    tempo,
+    canTraverse,
+    scaleAnchor: effectiveScalePlayback ? scaleAnchor : undefined,
+    onScaleAnchorChange: effectiveScalePlayback ? setScaleAnchor : undefined,
+    onInstrumentChange: audio.setInstrument,
+    onVolumeChange: audio.setVolume,
+    onMutedToggle: () => audio.setMuted(!audio.muted),
+    onTempoChange: setTempo,
+    onStrum: handleStrum,
+    onPlayScale: handlePlayScale,
+    onPlayTraversal: handlePlayTraversal,
+    onPlayProgression: handlePlayProgression,
+    onPlayProgressionLadder: handlePlayProgressionLadder,
+  };
+
+  const pickers =
+    studyMode === 'notes' ? (
+      <>
+        <KeySelector
+          activeNotes={activeNotes}
+          notation={notation}
+          singleRootMode={false}
+          onApplyKey={handleApplyKey}
+          onNotationChange={setNotation}
+        />
+        <div className="shortcuts" role="group" aria-label="Selection">
+          <button type="button" className={glass.pill} onClick={handleSelectAll}>
+            All
+          </button>
+          <button type="button" className={glass.pill} onClick={handleClearAll}>
+            Clear
+          </button>
+        </div>
+      </>
+    ) : studyMode === 'theory' ? (
+      <TheoryActions
+        topic={activeTheoryTopic}
+        diagramView={theoryDiagramView}
+        onDiagramViewChange={(view) =>
+          setDiagramChoice({ topicId: activeTheoryTopic.id, view })
+        }
+        showFretboard={theoryShowFretboard}
+        onShowFretboardChange={handleTheoryShowFretboard}
+        onPracticeLink={
+          activeTheoryTopic.practiceLink ? handleTheoryPracticeLink : undefined
+        }
+      />
+    ) : (
+      <StudyModeControls
+        studyMode={studyMode}
+        chordQuality={chordQuality}
+        scaleQuality={scaleQuality}
+        scaleSystem={scaleSystem}
+        showSystemToggle={supportsSystemToggle}
+        progressionId={progressionId}
+        progressionStepIndex={progressionStepIndex}
+        resolvedSteps={resolvedProgressionSteps}
+        onChordQualityChange={setChordQuality}
+        onScaleQualityChange={setScaleQuality}
+        onScaleSystemChange={setScaleSystem}
+        onProgressionChange={handleProgressionChange}
+        onProgressionStepChange={setProgressionStepIndex}
+      />
+    );
+
+  const deck = (
+    <Deck>
+      <DeckRow>{pickers}</DeckRow>
+      {showFretboard && (
+        <DeckRow>
+          <AudioControls part="transport" {...audioProps} />
+        </DeckRow>
+      )}
+      {showFretboard && (
+        <DeckRow end>
+          <AudioControls part="sound" {...audioProps} />
+          {showPositionSlider && (
+            <DisplayToggles
+              showFingers={showFingers}
+              onFingersToggle={() => setShowFingers((prev) => !prev)}
+              showNoteLabels={showNoteLabels}
+              fullDotOpacity={fullDotOpacity}
+              onNoteLabelsToggle={() => setShowNoteLabels((prev) => !prev)}
+              onFullDotOpacityToggle={() => setFullDotOpacity((prev) => !prev)}
+              showChordTones={supportsChordTones ? showChordTones : undefined}
+              onChordTonesToggle={
+                supportsChordTones
+                  ? () => setShowChordTones((prev) => !prev)
+                  : undefined
+              }
+              harmonyLayer={studyMode === 'scales' ? harmonyLayer : undefined}
+              onHarmonyLayerChange={
+                studyMode === 'scales' ? setHarmonyLayer : undefined
+              }
+            />
+          )}
+        </DeckRow>
+      )}
+    </Deck>
+  );
+
+  const side = (
+    <SidePanel label="Side panel">
+      {keyContext}
+
+      {studyMode === 'chords' && chordPositionViews.length > 0 && (
+        <SettingsSection title="Positions">
+          <ChordPositionStrip
+            wrap
+            positions={chordPositionViews}
+            activeIndex={positionIndex}
+            notation={notation}
+            showFingers={showFingers}
+            showNoteLabels={showNoteLabels}
+            fullDotOpacity={fullDotOpacity}
+            showChordTones={showChordTones}
+            rootNote={rootNote}
+            chordQuality={chordQuality}
+            onSelectPosition={setPositionIndex}
+          />
+        </SettingsSection>
+      )}
+
+      {studyMode === 'progressions' && displayProgressionChordViews.length > 0 && (
+        <SettingsSection title="Chords">
+          <ProgressionStrip
+            wrap
+            chords={displayProgressionChordViews}
+            activeIndex={progressionStepIndex}
+            notation={notation}
+            showFingers={showFingers}
+            showNoteLabels={showNoteLabels}
+            fullDotOpacity={fullDotOpacity}
+            showChordTones={showChordTones}
+            onSelectStep={setProgressionStepIndex}
+          />
+        </SettingsSection>
+      )}
+
+      {studyMode === 'progressions' && (
+        <SettingsSection title="About">
+          <TheoryPanel
+            theory={activeProgression.theory}
+            currentStepLabel={
+              activeProgressionStep
+                ? `${activeProgressionStep.chordName} (${activeProgressionStep.numeral})`
+                : undefined
+            }
+            currentStepRole={currentStepRole}
+            resolvedChords={resolvedProgressionSteps
+              .map((step) => step.chordName)
+              .join(' – ')}
+          />
+        </SettingsSection>
+      )}
+
+      {studyMode === 'theory' && (
+        <SettingsSection title="Topics">
+          <TheoryNavigator
+            activeTopicId={theoryTopicId}
+            onTopicChange={handleTheoryTopicChange}
+          />
+        </SettingsSection>
+      )}
+
+      {studyMode === 'theory' && (
+        <SettingsSection title="About">
+          <TheoryPanel theory={activeTheoryTopic.theory} defaultOpen />
+        </SettingsSection>
+      )}
+    </SidePanel>
+  );
+
   return (
     <div
       className="themeRoot"
@@ -985,297 +1385,37 @@ function App() {
         light={vibratoCanvas === 'light'}
         enabled={uiTheme === 'vibrato'}
       />
-      <div className="app" data-practice={studyMode === 'practice' ? 'true' : undefined} data-focus={focusMode ? 'true' : undefined}>
-        <div
-          className="shell"
-        >
-          <p className="wordmark" aria-label={APP_NAME.slice(0, -1)}>
-            {APP_NAME.slice(0, -1)}
-            <span className="wordmarkWave">{APP_NAME.at(-1)}</span>
-          </p>
-          <SettingsList>
-            <SettingsSection>
-              <SettingsRow label="Mode">
-                <StudyModeSelector
-                  studyMode={studyMode}
-                  onStudyModeChange={handleStudyModeChange}
-                />
-              </SettingsRow>
-
-              {studyMode !== 'practice' && <SettingsRow label="Key">
-                <KeySelector
-                  activeNotes={activeNotes}
-                  notation={notation}
-                  singleRootMode={singleRootMode}
-                  onApplyKey={handleApplyKey}
-                  onNotationChange={setNotation}
-                />
-              </SettingsRow>}
-
-              <StudyModeControls
-                studyMode={studyMode}
-                chordQuality={chordQuality}
-                scaleQuality={scaleQuality}
-                scaleSystem={scaleSystem}
-                showSystemToggle={supportsSystemToggle}
-                progressionId={progressionId}
-                progressionStepIndex={progressionStepIndex}
-                resolvedSteps={resolvedProgressionSteps}
-                onChordQualityChange={setChordQuality}
-                onScaleQualityChange={setScaleQuality}
-                onScaleSystemChange={setScaleSystem}
-                onProgressionChange={handleProgressionChange}
-                onProgressionStepChange={setProgressionStepIndex}
-              />
-
-              {!singleRootMode && (
-                <SettingsRow label="Selection">
-                  <div className="shortcuts">
-                    <button
-                      type="button"
-                      className={glass.pill}
-                      onClick={handleSelectAll}
-                    >
-                      All
-                    </button>
-                    <button
-                      type="button"
-                      className={glass.pill}
-                      onClick={handleClearAll}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </SettingsRow>
-              )}
-            </SettingsSection>
-
-            {singleRootMode && studyMode !== 'practice' && (
-              <SettingsSection title="This key">
-                <KeyContext
-                  keyRoot={keyCenter}
-                  keyMode={effectiveKeyMode}
-                  notation={notation}
-                  keyModeLocked={keyModeLocked}
-                  onKeyModeChange={setKeyMode}
-                  onSelectChord={handleContextSelectChord}
-                  onSelectScale={handleContextSelectScale}
-                  onSelectProgressions={handleContextSelectProgressions}
-                  onSelectRelative={handleContextSelectRelative}
-                  onExplainChords={handleContextExplainChords}
-                />
-              </SettingsSection>
-            )}
-
-            {studyMode === 'theory' && (
-              <SettingsSection title="Topics">
-                <TheoryNavigator
-                  activeTopicId={theoryTopicId}
-                  onTopicChange={handleTheoryTopicChange}
-                />
-              </SettingsSection>
-            )}
-
-            {studyMode === 'progressions' && (
-              <SettingsSection title="About">
-                <TheoryPanel
-                  theory={activeProgression.theory}
-                  currentStepLabel={
-                    activeProgressionStep
-                      ? `${activeProgressionStep.chordName} (${activeProgressionStep.numeral})`
-                      : undefined
-                  }
-                  currentStepRole={currentStepRole}
-                  resolvedChords={resolvedProgressionSteps
-                    .map((step) => step.chordName)
-                    .join(' – ')}
-                />
-              </SettingsSection>
-            )}
-
-            {studyMode === 'theory' && (
-              <SettingsSection title="About">
-                <TheoryPanel
-                  theory={activeTheoryTopic.theory}
-                  defaultOpen
-                />
-              </SettingsSection>
-            )}
-
-          </SettingsList>
-        </div>
-
-        <div className="fretboardStage">
-          {studyMode === 'practice' && <PracticeSession root={rootNote} notation={notation} audio={audio} onRootChange={note => handleApplyKey(note, 'set')} />}
-          {audio.error && studyMode !== 'practice' && <p className="audioError" role="alert">{audio.error} <button onClick={() => audio.setInstrument(audio.instrument)}>Retry sound</button></p>}
-          {showFretboard && (
-            <div className="focusRow">
-              <button
-                type="button"
-                className={glass.pill}
-                aria-pressed={focusMode}
-                title={
-                  focusMode
-                    ? 'Show the sidebar (Esc)'
-                    : 'Hide the sidebar and fill the screen with the fretboard'
-                }
-                onClick={() => setFocusMode((prev) => !prev)}
-              >
-                {focusMode ? 'Exit focus' : 'Focus'}
-              </button>
-            </div>
-          )}
-          {showTheoryStage ? (
-            <TheoryStage
-              key={activeTheoryTopic.id}
-              topic={activeTheoryTopic}
-              selectedRoot={rootNote}
-              keyMode={keyMode}
-              showFretboard={theoryShowFretboard}
-              onSelectKey={handleTheoryKeySelect}
-              onShowFretboardChange={handleTheoryShowFretboard}
-              onPracticeLink={
-                activeTheoryTopic.practiceLink
-                  ? handleTheoryPracticeLink
-                  : undefined
-              }
-            />
-          ) : null}
-          {showIntervalTrainer ? (
+      <Frame
+        side={sideState}
+        focus={focusMode}
+        practice={studyMode === 'practice'}
+        onCloseSide={() => setDrawerOpen(false)}
+      >
+        {strip}
+        {studyMode === 'practice' ? (
+          <PracticeSession
+            root={rootNote}
+            notation={notation}
+            audio={audio}
+            onRootChange={(note) => handleApplyKey(note, 'set')}
+          />
+        ) : showIntervalTrainer ? (
+          <>
             <IntervalTrainer
               root={rootNote}
               notation={notation}
               noteColors={noteColors}
               audio={audio}
             />
-          ) : null}
-          {showFretboard ? (
-            <>
-              {showPositionSlider && (
-                <PositionSlider
-                  regions={displayRegions}
-                  selectedIndex={positionIndex}
-                  onChange={setPositionIndex}
-                  spanEndIndex={neckView.spanEndIndex}
-                  onSpanEndChange={neckView.setSpanEndIndex}
-                  allowRange={neckViewEnabled}
-                  disabled={ladderActive || traversalActive}
-                />
-              )}
-              <Fretboard
-                positions={positions}
-                title={title}
-                notation={notation}
-                noteLabels={spellingMap}
-                mutedStrings={mutedStrings}
-                showFingers={showFingers}
-                showNoteLabels={showNoteLabels}
-                fullDotOpacity={fullDotOpacity}
-                showChordTones={supportsChordTones && showChordTones}
-                rootNote={highlightRoot}
-                chordQuality={
-                  supportsChordTones ? highlightChordQuality : null
-                }
-                noteColors={noteColors}
-                onPlayNote={audio.muted ? undefined : audio.playPosition}
-                activePosition={audio.playingPosition}
-                ghostLayers={neckView.layers.ghosts}
-                overlapKeys={neckView.layers.overlapKeys}
-                regionBadges={neckView.badges}
-                onSelectRegion={
-                  traversalActive ? undefined : setPositionIndex
-                }
-              />
-              <div className="soundRow">
-                <AudioControls
-                  instrument={audio.instrument}
-                  volume={audio.volume}
-                  muted={audio.muted}
-                  loading={audio.loading}
-                  canPlay={
-                    studyMode === 'progressions'
-                      ? displayProgressionChordViews.some(
-                          (chord) => chord.positions.length > 0,
-                        )
-                      : positions.length > 0
-                  }
-                  playbackMode={playbackMode}
-                  playingId={audio.playingId}
-                  tempo={tempo}
-                  canTraverse={canTraverse}
-                  scaleAnchor={
-                    effectiveScalePlayback ? scaleAnchor : undefined
-                  }
-                  onScaleAnchorChange={
-                    effectiveScalePlayback ? setScaleAnchor : undefined
-                  }
-                  onInstrumentChange={audio.setInstrument}
-                  onVolumeChange={audio.setVolume}
-                  onMutedToggle={() => audio.setMuted(!audio.muted)}
-                  onTempoChange={setTempo}
-                  onStrum={handleStrum}
-                  onPlayScale={handlePlayScale}
-                  onPlayTraversal={handlePlayTraversal}
-                  onPlayProgression={handlePlayProgression}
-                  onPlayProgressionLadder={handlePlayProgressionLadder}
-                />
-                {showPositionSlider && (
-                  <DisplayToggles
-                    showFingers={showFingers}
-                    onFingersToggle={() => setShowFingers((prev) => !prev)}
-                    showNoteLabels={showNoteLabels}
-                    fullDotOpacity={fullDotOpacity}
-                    onNoteLabelsToggle={() => setShowNoteLabels((prev) => !prev)}
-                    onFullDotOpacityToggle={() =>
-                      setFullDotOpacity((prev) => !prev)
-                    }
-                    showChordTones={
-                      supportsChordTones ? showChordTones : undefined
-                    }
-                    onChordTonesToggle={
-                      supportsChordTones
-                        ? () => setShowChordTones((prev) => !prev)
-                        : undefined
-                    }
-                    harmonyLayer={
-                      studyMode === 'scales' ? harmonyLayer : undefined
-                    }
-                    onHarmonyLayerChange={
-                      studyMode === 'scales' ? setHarmonyLayer : undefined
-                    }
-                  />
-                )}
-              </div>
-              {studyMode === 'chords' && chordPositionViews.length > 0 && (
-                <ChordPositionStrip
-                  positions={chordPositionViews}
-                  activeIndex={positionIndex}
-                  notation={notation}
-                  showFingers={showFingers}
-                  showNoteLabels={showNoteLabels}
-                  fullDotOpacity={fullDotOpacity}
-                  showChordTones={showChordTones}
-                  rootNote={rootNote}
-                  chordQuality={chordQuality}
-                  onSelectPosition={setPositionIndex}
-                />
-              )}
-              {studyMode === 'progressions' &&
-                displayProgressionChordViews.length > 0 && (
-                  <ProgressionStrip
-                    chords={displayProgressionChordViews}
-                    activeIndex={progressionStepIndex}
-                    notation={notation}
-                    showFingers={showFingers}
-                    showNoteLabels={showNoteLabels}
-                    fullDotOpacity={fullDotOpacity}
-                    showChordTones={showChordTones}
-                    onSelectStep={setProgressionStepIndex}
-                  />
-                )}
-            </>
-          ) : null}
-        </div>
+            <SidePanel label="Side panel">{keyContext}</SidePanel>
+          </>
+        ) : (
+          <>
+            {neck}
+            {deck}
+            {side}
+          </>
+        )}
 
         {debug.enabled && (
           <DebugPanel
@@ -1291,14 +1431,7 @@ function App() {
             onColorReset={() => setNoteColors({ ...NOTE_COLORS })}
           />
         )}
-      </div>
-      <UiThemeSelector
-        uiTheme={uiTheme}
-        vibratoCanvas={vibratoCanvas}
-        onUiThemeChange={selectUiTheme}
-        motion={ambientMotion}
-        onMotionChange={setAmbientMotion}
-      />
+      </Frame>
     </div>
   );
 }

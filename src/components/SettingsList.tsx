@@ -1,17 +1,11 @@
 import type { ReactNode } from 'react';
 import styles from './SettingsList.module.css';
 
-interface SettingsListProps {
-  children: ReactNode;
-}
-
-export function SettingsList({ children }: SettingsListProps) {
-  return (
-    <div className={styles.list} aria-label="Settings">
-      {children}
-    </div>
-  );
-}
+/*
+ * Since the single-screen layout, sections titled like "This key" or
+ * "Topics" live in the side panel, and rows (a label beside its control)
+ * sit inline in the deck.
+ */
 
 interface SettingsSectionProps {
   title?: string;

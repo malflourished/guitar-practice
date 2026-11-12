@@ -9,6 +9,7 @@ import { chordPattern, sequencePattern } from '../lib/audio/pattern';
 import { sessionReducer, type SessionState } from '../lib/practice/reducer';
 import { DRAFT_KEY, HISTORY_KEY, PRACTICE_BLOCKS, SESSION_SECONDS, formatTime, loadDraft, loadHistory, saveHistory, finishSession, type Rating } from '../lib/practice/session';
 import { Fretboard } from './Fretboard';
+import { Deck, DeckRow, Neck, SidePanel } from './Frame';
 import styles from './PracticeSession.module.css';
 
 interface Props { root: NoteName; notation: NotationPreference; audio: UseInstrument; onRootChange: (root: NoteName) => void }
@@ -170,52 +171,101 @@ export function PracticeSession({ root, notation, audio, onRootChange }: Props) 
     <button type="button" className={styles.quietButton} aria-pressed={audio.muted} onClick={() => audio.setMuted(!audio.muted)}>{audio.muted ? 'Unmute' : 'Mute'}</button>
   </div>;
 
-  return <section className={styles.practice} aria-label="Daily practice" data-status={status}>
+  // Alerts sit over the neck so they never move the layout.
+  const notices = (storageError || audio.error) ? <div className={styles.notices}>
     {storageError && <p role="alert" className={styles.notice}>Your browser couldn’t save this practice. Keep this tab open; results may be lost when you close it.</p>}
     {audio.error && <p role="alert" className={styles.notice}>{audio.error} <button onClick={() => audio.setInstrument(audio.instrument)}>Retry sound</button></p>}
-    {status === 'ready' ? <>
-      <header className={styles.welcome}>
-        <div><p className={styles.eyebrow}>YOUR DAILY PRACTICE · 10 MINUTES</p><h1>Find your flow.</h1><p className={styles.intro}>A little focus. A few good repetitions.<br />Take what you know and turn it into music.</p></div>
-        <div className={styles.duration} aria-label="10 minutes"><span>10</span><small>MINUTES, JUST FOR YOU</small></div>
-      </header>
-      <div className={styles.plan}>{PRACTICE_BLOCKS.map((item, index) => <div className={styles.planBlock} key={item.id}><div className={styles.planTop}><span>0{index + 1}</span><span>{item.seconds / 60} MIN</span></div><h2>{item.title}</h2><p>{item.detail}</p></div>)}</div>
+  </div> : null;
+
+  const historySection = <section className={styles.history} aria-label="Practice history">
+    <div className={styles.historyTitle}><h2>Your recent practice</h2><span>Saved on this device</span></div>
+    {history.length === 0 ? <p className={styles.historyEmpty}>Finished sessions are listed here.</p> : history.slice(0, 5).map(item => <div className={styles.historyRow} key={item.id}><span>{new Date(item.startedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span><strong>{formatNoteDisplay(item.root, notation)} minor</strong><span>{formatTime(item.elapsed.reduce((sum, n) => sum + n, 0))}</span><span>{item.completed ? 'Complete' : 'Short session'}</span></div>)}
+  </section>;
+
+  const soundSection = <section className={styles.sideSection} aria-label="Practice sound">
+    <h2 className={styles.sideTitle}>Sound</h2>
+    {soundSettings}
+  </section>;
+
+  if (status === 'ready') return <>
+    <Neck className={styles.practice}>
+      <div className={styles.landing} data-status={status}>
+        <header className={styles.welcome}>
+          <div><p className={styles.eyebrow}>YOUR DAILY PRACTICE · 10 MINUTES</p><h1>Find your flow.</h1><p className={styles.intro}>A little focus. A few good repetitions.<br />Take what you know and turn it into music.</p></div>
+          <div className={styles.duration} aria-label="10 minutes"><span>10</span><small>MINUTES, JUST FOR YOU</small></div>
+        </header>
+        <div className={styles.plan}>{PRACTICE_BLOCKS.map((item, index) => <div className={styles.planBlock} key={item.id}><div className={styles.planTop}><span>0{index + 1}</span><span>{item.seconds / 60} MIN</span></div><h2>{item.title}</h2><p>{item.detail}</p></div>)}</div>
+      </div>
+      {notices}
+    </Neck>
+    <Deck className={styles.practice} label="Start your practice">
       <div className={styles.startBar}><div className={styles.setup}>
         <label>KEY<select aria-label="Practice key" value={root} onChange={e => onRootChange(e.target.value as NoteName)}>{ALL_NOTES.map(note => <option key={note} value={note}>{formatNoteDisplay(note, notation)} minor</option>)}</select></label>
         <label>TEMPO<select aria-label="Practice tempo" value={tempo} onChange={e => setTempo(Number(e.target.value))}>{[48, 60, 72, 84, 96, 108].map(bpm => <option key={bpm} value={bpm}>{bpm} BPM</option>)}</select></label>
       </div><button className={styles.primary} onClick={start}>Start my practice <span aria-hidden="true">↗</span></button></div>
       <p className={styles.footnote}>Four beats to get ready. Pause whenever you need. Your place is saved on this device.</p>
-      {soundSettings}
-    </> : status === 'finished' && session ? <div className={styles.result}>
-      <p className={styles.eyebrow}>{session.completed ? 'TEN MINUTES WELL SPENT' : 'EVERY MINUTE COUNTS'}</p>
-      <h1>{storageError ? 'Practice finished.' : 'Practice, saved.'}</h1><p className={styles.intro}>{rootLabel} minor · {session.bpm} BPM · {session.completed ? 'Full session' : 'Short session'}</p>
-      <div className={styles.stats}><div><strong>{formatTime(elapsed)}</strong><span>time practiced</span></div><div><strong>{attempts ? `${correct}/${attempts}` : '—'}</strong><span>intervals correct</span></div><div><strong>{Object.values(session.ratings).filter(r => r === 'clean').length}</strong><span>blocks felt clean</span></div></div>
-      <p className={styles.resultTip}>{Object.values(session.ratings).includes('revisit') ? 'Next time, start with the blocks you marked to revisit. Stay at a comfortable tempo.' : 'Come back to the same key next time. Aim for a relaxed, even sound before increasing the tempo.'}</p>
-      <button className={styles.primary} onClick={() => { dispatch({ type: 'reset' }); setAnswer(null); answered.current = false; }}>Back to my practice <span aria-hidden="true">↗</span></button>
-    </div> : session ? <>
-      <nav className={styles.steps} aria-label="Session blocks">{PRACTICE_BLOCKS.map((item, index) => <div key={item.id} className={index === blockIndex ? styles.currentStep : styles.step} aria-current={index === blockIndex ? 'step' : undefined}><span>{session.elapsed[index] >= item.seconds ? '✓' : `0${index + 1}`}</span>{item.short}<small>{item.seconds / 60}m</small></div>)}</nav>
-      <div className={styles.sessionProgress} role="progressbar" aria-label="Practice progress" aria-valuenow={Math.floor(elapsed)} aria-valuemin={0} aria-valuemax={SESSION_SECONDS}><span style={{ width: `${elapsed / SESSION_SECONDS * 100}%` }} /></div>
-      <header className={styles.stageHeader}><div><p className={styles.eyebrow}>{rootLabel.toUpperCase()} MINOR · BLOCK {blockIndex + 1} OF 4</p><h1>{block.title}</h1></div><div className={styles.timer}><strong>{formatTime(block.seconds - session.elapsed[blockIndex])}</strong><span>left in this block</span></div></header>
-      <p className={styles.instruction}>{instructions[blockIndex]}</p>
-      <div className={styles.transport}>
-        {status === 'review' ? <button className={styles.primary} onClick={blockIndex === 3 ? finish : () => { setChordIndex(0); setCycle(0); dispatch({ type: 'next' }); }}>{blockIndex === 3 ? 'Save my session' : `Next: ${PRACTICE_BLOCKS[blockIndex + 1].short}`} <span aria-hidden="true">↗</span></button> : <button className={styles.primary} onClick={active ? () => dispatch({ type: 'pause' }) : start}>{status === 'loading' ? 'Cancel loading' : active ? 'Pause practice' : 'Resume practice'}</button>}
-        <div className={styles.beatStatus} role="status">{status === 'loading' ? 'Getting your guitar ready…' : status === 'counting' ? `Count in · ${beat + 1} / 4` : status === 'review' ? 'Block complete. Take a breath.' : status === 'paused' ? 'Paused · your place is saved' : `${liveTempo} BPM${blockIndex === 2 ? ' · listen & answer' : ` · loop ${cycle + 1}`}`}</div>
-        <div className={styles.beats} aria-hidden="true">{[0, 1, 2, 3].map(n => <i key={n} className={active && beat === n ? styles.litBeat : ''} />)}</div>
+      <DeckRow end className={styles.deckEnd}>{soundSettings}</DeckRow>
+    </Deck>
+    <SidePanel className={styles.practice} label="Practice history">{historySection}</SidePanel>
+  </>;
+
+  if (status === 'finished' && session) return <>
+    <Neck className={styles.practice}>
+      <div className={styles.result}>
+        <p className={styles.eyebrow}>{session.completed ? 'TEN MINUTES WELL SPENT' : 'EVERY MINUTE COUNTS'}</p>
+        <h1>{storageError ? 'Practice finished.' : 'Practice, saved.'}</h1><p className={styles.intro}>{rootLabel} minor · {session.bpm} BPM · {session.completed ? 'Full session' : 'Short session'}</p>
+        <div className={styles.stats}><div><strong>{formatTime(elapsed)}</strong><span>time practiced</span></div><div><strong>{attempts ? `${correct}/${attempts}` : '—'}</strong><span>intervals correct</span></div><div><strong>{Object.values(session.ratings).filter(r => r === 'clean').length}</strong><span>blocks felt clean</span></div></div>
+        <p className={styles.resultTip}>{Object.values(session.ratings).includes('revisit') ? 'Next time, start with the blocks you marked to revisit. Stay at a comfortable tempo.' : 'Come back to the same key next time. Aim for a relaxed, even sound before increasing the tempo.'}</p>
       </div>
+      {notices}
+    </Neck>
+    <Deck className={styles.practice} label="Practice saved">
+      <DeckRow><button className={styles.primary} onClick={() => { dispatch({ type: 'reset' }); setAnswer(null); answered.current = false; }}>Back to my practice <span aria-hidden="true">↗</span></button></DeckRow>
+      <DeckRow end className={styles.deckEnd}>{soundSettings}</DeckRow>
+    </Deck>
+    <SidePanel className={styles.practice} label="Practice history">{historySection}</SidePanel>
+  </>;
+
+  if (!session) return null;
+
+  return <>
+    <Neck className={styles.practice} bar={<p className={styles.instruction}>{instructions[blockIndex]}</p>}>
       {blockIndex === 2 ? <div className={styles.earCard}>
         <p className={styles.eyebrow}>LISTEN FIRST. TRUST YOUR EAR.</p><h2>{answer === null ? 'What interval do you hear?' : answer === EAR_INTERVALS[question].semitones ? 'You’ve got it.' : `That was a ${EAR_INTERVALS[question].name.toLowerCase()}.`}</h2>
         <button className={styles.listen} onClick={hear} disabled={status !== 'running' || audio.muted}>♫ {answer === null ? 'Listen / replay' : 'Hear it again'}</button>
         <div className={styles.answers}>{EAR_INTERVALS.map(interval => <button key={interval.semitones} disabled={status !== 'running' || answer !== null} className={answer !== null && interval.semitones === EAR_INTERVALS[question].semitones ? styles.correctAnswer : ''} onClick={() => choose(interval.semitones)}><strong>{interval.short}</strong>{interval.name}</button>)}</div>
         <div className={styles.earFooter}><span>{correct} / {attempts} correct · first answers</span><button disabled={answer === null || status !== 'running'} className={styles.quietButton} onClick={nextQuestion}>Next interval →</button></div>
-      </div> : <div className={styles.boardCard}>
-        {blockIndex === 3 && <div className={styles.chordStrip}>{chords.map((chord, index) => <div key={chord.numeral} className={index === chordIndex ? styles.activeChord : ''}><small>{chord.numeral} · 4 BEATS</small><strong>{formatNoteDisplay(chord.root, notation)}{chord.quality === 'minor' ? 'm' : ''}</strong></div>)}</div>}
+      </div> : <>
+        <Fretboard fill fretRange={[boardRegion.startFret, boardEnd]} positions={boardPositions} title={`${rootLabel} ${block.short} practice`} notation={notation} noteColors={NOTE_COLORS} rootNote={blockIndex === 3 ? currentChord.root : sessionRoot} intervalLabeling={{ root: blockIndex === 3 ? currentChord.root : sessionRoot, style: 'function' }} showNoteLabels fullDotOpacity onPlayNote={audio.muted ? undefined : audio.playPosition} activePosition={audio.playingPosition} mutedStrings={blockIndex === 3 ? currentChord.region.mutedStrings : []} />
         <div className={styles.boardCaption}><span>{blockIndex === 0 ? 'ROOT + FIFTH' : blockIndex === 1 ? 'MINOR PENTATONIC' : 'CHORD TONES'}</span><span>Frets {boardRegion.startFret === 0 ? 'open' : boardRegion.startFret}–{boardEnd} · tap a note to hear it</span></div>
-        <Fretboard fretRange={[boardRegion.startFret, boardEnd]} positions={boardPositions} title={`${rootLabel} ${block.short} practice`} notation={notation} noteColors={NOTE_COLORS} rootNote={blockIndex === 3 ? currentChord.root : sessionRoot} intervalLabeling={{ root: blockIndex === 3 ? currentChord.root : sessionRoot, style: 'function' }} showNoteLabels fullDotOpacity onPlayNote={audio.muted ? undefined : audio.playPosition} activePosition={audio.playingPosition} mutedStrings={blockIndex === 3 ? currentChord.region.mutedStrings : []} />
-      </div>}
+      </>}
+      {notices}
+    </Neck>
+    <Deck className={styles.practice} label="Practice block">
+      <header className={styles.stageHeader}>
+        <div><p className={styles.eyebrow}>{rootLabel.toUpperCase()} MINOR · BLOCK {blockIndex + 1} OF 4</p><h1>{block.title}</h1></div>
+        {blockIndex === 3 && <div className={styles.chordStrip}>{chords.map((chord, index) => <div key={chord.numeral} className={index === chordIndex ? styles.activeChord : ''}><small>{chord.numeral} · 4 BEATS</small><strong>{formatNoteDisplay(chord.root, notation)}{chord.quality === 'minor' ? 'm' : ''}</strong></div>)}</div>}
+        <div className={styles.timer}><strong>{formatTime(block.seconds - session.elapsed[blockIndex])}</strong><span>left in this block</span></div>
+      </header>
+      <div className={styles.transport}>
+        {status === 'review' ? <button className={styles.primary} onClick={blockIndex === 3 ? finish : () => { setChordIndex(0); setCycle(0); dispatch({ type: 'next' }); }}>{blockIndex === 3 ? 'Save my session' : `Next: ${PRACTICE_BLOCKS[blockIndex + 1].short}`} <span aria-hidden="true">↗</span></button> : <button className={styles.primary} onClick={active ? () => dispatch({ type: 'pause' }) : start}>{status === 'loading' ? 'Cancel loading' : active ? 'Pause practice' : 'Resume practice'}</button>}
+        <div className={styles.beatStatus} role="status">{status === 'loading' ? 'Getting your guitar ready…' : status === 'counting' ? `Count in · ${beat + 1} / 4` : status === 'review' ? 'Block complete. Take a breath.' : status === 'paused' ? 'Paused · your place is saved' : `${liveTempo} BPM${blockIndex === 2 ? ' · listen & answer' : ` · loop ${cycle + 1}`}`}</div>
+        <div className={styles.beats} aria-hidden="true">{[0, 1, 2, 3].map(n => <i key={n} className={active && beat === n ? styles.litBeat : ''} />)}</div>
+        <div className={styles.endRow}><span className={styles.spaceHint}>Space to pause / resume</span>{ending ? <><span>Save what you’ve practiced and finish early?</span><button className={styles.quietButton} onClick={finish}>Save & finish</button><button className={styles.quietButton} onClick={() => setEnding(false)}>Keep practicing</button></> : <button className={styles.textButton} onClick={() => { dispatch({ type: 'pause' }); setEnding(true); }}>Finish early</button>}</div>
+      </div>
       <div className={styles.reflection}><span>How does it feel?</span>{RATINGS.map(rating => <button key={rating.id} aria-pressed={session.ratings[blockIndex] === rating.id} onClick={() => dispatch({ type: 'rate', rating: rating.id })}>{rating.label}</button>)}<small>Your assessment of your playing.</small></div>
-      <div className={styles.practiceOptions}><label><input type="checkbox" checked={metronome} disabled={active} onChange={e => setMetronome(e.target.checked)} /> Metronome</label><label><input type="checkbox" checked={ramp} disabled={active} onChange={e => setRamp(e.target.checked)} /> Scale: +4 BPM every 4 loops, up to 120</label><span>Space to pause / resume</span></div>
-      {soundSettings}
-      <div className={styles.endRow}>{ending ? <><span>Save what you’ve practiced and finish early?</span><button className={styles.quietButton} onClick={finish}>Save & finish</button><button className={styles.quietButton} onClick={() => setEnding(false)}>Keep practicing</button></> : <button className={styles.textButton} onClick={() => { dispatch({ type: 'pause' }); setEnding(true); }}>Finish early</button>}</div>
-    </> : null}
-    {(status === 'ready' || status === 'finished') && history.length > 0 && <section className={styles.history} aria-label="Practice history"><div className={styles.historyTitle}><h2>Your recent practice</h2><span>Saved on this device</span></div>{history.slice(0, 5).map(item => <div className={styles.historyRow} key={item.id}><span>{new Date(item.startedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span><strong>{formatNoteDisplay(item.root, notation)} minor</strong><span>{formatTime(item.elapsed.reduce((sum, n) => sum + n, 0))}</span><span>{item.completed ? 'Complete' : 'Short session'}</span></div>)}</section>}
-  </section>;
+    </Deck>
+    <SidePanel className={styles.practice} label="This session">
+      <section className={styles.sideSection} aria-label="Session blocks">
+        <h2 className={styles.sideTitle}>This session</h2>
+        <nav className={styles.steps} aria-label="Session blocks">{PRACTICE_BLOCKS.map((item, index) => <div key={item.id} className={index === blockIndex ? styles.currentStep : styles.step} aria-current={index === blockIndex ? 'step' : undefined}><span>{session.elapsed[index] >= item.seconds ? '✓' : `0${index + 1}`}</span>{item.short}<small>{item.seconds / 60}m</small></div>)}</nav>
+        <div className={styles.sessionProgress} role="progressbar" aria-label="Practice progress" aria-valuenow={Math.floor(elapsed)} aria-valuemin={0} aria-valuemax={SESSION_SECONDS}><span style={{ width: `${elapsed / SESSION_SECONDS * 100}%` }} /></div>
+      </section>
+      <section className={styles.sideSection} aria-label="Practice options">
+        <h2 className={styles.sideTitle}>Options</h2>
+        <div className={styles.practiceOptions}><label><input type="checkbox" checked={metronome} disabled={active} onChange={e => setMetronome(e.target.checked)} /> Metronome</label><label><input type="checkbox" checked={ramp} disabled={active} onChange={e => setRamp(e.target.checked)} /> Scale: +4 BPM every 4 loops, up to 120</label></div>
+      </section>
+      {soundSection}
+    </SidePanel>
+  </>;
 }

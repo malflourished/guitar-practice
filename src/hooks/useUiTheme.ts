@@ -29,21 +29,12 @@ export function useUiTheme() {
   const [vibratoCanvas, setVibratoCanvas] =
     useState<VibratoCanvas>(loadVibratoCanvas);
 
-  const selectUiTheme = useCallback(
-    (theme: UiTheme) => {
-      if (theme === 'scholar') {
-        setUiTheme('scholar');
-        return;
-      }
-
-      if (uiTheme === 'vibrato') {
-        setVibratoCanvas((canvas) => (canvas === 'dark' ? 'light' : 'dark'));
-        return;
-      }
-
-      setUiTheme('vibrato');
-    },
-    [uiTheme],
+  // The canvas has its own control in the theme menu; picking Vibrato again
+  // no longer flips it (that was a hidden gesture).
+  const selectUiTheme = useCallback((theme: UiTheme) => setUiTheme(theme), []);
+  const selectCanvas = useCallback(
+    (canvas: VibratoCanvas) => setVibratoCanvas(canvas),
+    [],
   );
 
   useEffect(() => {
@@ -55,5 +46,5 @@ export function useUiTheme() {
     }
   }, [uiTheme, vibratoCanvas]);
 
-  return { uiTheme, vibratoCanvas, selectUiTheme };
+  return { uiTheme, vibratoCanvas, selectUiTheme, selectCanvas };
 }

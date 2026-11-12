@@ -1,0 +1,276 @@
+/* The single-screen frame. Heights are fixed per window size, never per mode,
+   so the neck sits at the same place in every mode and drill. */
+.frame {
+  --frame-pad: 12px;
+  --frame-gap: 10px;
+  --strip-h: 52px;
+  --deck-h: 232px;
+  --neck-bar-h: 46px;
+  --side-w: clamp(280px, 22vw, 340px);
+  --region-radius: 14px;
+
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--strip-h) minmax(0, 1fr) var(--deck-h);
+  grid-template-areas:
+    'strip'
+    'neck'
+    'deck';
+  column-gap: var(--frame-gap);
+  row-gap: var(--frame-gap);
+  padding: var(--frame-pad);
+  overflow: hidden;
+}
+
+.frame[data-side='docked'] {
+  grid-template-columns: minmax(0, 1fr) var(--side-w);
+  grid-template-areas:
+    'strip strip'
+    'neck side'
+    'deck side';
+}
+
+/* Focus: the strip and side panel step aside; neck and deck stay. */
+.frame[data-focus='true'] {
+  grid-template-rows: minmax(0, 1fr) var(--deck-h);
+  grid-template-areas:
+    'neck'
+    'deck';
+}
+
+.frame[data-focus='true'] .strip {
+  display: none;
+}
+
+@media (max-height: 760px) {
+  .frame {
+    --frame-pad: 8px;
+    --frame-gap: 8px;
+    --strip-h: 48px;
+    --deck-h: 216px;
+    --neck-bar-h: 42px;
+  }
+}
+
+/* ---- Top strip ---- */
+
+.strip {
+  grid-area: strip;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: 0 0.75rem 0 1.1rem;
+  border-radius: var(--region-radius);
+}
+
+.stripEnd {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* Narrow windows: seven modes plus Key, Theme and Panel need about 1140 px.
+   The window title still names the app when the wordmark steps aside. */
+@media (max-width: 1219px) {
+  .strip {
+    gap: 0.6rem;
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+  }
+
+  .strip :global(.wordmark) {
+    display: none;
+  }
+
+  .strip button {
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .strip [aria-label='Study mode'] {
+    gap: 0.3rem;
+  }
+}
+
+/* ---- Neck and deck share one surface, as the stage did before ---- */
+
+.surface {
+  grid-row: neck-start / deck-end;
+  grid-column: neck-start / neck-end;
+  border-radius: 18px;
+  pointer-events: none;
+}
+
+.neck {
+  grid-area: neck;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.neckBar {
+  flex: 0 0 var(--neck-bar-h);
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.25rem 0.9rem 0;
+  box-sizing: border-box;
+}
+
+.neckBarMain {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.neckBarEnd {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.neckBody {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.deck {
+  grid-area: deck;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.55rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.75rem 1rem 0.85rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-top: 1px solid var(--glass-divider);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem 1rem;
+  min-width: 0;
+}
+
+/* The sound and view row; kept apart from the pickers by a little air. */
+.rowEnd {
+  composes: row;
+  margin-top: 0.35rem;
+}
+
+/* After the base rules, so it wins: short windows get a tighter deck. */
+@media (max-height: 760px) {
+  .deck {
+    gap: 0.4rem;
+    padding: 0.6rem 1rem;
+  }
+}
+
+/* ---- Side panel: the only region that scrolls ---- */
+
+.side {
+  grid-area: side;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem 1.1rem 1.2rem;
+  box-sizing: border-box;
+  border-radius: var(--region-radius);
+  scrollbar-width: thin;
+}
+
+.side[data-side='drawer'] {
+  position: absolute;
+  z-index: 6;
+  top: calc(var(--frame-pad) + var(--strip-h) + var(--frame-gap));
+  right: var(--frame-pad);
+  bottom: var(--frame-pad);
+  width: min(360px, calc(100% - 2 * var(--frame-pad)));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+
+.sideClose {
+  composes: pill from '../styles/glass.module.css';
+  float: right;
+  margin: -0.2rem 0 0.4rem 0.5rem;
+}
+
+/* ---- Region surfaces per theme (the panels the page had before) ---- */
+
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='dark']) .strip,
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='dark']) .surface,
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='dark']) .side {
+  background: rgba(10, 16, 23, 0.86);
+  border: 1px solid rgba(230, 239, 250, 0.16);
+}
+
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='light']) .strip,
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='light']) .surface,
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='light']) .side {
+  background: rgba(249, 249, 243, 0.92);
+  border: 1px solid rgba(25, 35, 45, 0.16);
+}
+
+/* Scholar is ink on paper: no panels, hairlines between regions. */
+:global(.themeRoot[data-ui-theme='scholar']) .strip {
+  border-bottom: 1px solid var(--glass-divider);
+  border-radius: 0;
+}
+
+:global(.themeRoot[data-ui-theme='scholar']) .side {
+  border-left: 1px solid var(--glass-divider);
+  border-radius: 0;
+}
+
+:global(.themeRoot[data-ui-theme='scholar']) .side[data-side='drawer'] {
+  background: #f6f5f0;
+  border: 1px solid var(--glass-divider);
+  border-radius: var(--region-radius);
+}
+
+/* Over the neck, the drawer needs a near-solid surface to stay readable. */
+.side[data-side='drawer'] {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='dark']) .side[data-side='drawer'] {
+  background: rgba(10, 16, 23, 0.97);
+}
+
+:global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='light']) .side[data-side='drawer'] {
+  background: rgba(249, 249, 243, 0.98);
+}

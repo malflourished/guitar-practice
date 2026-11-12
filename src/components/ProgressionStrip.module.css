@@ -99,6 +99,23 @@
   composes: item;
 }
 
+/* Side panel: a two-column grid that the panel scrolls. */
+.scrollWrap {
+  width: 100%;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.rowWrap {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem 0.9rem;
+}
+
+.rowWrap .item,
+.rowWrap .itemActive {
+  width: auto;
+}
+
 @media (max-width: 768px) {
   .row {
     justify-content: flex-start;

@@ -38,6 +38,7 @@ import {
   type IntervalPlaybackDirection,
 } from '../lib/audio/intervalPlayback';
 import { Fretboard } from './Fretboard';
+import { Deck, DeckRow, Neck } from './Frame';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { EMPTY_SCORE, validScore, recordResult } from '../lib/practice/score';
 import styles from './IntervalTrainer.module.css';
@@ -553,172 +554,249 @@ export function IntervalTrainer({
         : `Find the ${target} above ${question.root}`;
   })();
 
-  return (
-    <div className={styles.panel}>
-      <div className={styles.tabs} role="group" aria-label="Interval drill">
-        {DRILLS.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            className={drill === id ? styles.tabActive : styles.tab}
-            aria-pressed={drill === id}
-            onClick={() => setDrill(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+  // Under the prompt: the click feedback and the teaching notes.
+  const notes = [
+    guessLabel && !solved && drill !== 'identify' && !revealed
+      ? `Last note: ${guessLabel}`
+      : null,
+    guideMotion
+      ? leapCaption ?? (guideMotion.held
+        ? `Common tone held: ${guideMotion.fromLabel} → ${guideMotion.toLabel}`
+        : guideMotion.semitones === 0
+          ? `Same note, new spot: ${guideMotion.fromLabel} → ${guideMotion.toLabel}`
+          : `Voice-leading: ${guideMotion.fromLabel} → ${guideMotion.toLabel} moves ${guideMotion.semitones} semitone${
+              guideMotion.semitones === 1 ? '' : 's'
+            }`)
+      : null,
+  ].filter(Boolean);
 
-      <div className={styles.options}>
-        {showScope && (
-          <div className={styles.segment} role="group" aria-label="Search scope">
-            {SCOPES.map(({ id, label }) => (
+  const prompt = (
+    <div className={styles.promptBar}>
+      <p
+        className={
+          solved ? styles.promptDone : revealed ? styles.promptReveal : styles.prompt
+        }
+      >
+        {promptText}
+      </p>
+      {notes.length > 0 || gbWarning ? (
+        <p className={styles.notes}>
+          {notes.join(' · ')}
+          {gbWarning && (
+            <span className={styles.gbBadge}>
+              G→B shift: this shape spans the only string pair tuned a major 3rd
+              apart, so the geometry differs here.
+            </span>
+          )}
+        </p>
+      ) : null}
+    </div>
+  );
+
+  return (
+    <>
+      <Neck bar={prompt}>
+        {drill === 'identify' && (
+          <div className={styles.choices} role="group" aria-label="Interval choices">
+            {enabledArray
+              .slice()
+              .sort((a, b) => a - b)
+              .map((semitones) => {
+                const def = getIntervalDef(semitones);
+                const isAnswer = question?.semitones === semitones;
+                const cls =
+                  (solved || revealed) && isAnswer
+                    ? styles.choiceCorrect
+                    : styles.choiceBtn;
+                return (
+                  <button
+                    key={semitones}
+                    type="button"
+                    className={cls}
+                    disabled={solved || revealed}
+                    onClick={() => handleIdentifyChoice(semitones)}
+                  >
+                    {def.name}
+                  </button>
+                );
+              })}
+          </div>
+        )}
+        {showBoard &&
+          (question ||
+            drill === 'shapes' ||
+            drill === 'build' ||
+            drill === 'changes') && (
+            <Fretboard
+              fill
+              positions={boardPositions}
+              title={promptText}
+              notation={notation}
+              noteColors={noteColors}
+              showNoteLabels
+              intervalLabeling={{ root: boardRoot, style: labelStyle }}
+              onCellClick={
+                drill === 'find'
+                  ? handleFindClick
+                  : drill === 'shell'
+                    ? handleShellClick
+                    : undefined
+              }
+              onPlayNote={
+                drill === 'learn'
+                  ? handleLearnPlay
+                  : drill === 'shapes'
+                    ? handleShapePlay
+                    : drill === 'build' || drill === 'changes'
+                      ? handleBuildPlay
+                      : undefined
+              }
+            />
+          )}
+      </Neck>
+
+      <Deck label="Interval drill">
+        <DeckRow>
+          <div className={styles.tabs} role="group" aria-label="Interval drill">
+            {DRILLS.map(({ id, label }) => (
               <button
                 key={id}
                 type="button"
-                className={scope === id ? styles.segmentBtnActive : styles.segmentBtn}
-                aria-pressed={scope === id}
-                onClick={() => setScope(id)}
+                className={drill === id ? styles.tabActive : styles.tab}
+                aria-pressed={drill === id}
+                onClick={() => setDrill(id)}
               >
                 {label}
               </button>
             ))}
           </div>
-        )}
+        </DeckRow>
+        <DeckRow>
+            {showScope && (
+              <div className={styles.segment} role="group" aria-label="Search scope">
+                {SCOPES.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={scope === id ? styles.segmentBtnActive : styles.segmentBtn}
+                    aria-pressed={scope === id}
+                    onClick={() => setScope(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
 
-        {drill === 'shell' && (
-          <div className={styles.segment} role="group" aria-label="Shell quality">
-            {SHELL_QUALITIES.map((quality) => (
+            {drill === 'shell' && (
+              <div className={styles.segment} role="group" aria-label="Shell quality">
+                {SHELL_QUALITIES.map((quality) => (
+                  <button
+                    key={quality}
+                    type="button"
+                    className={
+                      shellQuality === quality ? styles.segmentBtnActive : styles.segmentBtn
+                    }
+                    aria-pressed={shellQuality === quality}
+                    onClick={() => setShellQuality(quality)}
+                  >
+                    {getShellDef(quality).label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className={styles.segment} role="group" aria-label="Label style">
               <button
-                key={quality}
                 type="button"
-                className={
-                  shellQuality === quality ? styles.segmentBtnActive : styles.segmentBtn
-                }
-                aria-pressed={shellQuality === quality}
-                onClick={() => setShellQuality(quality)}
+                className={labelStyle === 'function' ? styles.segmentBtnActive : styles.segmentBtn}
+                aria-pressed={labelStyle === 'function'}
+                onClick={() => setLabelStyle('function')}
               >
-                {getShellDef(quality).label}
+                R 3 ♭7
               </button>
-            ))}
-          </div>
-        )}
-
-        <div className={styles.segment} role="group" aria-label="Label style">
-          <button
-            type="button"
-            className={labelStyle === 'function' ? styles.segmentBtnActive : styles.segmentBtn}
-            aria-pressed={labelStyle === 'function'}
-            onClick={() => setLabelStyle('function')}
-          >
-            R 3 ♭7
-          </button>
-          <button
-            type="button"
-            className={labelStyle === 'degree' ? styles.segmentBtnActive : styles.segmentBtn}
-            aria-pressed={labelStyle === 'degree'}
-            onClick={() => setLabelStyle('degree')}
-          >
-            1 3 ♭7
-          </button>
-        </div>
-
-        {(drill === 'find' || drill === 'identify' || drill === 'learn') && (
-          <div className={styles.segment} role="group" aria-label="Playback direction">
-            {(['ascending', 'harmonic'] as const).map((dir) => (
               <button
-                key={dir}
                 type="button"
-                className={direction === dir ? styles.segmentBtnActive : styles.segmentBtn}
-                aria-pressed={direction === dir}
-                onClick={() => setDirection(dir)}
+                className={labelStyle === 'degree' ? styles.segmentBtnActive : styles.segmentBtn}
+                aria-pressed={labelStyle === 'degree'}
+                onClick={() => setLabelStyle('degree')}
               >
-                {dir === 'ascending' ? 'Melodic' : 'Harmonic'}
+                1 3 ♭7
               </button>
-            ))}
-          </div>
-        )}
+            </div>
 
-        <button
-          type="button"
-          className={randomRoot ? styles.toggleActive : styles.toggle}
-          aria-pressed={randomRoot}
-          onClick={() => setRandomRoot((prev) => !prev)}
-          title="Pick a random root each question instead of the app key"
-        >
-          Random root
-        </button>
-      </div>
+            {(drill === 'find' || drill === 'identify' || drill === 'learn') && (
+              <div className={styles.segment} role="group" aria-label="Playback direction">
+                {(['ascending', 'harmonic'] as const).map((dir) => (
+                  <button
+                    key={dir}
+                    type="button"
+                    className={direction === dir ? styles.segmentBtnActive : styles.segmentBtn}
+                    aria-pressed={direction === dir}
+                    onClick={() => setDirection(dir)}
+                  >
+                    {dir === 'ascending' ? 'Melodic' : 'Harmonic'}
+                  </button>
+                ))}
+              </div>
+            )}
 
-      {(drill === 'find' || drill === 'identify') && (
-        <div className={styles.poolRow}>
-          <span className={styles.poolLabel}>Pool</span>
-          <div className={styles.presets}>
-            {ENABLED_PRESETS.map((preset) => (
-              <button
-                key={preset.label}
-                type="button"
-                className={styles.preset}
-                onClick={() => setEnabled(preset.semitones)}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-          <div className={styles.chips}>
-            {TOGGLEABLE.map((semitones) => {
-              const on = enabledArray.includes(semitones);
-              const def = getIntervalDef(semitones);
-              return (
+            <button
+              type="button"
+              className={randomRoot ? styles.toggleActive : styles.toggle}
+              aria-pressed={randomRoot}
+              onClick={() => setRandomRoot((prev) => !prev)}
+              title="Pick a random root each question instead of the app key"
+            >
+              Random root
+            </button>
+        </DeckRow>
+        {(drill === 'find' || drill === 'identify') && (
+          <div className={styles.poolRow}>
+            <span className={styles.poolLabel}>Pool</span>
+            <div className={styles.presets}>
+              {ENABLED_PRESETS.map((preset) => (
                 <button
-                  key={semitones}
+                  key={preset.label}
                   type="button"
-                  className={on ? styles.chipOn : styles.chip}
-                  aria-pressed={on}
-                  style={on ? { borderColor: getIntervalColor(semitones) } : undefined}
-                  onClick={() =>
-                    setEnabled((prev) =>
-                      prev.includes(semitones)
-                        ? prev.filter((s) => s !== semitones)
-                        : [...prev, semitones].sort((a, b) => a - b),
-                    )
-                  }
-                  title={def.name}
+                  className={styles.preset}
+                  onClick={() => setEnabled(preset.semitones)}
                 >
-                  {labelStyle === 'degree' ? def.degreeLabel : def.functionLabel}
+                  {preset.label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+            <div className={styles.chips}>
+              {TOGGLEABLE.map((semitones) => {
+                const on = enabledArray.includes(semitones);
+                const def = getIntervalDef(semitones);
+                return (
+                  <button
+                    key={semitones}
+                    type="button"
+                    className={on ? styles.chipOn : styles.chip}
+                    aria-pressed={on}
+                    style={on ? { borderColor: getIntervalColor(semitones) } : undefined}
+                    onClick={() =>
+                      setEnabled((prev) =>
+                        prev.includes(semitones)
+                          ? prev.filter((s) => s !== semitones)
+                          : [...prev, semitones].sort((a, b) => a - b),
+                      )
+                    }
+                    title={def.name}
+                  >
+                    {labelStyle === 'degree' ? def.degreeLabel : def.functionLabel}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
-
-      {drill === 'learn' && (
-        <div className={styles.chips} role="group" aria-label="Interval">
-          {INTERVALS.filter((i) => i.semitones > 0).map((def) => {
-            const on = learnSemitones === def.semitones;
-            return (
-              <button
-                key={def.semitones}
-                type="button"
-                className={on ? styles.chipOn : styles.chip}
-                aria-pressed={on}
-                style={on ? { borderColor: getIntervalColor(def.semitones) } : undefined}
-                onClick={() => setLearnInterval(def.semitones)}
-                title={def.name}
-              >
-                {labelStyle === 'degree' ? def.degreeLabel : def.functionLabel}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {drill === 'shapes' && (
-        <>
+        )}
+        {drill === 'learn' && (
           <div className={styles.chips} role="group" aria-label="Interval">
-            {INTERVALS.filter((i) => i.semitones > 0 && i.semitones < 12).map((def) => {
-              const on = shapeSemitones === def.semitones;
+            {INTERVALS.filter((i) => i.semitones > 0).map((def) => {
+              const on = learnSemitones === def.semitones;
               return (
                 <button
                   key={def.semitones}
@@ -726,7 +804,7 @@ export function IntervalTrainer({
                   className={on ? styles.chipOn : styles.chip}
                   aria-pressed={on}
                   style={on ? { borderColor: getIntervalColor(def.semitones) } : undefined}
-                  onClick={() => setShapeSemitones(def.semitones)}
+                  onClick={() => setLearnInterval(def.semitones)}
                   title={def.name}
                 >
                   {labelStyle === 'degree' ? def.degreeLabel : def.functionLabel}
@@ -734,310 +812,239 @@ export function IntervalTrainer({
               );
             })}
           </div>
-          <ul className={styles.legend} aria-label="Shape relationships">
-            {dyadShapes.map((shape) => (
-              <li key={shape.relationship} className={styles.legendItem}>
-                <span className={styles.legendName}>
-                  {getDyadRelationshipLabel(shape.relationship)}
-                </span>
-                <span className={styles.legendDetail}>
-                  {shape.fretOffset === 0
-                    ? 'same fret'
-                    : `${shape.fretOffset > 0 ? '+' : ''}${shape.fretOffset} fret${
-                        Math.abs(shape.fretOffset) === 1 ? '' : 's'
-                      }`}
-                  {shape.crossesGB && ' · crosses G→B'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      {drill === 'build' && (
-        <>
-          <div className={styles.presets} role="group" aria-label="Build target">
-            {FORMULA_TARGETS.map((target) => (
-              <button
-                key={target.id}
-                type="button"
-                className={formulaTargetId === target.id ? styles.chipOn : styles.preset}
-                aria-pressed={formulaTargetId === target.id}
-                onClick={() => setFormulaTargetId(target.id)}
-              >
-                {target.label}
-              </button>
-            ))}
-          </div>
-          <div className={styles.chips} role="group" aria-label="Formula">
-            {formulaSpec.tones.map((tone, index) => {
-              const shown = index < revealedCount;
-              const cls = !shown
-                ? styles.chip
-                : tone.altered
-                  ? styles.chipAltered
-                  : styles.chipOn;
-              return (
+        )}
+        {drill === 'shapes' && (
+          <>
+            <div className={styles.chips} role="group" aria-label="Interval">
+              {INTERVALS.filter((i) => i.semitones > 0 && i.semitones < 12).map((def) => {
+                const on = shapeSemitones === def.semitones;
+                return (
+                  <button
+                    key={def.semitones}
+                    type="button"
+                    className={on ? styles.chipOn : styles.chip}
+                    aria-pressed={on}
+                    style={on ? { borderColor: getIntervalColor(def.semitones) } : undefined}
+                    onClick={() => setShapeSemitones(def.semitones)}
+                    title={def.name}
+                  >
+                    {labelStyle === 'degree' ? def.degreeLabel : def.functionLabel}
+                  </button>
+                );
+              })}
+            </div>
+            <ul className={styles.legend} aria-label="Shape relationships">
+              {dyadShapes.map((shape) => (
+                <li key={shape.relationship} className={styles.legendItem}>
+                  <span className={styles.legendName}>
+                    {getDyadRelationshipLabel(shape.relationship)}
+                  </span>
+                  <span className={styles.legendDetail}>
+                    {shape.fretOffset === 0
+                      ? 'same fret'
+                      : `${shape.fretOffset > 0 ? '+' : ''}${shape.fretOffset} fret${
+                          Math.abs(shape.fretOffset) === 1 ? '' : 's'
+                        }`}
+                    {shape.crossesGB && ' · crosses G→B'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {drill === 'build' && (
+          <DeckRow>
+            {/* Fourteen targets: a select keeps Build to one row in the deck. */}
+            <select
+              className={styles.select}
+              aria-label="Build target"
+              value={formulaTargetId}
+              onChange={(event) => setFormulaTargetId(event.target.value)}
+            >
+              {FORMULA_TARGETS.map((target) => (
+                <option key={target.id} value={target.id}>
+                  {target.label}
+                </option>
+              ))}
+            </select>
+            <div className={styles.chips} role="group" aria-label="Formula">
+              {formulaSpec.tones.map((tone, index) => {
+                const shown = index < revealedCount;
+                const cls = !shown
+                  ? styles.chip
+                  : tone.altered
+                    ? styles.chipAltered
+                    : styles.chipOn;
+                return (
+                  <button
+                    key={`${tone.interval}-${index}`}
+                    type="button"
+                    className={cls}
+                    style={shown ? { borderColor: getIntervalColor(tone.interval) } : undefined}
+                    onClick={() => setBuildStep(index + 1)}
+                    title={
+                      tone.altered ? `${tone.label} — altered from major` : tone.label
+                    }
+                  >
+                    {tone.label}
+                  </button>
+                );
+              })}
+            </div>
+          </DeckRow>
+        )}
+        {drill === 'changes' && (
+          <>
+            <div className={styles.presets} role="group" aria-label="Progression">
+              {CHANGES_PROGRESSIONS.map((prog) => (
                 <button
-                  key={`${tone.interval}-${index}`}
+                  key={prog.id}
                   type="button"
-                  className={cls}
-                  style={shown ? { borderColor: getIntervalColor(tone.interval) } : undefined}
-                  onClick={() => setBuildStep(index + 1)}
-                  title={
-                    tone.altered ? `${tone.label} — altered from major` : tone.label
-                  }
+                  className={changesId === prog.id ? styles.chipOn : styles.preset}
+                  aria-pressed={changesId === prog.id}
+                  onClick={() => setChangesId(prog.id)}
                 >
-                  {tone.label}
+                  {prog.label}
                 </button>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {drill === 'changes' && (
-        <>
-          <div className={styles.presets} role="group" aria-label="Progression">
-            {CHANGES_PROGRESSIONS.map((prog) => (
-              <button
-                key={prog.id}
-                type="button"
-                className={changesId === prog.id ? styles.chipOn : styles.preset}
-                aria-pressed={changesId === prog.id}
-                onClick={() => setChangesId(prog.id)}
-              >
-                {prog.label}
-              </button>
-            ))}
-          </div>
-          <div className={styles.chips} role="group" aria-label="Chords">
-            {changesSteps.map((step, index) => (
-              <button
-                key={`${step.numeral}-${index}`}
-                type="button"
-                className={index === changeIndex ? styles.chipOn : styles.chip}
-                aria-pressed={index === changeIndex}
-                onClick={() => setChangesStep(index)}
-                title={`${step.numeral} on ${step.root}`}
-              >
-                {step.numeral}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      <div className={styles.promptRow}>
-        <div className={styles.promptMain}>
-          <p
-            className={
-              solved ? styles.promptDone : revealed ? styles.promptReveal : styles.prompt
-            }
-          >
-            {promptText}
-          </p>
-          {gbWarning && (
-            <p className={styles.gbBadge}>
-              G→B shift: this shape spans the only string pair tuned a major 3rd
-              apart, so the geometry differs here.
-            </p>
-          )}
-          {guideMotion && (
-            <p className={styles.guess}>
-              {leapCaption ??
-                (guideMotion.held
-                ? `Common tone held: ${guideMotion.fromLabel} → ${guideMotion.toLabel}`
-                : guideMotion.semitones === 0
-                  ? `Same note, new spot: ${guideMotion.fromLabel} → ${guideMotion.toLabel}`
-                  : `Voice-leading: ${guideMotion.fromLabel} → ${guideMotion.toLabel} moves ${guideMotion.semitones} semitone${
-                    guideMotion.semitones === 1 ? '' : 's'
-                  }`)}
-            </p>
-          )}
-          {guessLabel && !solved && drill !== 'identify' && !revealed && (
-            <p className={styles.guess}>Last note: {guessLabel}</p>
-          )}
-        </div>
-
-        <div className={styles.controls}>
-          {(drill === 'find' || drill === 'identify' || drill === 'learn') && (
-            <button
-              type="button"
-              className={styles.btn}
-              onClick={() => question && playPromptInterval(question)}
-              disabled={audio.muted}
-              title={audio.muted ? 'Unmute to hear the interval' : 'Replay the interval'}
-            >
-              Play
-            </button>
-          )}
-          {drill === 'shapes' && (
-            <button
-              type="button"
-              className={styles.btn}
-              onClick={handleShapePlay}
-              disabled={audio.muted}
-              title={audio.muted ? 'Unmute to hear the interval' : 'Hear the interval'}
-            >
-              Play
-            </button>
-          )}
-          {drill === 'build' && (
-            <>
+              ))}
+            </div>
+            <div className={styles.chips} role="group" aria-label="Chords">
+              {changesSteps.map((step, index) => (
+                <button
+                  key={`${step.numeral}-${index}`}
+                  type="button"
+                  className={index === changeIndex ? styles.chipOn : styles.chip}
+                  aria-pressed={index === changeIndex}
+                  onClick={() => setChangesStep(index)}
+                  title={`${step.numeral} on ${step.root}`}
+                >
+                  {step.numeral}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        <DeckRow end>
+          <div className={styles.controls}>
+            {(drill === 'find' || drill === 'identify' || drill === 'learn') && (
               <button
                 type="button"
                 className={styles.btn}
-                onClick={() => setBuildStep((s) => Math.max(1, s - 1))}
-                disabled={revealedCount <= 1}
-                title="Remove the last tone"
-              >
-                Peel
-              </button>
-              <button
-                type="button"
-                className={styles.btn}
-                onClick={() =>
-                  setBuildStep((s) => Math.min(formulaSpec.tones.length, s + 1))
-                }
-                disabled={revealedCount >= formulaSpec.tones.length}
-                title="Add the next interval"
-              >
-                Add tone
-              </button>
-            </>
-          )}
-          {drill === 'changes' && (
-            <>
-              <button
-                type="button"
-                className={styles.btn}
-                onClick={() => setChangesStep((s) => Math.max(0, s - 1))}
-                disabled={changeIndex <= 0}
-                title="Previous chord"
-              >
-                Prev
-              </button>
-              <button
-                type="button"
-                className={styles.btn}
-                onClick={handleChangesPlay}
+                onClick={() => question && playPromptInterval(question)}
                 disabled={audio.muted}
-                title={audio.muted ? 'Unmute to hear the shell' : 'Hear the guide tones'}
+                title={audio.muted ? 'Unmute to hear the interval' : 'Replay the interval'}
               >
-                Hear
+                Play
               </button>
+            )}
+            {drill === 'shapes' && (
               <button
                 type="button"
-                className={styles.btnPrimary}
-                onClick={() =>
-                  setChangesStep((s) => Math.min(changesSteps.length - 1, s + 1))
-                }
-                disabled={changeIndex >= changesSteps.length - 1}
-                title="Next chord"
+                className={styles.btn}
+                onClick={handleShapePlay}
+                disabled={audio.muted}
+                title={audio.muted ? 'Unmute to hear the interval' : 'Hear the interval'}
               >
+                Play
+              </button>
+            )}
+            {drill === 'build' && (
+              <>
+                <button
+                  type="button"
+                  className={styles.btn}
+                  onClick={() => setBuildStep((s) => Math.max(1, s - 1))}
+                  disabled={revealedCount <= 1}
+                  title="Remove the last tone"
+                >
+                  Peel
+                </button>
+                <button
+                  type="button"
+                  className={styles.btn}
+                  onClick={() =>
+                    setBuildStep((s) => Math.min(formulaSpec.tones.length, s + 1))
+                  }
+                  disabled={revealedCount >= formulaSpec.tones.length}
+                  title="Add the next interval"
+                >
+                  Add tone
+                </button>
+              </>
+            )}
+            {drill === 'changes' && (
+              <>
+                <button
+                  type="button"
+                  className={styles.btn}
+                  onClick={() => setChangesStep((s) => Math.max(0, s - 1))}
+                  disabled={changeIndex <= 0}
+                  title="Previous chord"
+                >
+                  Prev
+                </button>
+                <button
+                  type="button"
+                  className={styles.btn}
+                  onClick={handleChangesPlay}
+                  disabled={audio.muted}
+                  title={audio.muted ? 'Unmute to hear the shell' : 'Hear the guide tones'}
+                >
+                  Hear
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={() =>
+                    setChangesStep((s) => Math.min(changesSteps.length - 1, s + 1))
+                  }
+                  disabled={changeIndex >= changesSteps.length - 1}
+                  title="Next chord"
+                >
+                  Next
+                </button>
+              </>
+            )}
+            {drill === 'shell' && question?.anchor && (
+              <button
+                type="button"
+                className={styles.btn}
+                onClick={() => {
+                  const shell = getShellDef(shellQuality);
+                  const a = question.anchor!;
+                  const third = getDirectedTargets(a, shell.third, 'position')[0];
+                  const seventh = getDirectedTargets(a, shell.seventh, 'position')[0];
+                  const voicing = [a, third, seventh].filter(Boolean) as FretPosition[];
+                  if (!audio.muted) audio.strum(voicing);
+                }}
+                disabled={audio.muted}
+              >
+                Hear shell
+              </button>
+            )}
+            {(drill === 'find' || drill === 'shell') && !solved && !revealed && (
+              <button type="button" className={styles.btn} onClick={handleReveal}>
+                Reveal
+              </button>
+            )}
+            {(drill === 'find' || drill === 'identify' || drill === 'shell') && (
+              <button type="button" className={styles.btnPrimary} onClick={nextQuestion}>
                 Next
               </button>
-            </>
+            )}
+          </div>
+          {(drill === 'find' || drill === 'shell' || drill === 'identify') && (
+            <div className={styles.scoreRow}>
+              <span className={styles.scoreItem}>
+                First answers {score.correct}/{score.total}
+              </span>
+              <span className={styles.scoreItem}>Streak {score.streak}</span>
+              <span className={styles.scoreItem}>Best {score.best}</span>
+            </div>
           )}
-          {drill === 'shell' && question?.anchor && (
-            <button
-              type="button"
-              className={styles.btn}
-              onClick={() => {
-                const shell = getShellDef(shellQuality);
-                const a = question.anchor!;
-                const third = getDirectedTargets(a, shell.third, 'position')[0];
-                const seventh = getDirectedTargets(a, shell.seventh, 'position')[0];
-                const voicing = [a, third, seventh].filter(Boolean) as FretPosition[];
-                if (!audio.muted) audio.strum(voicing);
-              }}
-              disabled={audio.muted}
-            >
-              Hear shell
-            </button>
-          )}
-          {(drill === 'find' || drill === 'shell') && !solved && !revealed && (
-            <button type="button" className={styles.btn} onClick={handleReveal}>
-              Reveal
-            </button>
-          )}
-          {(drill === 'find' || drill === 'identify' || drill === 'shell') && (
-            <button type="button" className={styles.btnPrimary} onClick={nextQuestion}>
-              Next
-            </button>
-          )}
-        </div>
-      </div>
-
-      {drill === 'identify' && (
-        <div className={styles.choices} role="group" aria-label="Interval choices">
-          {enabledArray
-            .slice()
-            .sort((a, b) => a - b)
-            .map((semitones) => {
-              const def = getIntervalDef(semitones);
-              const isAnswer = question?.semitones === semitones;
-              const cls =
-                (solved || revealed) && isAnswer
-                  ? styles.choiceCorrect
-                  : styles.choiceBtn;
-              return (
-                <button
-                  key={semitones}
-                  type="button"
-                  className={cls}
-                  disabled={solved || revealed}
-                  onClick={() => handleIdentifyChoice(semitones)}
-                >
-                  {def.name}
-                </button>
-              );
-            })}
-        </div>
-      )}
-
-      {(drill === 'find' || drill === 'shell' || drill === 'identify') && (
-        <div className={styles.scoreRow}>
-          <span className={styles.scoreItem}>
-            First answers {score.correct}/{score.total}
-          </span>
-          <span className={styles.scoreItem}>Streak {score.streak}</span>
-          <span className={styles.scoreItem}>Best {score.best}</span>
-        </div>
-      )}
-
-      {showBoard &&
-        (question ||
-          drill === 'shapes' ||
-          drill === 'build' ||
-          drill === 'changes') && (
-          <Fretboard
-            positions={boardPositions}
-            title={promptText}
-            notation={notation}
-            noteColors={noteColors}
-            showNoteLabels
-            intervalLabeling={{ root: boardRoot, style: labelStyle }}
-            onCellClick={
-              drill === 'find'
-                ? handleFindClick
-                : drill === 'shell'
-                  ? handleShellClick
-                  : undefined
-            }
-            onPlayNote={
-              drill === 'learn'
-                ? handleLearnPlay
-                : drill === 'shapes'
-                  ? handleShapePlay
-                  : drill === 'build' || drill === 'changes'
-                    ? handleBuildPlay
-                    : undefined
-            }
-          />
-        )}
-    </div>
+        </DeckRow>
+      </Deck>
+    </>
   );
 }
 

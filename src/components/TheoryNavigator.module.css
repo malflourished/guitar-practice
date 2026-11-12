@@ -12,7 +12,7 @@
 
 .sectionTitle {
   font-family: var(--font-sans);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;
@@ -30,12 +30,12 @@
   composes: pill from '../styles/glass.module.css';
   text-transform: none;
   letter-spacing: normal;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .topicButtonSelected {
   composes: pillSelected from '../styles/glass.module.css';
   text-transform: none;
   letter-spacing: normal;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }

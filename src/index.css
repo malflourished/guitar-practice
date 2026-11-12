@@ -11,6 +11,8 @@
 
 html,
 body {
+  height: 100%;
+  overflow: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -43,7 +45,7 @@ html:has(.themeRoot[data-vibrato-canvas='light']) body {
 }
 
 #root {
-  min-height: 100svh;
+  height: 100%;
 }
 
 button,

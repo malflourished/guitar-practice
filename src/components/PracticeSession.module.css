@@ -1,23 +1,17 @@
+/* Practice is laid out in the frame's regions (neck, deck, side panel); each
+   region it fills carries this class for the practice colours and type. The
+   frame draws the surface, as it does for every other mode. */
 .practice {
-  --practice-surface: rgba(13, 17, 19, 0.86);
   --practice-soft: rgba(255, 255, 255, 0.045);
   --practice-text: #f1f1e9;
   --practice-muted: #b4b8b3;
   --practice-line: rgba(231, 239, 218, 0.18);
   --practice-accent: #e4edce;
   --practice-ink: #172017;
-  width: min(1100px, 100%);
-  margin: 0 auto;
   color: var(--practice-text);
-  padding: clamp(1.3rem, 3.5vw, 3rem);
-  background: var(--practice-surface);
-  border: 1px solid var(--practice-line);
-  border-radius: 24px;
-  box-shadow: 0 24px 80px #0003;
 }
 :global(.themeRoot[data-ui-theme='scholar']) .practice,
 :global(.themeRoot[data-vibrato-canvas='light']) .practice {
-  --practice-surface: rgba(249, 249, 243, 0.94);
   --practice-soft: rgba(20, 35, 20, 0.04);
   --practice-text: #202b25;
   --practice-muted: #526055;
@@ -32,137 +26,136 @@
 .practice button { cursor: pointer; transition: background 150ms, border-color 150ms, transform 150ms; }
 .practice button:disabled { cursor: default; opacity: 0.48; }
 .practice button:focus-visible, .practice input:focus-visible, .practice select:focus-visible { outline: 2px solid var(--practice-accent); outline-offset: 4px; }
-.practice .eyebrow { font-size: 0.65rem; letter-spacing: 0.16em; font-weight: 400; color: var(--practice-muted); margin-bottom: 1.05rem; }
-.welcome { display: flex; justify-content: space-between; align-items: center; gap: 2rem; padding: 0.4rem 0 2.5rem; }
+.practice .eyebrow { font-size: 0.75rem; letter-spacing: 0.16em; font-weight: 400; color: var(--practice-muted); margin-bottom: 0.6rem; }
 .practice .intro { color: var(--practice-muted); margin-top: 1rem; line-height: 1.8; font-size: 0.95rem; }
+.practice select { display: block; background: var(--practice-soft); border: 1px solid var(--practice-line); border-radius: 8px; padding: 0.7rem 1.8rem 0.7rem 0.8rem; min-height: 44px; color: var(--practice-text); font-size: 0.82rem; letter-spacing: normal; }
+.practice select option { background: #1b211d; color: #f4f4eb; }
+
+/* ---- Landing: welcome and plan in the neck, start in the deck ---- */
+.landing { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding: 0.25rem clamp(1.2rem, 3vw, 2.5rem) 1rem; }
+.welcome { display: flex; justify-content: space-between; align-items: center; gap: 2rem; padding: 0 0 2rem; }
 .duration { display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid var(--practice-line); border-radius: 50%; flex: 0 0 170px; height: 170px; background: radial-gradient(ellipse at 35% 20%, #e4edce12, transparent 75%); }
 .duration span { font-size: 4.5rem; line-height: 1.1; font-weight: 300; letter-spacing: -0.09em; padding-right: 0.09em; }
-.duration small { font-size: 0.5rem; letter-spacing: 0.13em; margin-top: 0.5rem; }
+.duration small { font-size: 0.75rem; letter-spacing: 0.13em; margin-top: 0.5rem; }
 .plan { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--practice-line); border-bottom: 1px solid var(--practice-line); }
 .planBlock { padding: 1.35rem 1.1rem 1.5rem; border-right: 1px solid var(--practice-line); }
 .planBlock:first-child { padding-left: 0; }
 .planBlock:last-child { border-right: 0; padding-right: 0; }
-.planTop { display: flex; justify-content: space-between; font-size: 0.62rem; letter-spacing: 0.1em; color: var(--practice-muted); margin-bottom: 1.5rem; }
+.planTop { display: flex; justify-content: space-between; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--practice-muted); margin-bottom: 1.5rem; }
 .planBlock p { font-size: 0.77rem; line-height: 1.7; color: var(--practice-muted); margin-top: 0.65rem; }
-.startBar { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-top: 2rem; }
+.startBar { display: flex; justify-content: space-between; align-items: end; gap: 1rem; }
 .setup { display: flex; gap: 1.6rem; }
-.setup label { display: grid; gap: 0.55rem; color: var(--practice-muted); font-size: 0.6rem; letter-spacing: 0.12em; }
-.practice select { display: block; background: var(--practice-soft); border: 1px solid var(--practice-line); border-radius: 8px; padding: 0.7rem 1.8rem 0.7rem 0.8rem; min-height: 44px; color: var(--practice-text); font-size: 0.82rem; letter-spacing: normal; }
-.practice select option { background: #1b211d; color: #f4f4eb; }
+.setup label { display: grid; gap: 0.45rem; color: var(--practice-muted); font-size: 0.75rem; letter-spacing: 0.12em; }
 .primary { background: var(--practice-accent); color: var(--practice-ink); border: 1px solid transparent; border-radius: 9px; padding: 0.85rem 1.2rem; min-height: 48px; font-size: 0.9rem !important; font-weight: 400 !important; display: inline-flex; gap: 2rem; justify-content: space-between; align-items: center; }
 .primary:hover { filter: brightness(1.06); transform: translateY(-1px); }
 .primary span { font-size: 1.25rem; }
-.practice .footnote { font-size: 0.73rem; color: var(--practice-muted); margin: 1.15rem 0 1.8rem; }
-.soundSettings { display: flex; flex-wrap: wrap; align-items: center; gap: 1.4rem; border-top: 1px solid var(--practice-line); padding-top: 1.15rem; }
-.soundSettings label { display: flex; align-items: center; gap: 0.7rem; font-size: 0.72rem; color: var(--practice-muted); }
+.practice .footnote { font-size: 0.75rem; color: var(--practice-muted); }
+.deckEnd { justify-content: flex-start; }
+.soundSettings { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem 1.4rem; }
+.soundSettings label { display: flex; align-items: center; gap: 0.7rem; font-size: 0.75rem; color: var(--practice-muted); }
 .soundSettings input { width: 80px; accent-color: var(--practice-accent); }
-.soundSettings select { font-size: 0.73rem; min-height: 40px; padding: 0.6rem; }
+.soundSettings select { font-size: 0.75rem; min-height: 40px; padding: 0.6rem; }
 .quietButton, .reflection button, .listen { border: 1px solid var(--practice-line); border-radius: 8px; padding: 0.65rem 0.9rem; min-height: 44px; background: var(--practice-soft); color: var(--practice-text); font-size: 0.78rem !important; }
 .quietButton:hover:not(:disabled), .reflection button:hover, .listen:hover:not(:disabled) { background: var(--practice-line); }
-.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; }
-.step, .currentStep { display: flex; align-items: center; gap: 0.6rem; color: var(--practice-muted); font-size: 0.75rem; }
-.step span, .currentStep span { font-size: 0.62rem; opacity: 0.7; }
-.step small, .currentStep small { margin-left: auto; opacity: 0.75; }
-.currentStep { color: var(--practice-text); }
-.sessionProgress { margin: 1.2rem 0 2rem; height: 2px; background: var(--practice-line); }
-.sessionProgress > span { display: block; background: var(--practice-accent); height: 100%; transition: width 250ms linear; }
+
+/* ---- A block: board or ear card in the neck, timer and transport in the deck ---- */
+.instruction { max-width: 62rem; font-size: 0.85rem; line-height: 1.4; color: var(--practice-muted); text-align: center; }
+.boardCaption { position: absolute; left: 0; right: 0; bottom: 0.45rem; display: flex; justify-content: center; gap: 1.5rem; font-size: 0.75rem; color: var(--practice-muted); pointer-events: none; }
 .stageHeader { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.stageHeader h1 { font-size: clamp(1.7rem, 3vw, 2.6rem); }
+.stageHeader h1 { font-size: clamp(1.5rem, 2.4vw, 2.1rem); }
+.stageHeader .eyebrow { margin-bottom: 0.3rem; }
 .timer { display: flex; flex-direction: column; align-items: end; flex-shrink: 0; }
-.timer strong { font-size: 2.3rem; font-weight: 300; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1.2; }
-.timer span { color: var(--practice-muted); font-size: 0.6rem; }
-.practice .instruction { margin: 1rem 0 1.6rem; max-width: 690px; font-size: 0.9rem; color: var(--practice-muted); line-height: 1.8; }
-.transport { display: flex; flex-wrap: wrap; align-items: center; gap: 1.2rem; margin-bottom: 1.5rem; }
+.timer strong { font-size: 2.1rem; font-weight: 300; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.timer span { color: var(--practice-muted); font-size: 0.75rem; }
+.chordStrip { display: flex; justify-content: center; gap: 0.6rem; margin: 0 auto; }
+.chordStrip > div { border: 1px solid var(--practice-line); padding: 0.3rem 1.1rem; border-radius: 8px; display: flex; flex-direction: column; min-width: 90px; text-align: center; color: var(--practice-muted); }
+.chordStrip .activeChord { color: var(--practice-ink); background: var(--practice-accent); }
+.chordStrip small { font-size: 0.75rem; letter-spacing: 0.1em; }
+.chordStrip strong { font-size: 1.3rem; font-weight: 400; line-height: 1.2; }
+.transport { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.2rem; }
 .beatStatus { font-size: 0.75rem; color: var(--practice-muted); }
-.beats { display: flex; gap: 0.45rem; margin-left: auto; }
+.beats { display: flex; gap: 0.45rem; }
 .beats i { width: 8px; height: 8px; border-radius: 50%; background: var(--practice-line); }
 .beats .litBeat { background: var(--practice-accent); box-shadow: 0 0 12px #dce7c455; }
-.boardCard { border-radius: 12px; border: 1px solid var(--practice-line); background: var(--practice-soft); padding: 1rem 0.4rem 0; }
-.boardCaption { display: flex; justify-content: space-between; gap: 1rem; margin: 0 0.8rem; font-size: 0.62rem; color: var(--practice-muted); }
-.chordStrip { display: flex; justify-content: center; gap: 0.6rem; margin: 0 0.6rem 1.2rem; }
-.chordStrip > div { border: 1px solid var(--practice-line); padding: 0.5rem 1.3rem; border-radius: 8px; display: flex; flex-direction: column; min-width: 90px; text-align: center; color: var(--practice-muted); }
-.chordStrip .activeChord { color: var(--practice-ink); background: var(--practice-accent); }
-.chordStrip small { font-size: 0.52rem; letter-spacing: 0.1em; }
-.chordStrip strong { font-size: 1.5rem; font-weight: 400; }
-.reflection { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 1.3rem 0; font-size: 0.75rem; }
+.endRow { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: end; gap: 0.6rem; color: var(--practice-muted); font-size: 0.75rem; }
+.spaceHint { margin-right: 0.4rem; }
+.textButton { border: 0; background: none; color: var(--practice-muted); min-height: 36px; font-size: 0.75rem !important; text-decoration: underline; text-underline-offset: 4px; }
+.reflection { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; font-size: 0.75rem; }
 .reflection > span { margin-right: 0.4rem; }
-.reflection small { margin-left: auto; color: var(--practice-muted); font-size: 0.64rem; }
+.reflection small { margin-left: auto; color: var(--practice-muted); font-size: 0.75rem; }
 .reflection button[aria-pressed='true'] { border-color: var(--practice-accent); color: var(--practice-accent); background: var(--practice-soft); }
-.practiceOptions { display: flex; flex-wrap: wrap; align-items: center; gap: 1.2rem; color: var(--practice-muted); font-size: 0.65rem; margin-bottom: 1.3rem; }
-.practiceOptions label { display: flex; align-items: center; gap: 0.4rem; min-height: 30px; }
-.practiceOptions input { accent-color: var(--practice-accent); }
-.practiceOptions > span { margin-left: auto; }
-.endRow { margin-top: 1rem; display: flex; align-items: center; justify-content: end; gap: 0.6rem; color: var(--practice-muted); font-size: 0.7rem; }
-.textButton { border: 0; background: none; color: var(--practice-muted); min-height: 44px; font-size: 0.7rem !important; text-decoration: underline; text-underline-offset: 4px; }
-.earCard { padding: 1.7rem; border: 1px solid var(--practice-line); border-radius: 12px; background: var(--practice-soft); text-align: center; }
+.earCard { margin: auto; width: min(100% - 2rem, 44rem); box-sizing: border-box; padding: 1.4rem 1.7rem; border: 1px solid var(--practice-line); border-radius: 12px; background: var(--practice-soft); text-align: center; }
 .earCard h2 { font-size: 1.4rem; margin-bottom: 1.2rem; }
 .listen { padding: 0.8rem 1.4rem; }
 .answers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; margin: 1.6rem 0 1rem; }
 .answers button { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1.1rem 0.4rem; background: transparent; color: var(--practice-text); border: 1px solid var(--practice-line); border-radius: 8px; font-size: 0.75rem; }
 .answers strong { font-size: 1.7rem; font-weight: 300; }
 .answers .correctAnswer { background: #9bc46b20; border-color: #9bc46b; opacity: 1; }
-.earFooter { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.7rem; color: var(--practice-muted); }
-.result { text-align: center; padding: 1.8rem 0; }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 2.5rem 0; border-top: 1px solid var(--practice-line); border-bottom: 1px solid var(--practice-line); padding: 1.5rem 0; }
+.earFooter { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--practice-muted); }
+
+/* ---- Finished ---- */
+.result { margin: auto; width: min(100% - 2rem, 52rem); text-align: center; padding: 0.5rem 0; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 1.8rem 0; border-top: 1px solid var(--practice-line); border-bottom: 1px solid var(--practice-line); padding: 1.2rem 0; }
 .stats > div { display: flex; flex-direction: column; gap: 0.3rem; }
 .stats strong { font-size: 2.5rem; font-weight: 300; }
-.stats span { font-size: 0.7rem; color: var(--practice-muted); }
-.practice .resultTip { max-width: 500px; margin: 0 auto 1.7rem; font-size: 0.87rem; line-height: 1.8; color: var(--practice-muted); }
-.history { margin-top: 2rem; border-top: 1px solid var(--practice-line); padding-top: 1.4rem; }
-.historyTitle { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.6rem; }
-.historyTitle > span { font-size: 0.65rem; color: var(--practice-muted); }
-.historyRow { display: grid; grid-template-columns: 1fr 1.2fr 1fr 1fr; padding: 0.8rem 0; border-bottom: 1px solid var(--practice-line); color: var(--practice-muted); font-size: 0.75rem; }
+.stats span { font-size: 0.75rem; color: var(--practice-muted); }
+.practice .resultTip { max-width: 500px; margin: 0 auto; font-size: 0.87rem; line-height: 1.8; color: var(--practice-muted); }
+
+/* ---- Side panel: this session, options, sound, history ---- */
+.sideSection { padding-bottom: 1.1rem; margin-bottom: 1.1rem; border-bottom: 1px solid var(--practice-line); }
+.sideSection:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+.sideTitle { font-size: 0.75rem !important; font-weight: 500 !important; letter-spacing: var(--label-tracking) !important; text-transform: uppercase; color: var(--practice-muted); margin-bottom: 0.75rem !important; }
+.sideSection .soundSettings { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+.steps { display: flex; flex-direction: column; gap: 0.65rem; }
+.step, .currentStep { display: flex; align-items: center; gap: 0.6rem; color: var(--practice-muted); font-size: 0.85rem; }
+.step span, .currentStep span { font-size: 0.75rem; opacity: 0.7; min-width: 1.4rem; }
+.step small, .currentStep small { margin-left: auto; opacity: 0.75; font-size: 0.75rem; }
+.currentStep { color: var(--practice-text); }
+.sessionProgress { margin-top: 1rem; height: 2px; background: var(--practice-line); }
+.sessionProgress > span { display: block; background: var(--practice-accent); height: 100%; transition: width 250ms linear; }
+.practiceOptions { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; color: var(--practice-muted); font-size: 0.75rem; }
+.practiceOptions label { display: flex; align-items: center; gap: 0.4rem; min-height: 30px; }
+.practiceOptions input { accent-color: var(--practice-accent); }
+.historyTitle { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.6rem; }
+.historyTitle > span { font-size: 0.75rem; color: var(--practice-muted); }
+.historyRow { display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 0.8rem; padding: 0.7rem 0; border-bottom: 1px solid var(--practice-line); color: var(--practice-muted); font-size: 0.75rem; }
 .historyRow strong { font-weight: 400; color: var(--practice-text); }
-.historyRow > :last-child { text-align: right; }
-.notice { border: 1px solid #e5a77a; padding: 0.8rem; border-radius: 8px; font-size: 0.8rem; margin-bottom: 1rem !important; }
+.historyRow > :nth-child(2n) { text-align: right; }
+.historyEmpty { color: var(--practice-muted); font-size: 0.8rem; }
+.notices { position: absolute; z-index: 3; top: 0.5rem; left: 50%; transform: translateX(-50%); width: min(100% - 2rem, 40rem); display: grid; gap: 0.4rem; }
+.notice { border: 1px solid #e5a77a; padding: 0.8rem; border-radius: 8px; font-size: 0.8rem; background: var(--practice-soft); backdrop-filter: blur(12px); }
 .notice button { color: inherit; background: none; border: 0; text-decoration: underline; }
-@media (max-width: 700px) {
-  .practice { border-radius: 16px; }
+
+/* ---- Short windows (1280×720, 960×640): same pieces, less air ---- */
+@media (max-height: 760px) {
   .duration { display: none; }
-  .welcome { padding-bottom: 1.6rem; }
-  .plan { grid-template-columns: repeat(2, 1fr); }
-  .planBlock { padding: 1rem !important; }
-  .planBlock:nth-child(2) { border-right: 0; }
-  .planBlock:nth-child(-n+2) { border-bottom: 1px solid var(--practice-line); }
-  .planTop { margin-bottom: 0.8rem; }
-  .startBar { align-items: stretch; flex-direction: column; }
-  .setup { gap: 1rem; }
-  .setup label { flex: 1; }
-  .primary { justify-content: center; }
-  .steps { gap: 0.55rem; }
-  .step, .currentStep { flex-direction: column; gap: 0.2rem; font-size: 0.65rem; }
-  .step small, .currentStep small { display: none; }
-  .sessionProgress { margin: 1rem 0 1.5rem; }
-  .timer strong { font-size: 1.7rem; }
-  .stageHeader .eyebrow { font-size: 0.5rem; }
-  .transport { gap: 0.7rem; }
-  .beatStatus { font-size: 0.66rem; }
-  .beats { display: none; }
-  .reflection small { width: 100%; margin: 0.2rem 0; }
-  .reflection > span { width: 100%; }
-  .boardCaption { flex-direction: column; gap: 0.25rem; }
-  .practiceOptions > span { display: none; }
-  .soundSettings { gap: 0.8rem; }
-  .soundSettings label:first-child { width: 100%; }
-  .soundSettings input { width: 70px; }
-  .earCard { padding: 1rem; }
-  .answers { gap: 0.35rem; }
-  .answers button { font-size: 0.62rem; }
-  .earFooter { flex-direction: column; }
-  .endRow { flex-wrap: wrap; }
-  .historyTitle { flex-direction: column; }
-  .historyRow { font-size: 0.65rem; }
-  .chordStrip { gap: 0.3rem; }
-  .chordStrip > div { min-width: 0; flex: 1; padding: 0.5rem; }
+  .welcome { padding-bottom: 1rem; }
+  .landing .eyebrow { margin-bottom: 0.4rem; }
+  .landing h1 { font-size: clamp(1.6rem, 3.4vw, 2.8rem); }
+  .practice .intro { margin-top: 0.5rem; line-height: 1.6; }
+  .planBlock { padding: 0.75rem 0.9rem 0.85rem; }
+  .planTop { margin-bottom: 0.5rem; }
+  .planBlock p { line-height: 1.5; margin-top: 0.35rem; }
+  .earCard { padding: 0.9rem 1.2rem; }
+  .earCard .eyebrow { margin-bottom: 0.35rem; }
+  .earCard h2 { font-size: 1.2rem; margin-bottom: 0.6rem; }
+  .answers { margin: 0.8rem 0 0.6rem; }
+  .answers button { padding: 0.55rem 0.4rem; gap: 0.2rem; }
+  .answers strong { font-size: 1.4rem; }
+  .result h1 { font-size: clamp(1.6rem, 3.4vw, 2.6rem); }
+  .stats { margin: 0.9rem 0; padding: 0.7rem 0; }
+  .stats strong { font-size: 1.9rem; }
+  .practice .resultTip { line-height: 1.6; }
 }
 
 @media (max-width: 700px) {
-  .practice[data-status='ready'] { display: flex; flex-direction: column; }
-  .practice[data-status='ready'] .notice { order: -1; }
-  .practice[data-status='ready'] .welcome { order: 0; }
-  .practice[data-status='ready'] .startBar { order: 1; margin: 0; }
-  .practice[data-status='ready'] .footnote { order: 2; }
-  .practice[data-status='ready'] .plan { order: 3; }
-  .practice[data-status='ready'] .soundSettings { order: 4; margin-top: 1.5rem; }
-  .practice[data-status='ready'] .history { order: 5; }
+  .duration { display: none; }
+  .plan { grid-template-columns: repeat(2, 1fr); }
+  .planBlock { padding: 0.8rem !important; }
+  .planBlock:nth-child(2) { border-right: 0; }
+  .planBlock:nth-child(-n+2) { border-bottom: 1px solid var(--practice-line); }
+  .startBar { align-items: stretch; flex-direction: column; }
+  .primary { justify-content: center; }
+  .beats { display: none; }
+  .spaceHint { display: none; }
 }

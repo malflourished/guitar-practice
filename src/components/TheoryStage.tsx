@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type {
   KeyMode,
   NoteName,
@@ -18,27 +17,65 @@ interface TheoryStageProps {
   topic: TheoryTopic;
   selectedRoot: NoteName;
   keyMode: KeyMode;
-  showFretboard: boolean;
+  /** The diagram shown, if the topic has one. */
+  diagramView?: TheoryDiagram;
   onSelectKey: (root: NoteName, mode: KeyMode) => void;
-  onShowFretboardChange: (show: boolean) => void;
-  onPracticeLink?: () => void;
 }
 
+/** The topic's title, summary and diagram: what Theory shows in the neck. */
 export function TheoryStage({
   topic,
   selectedRoot,
   keyMode,
-  showFretboard,
+  diagramView,
   onSelectKey,
+}: TheoryStageProps) {
+  return (
+    <section className={styles.stage} aria-label={topic.title}>
+      <header className={styles.header}>
+        <h2 className={styles.title}>{topic.title}</h2>
+        <p className={styles.summary}>{topic.theory.summary}</p>
+      </header>
+
+      {diagramView ? (
+        <div className={styles.diagram}>
+          {diagramView === 'chord-wheel' ? (
+            <ChordWheel
+              selectedRoot={selectedRoot}
+              keyMode={keyMode}
+              onSelectKey={onSelectKey}
+            />
+          ) : (
+            <CircleOfFifths
+              selectedRoot={selectedRoot}
+              keyMode={keyMode}
+              onSelectKey={onSelectKey}
+            />
+          )}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+interface TheoryActionsProps {
+  topic: TheoryTopic;
+  diagramView?: TheoryDiagram;
+  onDiagramViewChange: (view: TheoryDiagram) => void;
+  showFretboard: boolean;
+  onShowFretboardChange: (show: boolean) => void;
+  onPracticeLink?: () => void;
+}
+
+/** Theory's controls in the deck: diagram choice, fretboard demo, practice link. */
+export function TheoryActions({
+  topic,
+  diagramView,
+  onDiagramViewChange,
+  showFretboard,
   onShowFretboardChange,
   onPracticeLink,
-}: TheoryStageProps) {
-  // Initialized from the topic's natural diagram; remounting via key={topic.id}
-  // in App.tsx resets this when the active topic changes.
-  const [diagramView, setDiagramView] = useState<TheoryDiagram | undefined>(
-    topic.diagram,
-  );
-
+}: TheoryActionsProps) {
   const practiceLabel =
     topic.practiceLink?.mode === 'progressions'
       ? 'Try in Progressions →'
@@ -51,50 +88,25 @@ export function TheoryStage({
             : null;
 
   return (
-    <section
-      className={showFretboard ? styles.stageCompact : styles.stage}
-      aria-label={topic.title}
-    >
-      <header className={styles.header}>
-        <h2 className={styles.title}>{topic.title}</h2>
-        <p className={styles.summary}>{topic.theory.summary}</p>
-      </header>
-
-      {diagramView ? (
-        <>
-          <div className={styles.diagramToggle} role="group" aria-label="Diagram">
-            {DIAGRAM_OPTIONS.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                className={
-                  diagramView === id
-                    ? styles.diagramToggleSelected
-                    : styles.diagramToggleButton
-                }
-                aria-pressed={diagramView === id}
-                onClick={() => setDiagramView(id)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className={showFretboard ? styles.diagramCompact : styles.diagram}>
-            {diagramView === 'chord-wheel' ? (
-              <ChordWheel
-                selectedRoot={selectedRoot}
-                keyMode={keyMode}
-                onSelectKey={onSelectKey}
-              />
-            ) : (
-              <CircleOfFifths
-                selectedRoot={selectedRoot}
-                keyMode={keyMode}
-                onSelectKey={onSelectKey}
-              />
-            )}
-          </div>
-        </>
+    <>
+      {diagramView && !showFretboard ? (
+        <div className={styles.diagramToggle} role="group" aria-label="Diagram">
+          {DIAGRAM_OPTIONS.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              className={
+                diagramView === id
+                  ? styles.diagramToggleSelected
+                  : styles.diagramToggleButton
+              }
+              aria-pressed={diagramView === id}
+              onClick={() => onDiagramViewChange(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       ) : null}
 
       <div className={styles.actions}>
@@ -120,6 +132,6 @@ export function TheoryStage({
           </button>
         ) : null}
       </div>
-    </section>
+    </>
   );
 }

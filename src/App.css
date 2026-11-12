@@ -1,6 +1,9 @@
+/* The page is one fixed frame (see components/Frame). Nothing here scrolls. */
 .themeRoot {
   position: relative;
-  min-height: 100svh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background-color: transparent;
   color: var(--text-primary);
   transition:
@@ -17,34 +20,15 @@
   animation: none;
 }
 
-.app {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  min-height: calc(100svh - 64px);
-  padding: 2.5rem 0 3rem;
-}
-
-.shell {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 var(--shell-padding);
-}
-
 .wordmark {
+  flex: 0 0 auto;
   margin: 0;
-  text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 0.22em;
   text-transform: lowercase;
   color: var(--hero-color);
+  white-space: nowrap;
 }
 
 .wordmarkWave {
@@ -69,55 +53,21 @@
   }
 }
 
-.fretboardStage {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-  padding: 0 var(--fretboard-padding);
-  box-sizing: border-box;
+/* The key menu: twelve notes and the sharp/flat switch in two rows of seven. */
+.keyMenu {
+  width: 352px;
+  max-width: calc(100vw - 48px);
 }
 
-.focusRow {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: -1rem;
-}
-
-/* Sound options live with the rest of the fretboard controls, just below the
-   position slider, so the whole control deck reads as one cluster. */
-.soundRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.65rem 1.25rem;
-  width: 100%;
-  max-width: min(1180px, 100%);
-  margin: -0.5rem auto 0;
-  padding: 0 var(--fretboard-padding);
-  box-sizing: border-box;
-}
-
-/* Focus mode: hide the sidebar so the fretboard fills the viewport. */
-.app[data-focus='true'] .shell {
-  display: none;
-}
-
-.app[data-focus='true'] {
-  justify-content: center;
+/* "Key" in front of the key name on the top strip's key button. */
+.stripLabel {
+  margin-right: 0.45rem;
+  color: var(--text-muted);
 }
 
 .shortcuts {
   display: flex;
   gap: 0.5rem;
-}
-
-@media (max-width: 768px) {
-  .app {
-    padding: 1.5rem 0 2rem;
-    gap: 1.25rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -126,28 +76,23 @@
   }
 }
 
-.app[data-practice='true'] .fretboardStage { padding: 0 clamp(1rem, 3vw, 3rem); }
-.audioError { text-align: center; font-size: 0.85rem; }
-.audioError button { color: inherit; background: transparent; border: 1px solid currentColor; border-radius: 6px; padding: 0.4rem 0.7rem; margin-left: 0.5rem; }
+/* Over the neck, so it never changes the layout. */
+.audioError {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 0.6rem;
+  transform: translateX(-50%);
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+}
 
-/* Give moving light a stable surface for text and practice controls. */
-.themeRoot[data-ui-theme='vibrato'] .shell [aria-label='Settings'] {
-  border-radius: 14px;
-  padding: 1rem 1.2rem;
-}
-.themeRoot[data-ui-theme='vibrato'] .app:not([data-practice='true']) .fretboardStage {
-  width: calc(100% - clamp(2rem, 4vw, 4rem));
-  margin: 0 auto;
-  padding: 1.2rem 0.6rem;
-  border-radius: 18px;
-}
-.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='dark'] .shell [aria-label='Settings'],
-.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='dark'] .app:not([data-practice='true']) .fretboardStage {
-  background: rgba(10, 16, 23, 0.86);
-  border: 1px solid rgba(230, 239, 250, 0.16);
-}
-.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='light'] .shell [aria-label='Settings'],
-.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='light'] .app:not([data-practice='true']) .fretboardStage {
-  background: rgba(249, 249, 243, 0.92);
-  border: 1px solid rgba(25, 35, 45, 0.16);
+.audioError button {
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  margin-left: 0.5rem;
 }

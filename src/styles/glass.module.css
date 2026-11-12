@@ -35,7 +35,7 @@
   border-radius: var(--radius-control);
   color: var(--text-secondary);
   font-family: var(--font-sans);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 400;
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;
@@ -119,12 +119,12 @@
 
 .keyTileAccidental {
   composes: keyTile;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .keyTileAccidentalActive {
   composes: keyTileActive;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 :global(.themeRoot[data-ui-theme='scholar']) .keyTileActive,
@@ -139,7 +139,7 @@
   border-radius: var(--radius-control);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -183,6 +183,6 @@
 
   .keyTileAccidental,
   .keyTileAccidentalActive {
-    font-size: 0.68rem;
+    font-size: 0.75rem;
   }
 }

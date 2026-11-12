@@ -6,6 +6,8 @@ import { CHORD_DIAGRAM_LABEL_STYLE } from '../lib/chordDiagramLayout';
 import styles from './ProgressionStrip.module.css';
 
 interface ChordPositionStripProps {
+  /** Wrap into a grid (side panel) instead of one scrolling row. */
+  wrap?: boolean;
   positions: ChordPositionView[];
   activeIndex: number;
   notation: NotationPreference;
@@ -19,6 +21,7 @@ interface ChordPositionStripProps {
 }
 
 export function ChordPositionStrip({
+  wrap = false,
   positions,
   activeIndex,
   notation,
@@ -34,8 +37,8 @@ export function ChordPositionStrip({
 
   return (
     <section className={styles.strip} aria-label="Chord position reference">
-      <div className={styles.scroll}>
-        <div className={styles.row}>
+      <div className={wrap ? styles.scrollWrap : styles.scroll}>
+        <div className={wrap ? styles.rowWrap : styles.row}>
           {positions.map((position) => {
             const isActive = position.index === activeIndex;
             return (

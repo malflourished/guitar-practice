@@ -6,6 +6,8 @@ import styles from './ProgressionStrip.module.css';
 export type { ProgressionChordView };
 
 interface ProgressionStripProps {
+  /** Wrap into a grid (side panel) instead of one scrolling row. */
+  wrap?: boolean;
   chords: ProgressionChordView[];
   activeIndex: number;
   notation: NotationPreference;
@@ -17,6 +19,7 @@ interface ProgressionStripProps {
 }
 
 export function ProgressionStrip({
+  wrap = false,
   chords,
   activeIndex,
   notation,
@@ -30,8 +33,8 @@ export function ProgressionStrip({
 
   return (
     <section className={styles.strip} aria-label="Progression chord reference">
-      <div className={styles.scroll}>
-        <div className={styles.row}>
+      <div className={wrap ? styles.scrollWrap : styles.scroll}>
+        <div className={wrap ? styles.rowWrap : styles.row}>
           {chords.map((chord, index) => {
             const isActive = index === activeIndex;
             return (
