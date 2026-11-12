@@ -161,7 +161,7 @@ export function PracticeSession({ root, notation, audio, onRootChange }: Props) 
     `Play each highlighted ${rootLabel} root, then its fifth. Say the note names aloud. Let each note ring for two beats.`,
     'Follow the loop up and down the shape. Keep your pick motion small and even. One note per eighth note; relaxed hands before speed.',
     'Listen to the two notes, then name their distance. Each question counts your first answer. Replay as often as you need.',
-    'One bar per chord. Start by playing the root on beat one, then improvise with the highlighted chord tones. Let the major V pull you home.',
+    `One bar per chord. Start by playing the root on beat one, then improvise with the highlighted chord tones. On the V, aim for its 3rd (${formatNoteDisplay(semitoneToNote(rootPc + 11), notation)}), a half step below the root. The pentatonic lacks it.`,
   ];
 
   const soundSettings = (withGuitar = true) => <div className={styles.soundSettings}>
@@ -192,7 +192,7 @@ export function PracticeSession({ root, notation, audio, onRootChange }: Props) 
       <div className={styles.landing} data-status={status}>
         <header className={styles.welcome}>
           <p className={styles.eyebrow}>YOUR DAILY PRACTICE · {SESSION_SECONDS / 60} MINUTES · {PRACTICE_BLOCKS.length} BLOCKS</p>
-          <h1>Find your flow.</h1>
+          <h1>Ten minutes in {rootLabel} minor</h1>
         </header>
         <ol className={styles.plan} aria-label="Today’s practice plan">{PRACTICE_BLOCKS.map((item, index) => <li className={styles.planBlock} key={item.id} style={{ flexGrow: item.seconds }}><div className={styles.planTop}><span>0{index + 1}</span><span>{item.seconds / 60} MIN</span></div><h2>{item.title}</h2><p className={styles.planDoes}>{item.does}</p><p className={styles.planWhy}>{item.why}</p></li>)}</ol>
       </div>
