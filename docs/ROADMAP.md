@@ -9,14 +9,23 @@ This file is the plan of record. It came out of a full review of the app on 2026
 
 | # | Work package | Status | Depends on | Who should do it |
 |---|---|---|---|---|
-| A | Single-screen layout | Built and measured, 2026-11-11 (see [what was built](#what-was-built)). Waiting for the owner to try it | nothing | the strongest model, or an experienced front-end developer: it needs design judgment |
+| A | Single-screen layout | Done. Owner walked through it on 2026-11-12; follow-ups are I to Q | nothing | the strongest model, or an experienced front-end developer: it needs design judgment |
 | B | Teaching fixes (five small ones) | Done and reviewed, 2026-11-11 | nothing | any capable model: fully specified and test-backed |
 | C | Chord shapes and small triads | Ready | nothing | a strong model, and a guitarist should check the fingerings |
-| D | Discover mode | Ready after A | A (needs the new frame) | a capable model: the content is written and the behaviour is specified |
-| E | Practice that adapts, jam loop | Ready after A | A | a capable model |
+| D | Discover mode | Folded into M and P on 2026-11-12: no separate mode | – | – |
+| E | Practice that adapts | After O. The jam loop moved to P | O | a capable model |
 | F | Look: analog texture | Default look done and reviewed, 2026-11-11. Open: measure its cost on real hardware | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
-| H | Theory figures: one key dial | Mock-up ready. **Waiting for the owner** | owner sign-off, then A | a capable model: the mock-up is the reference implementation |
+| H | Theory figures: one key dial | Done, merged and pushed 2026-11-12 | – | – |
+| I | Quick fixes from the 2026-11-12 walkthrough | **In progress** in its own session and branch | nothing | a capable model |
+| J | Split `App.tsx` into mode components | **Next**, as soon as I is merged (both edit `App.tsx`) | I | a capable model, carefully: no change in behaviour or look |
+| K | Settings page in the side panel | After J | J | a capable model |
+| L | One Play control for every mode | The component can start now; wiring after J | J for wiring | a capable model |
+| M | Mode controls: Notes, Chords, Scales | After J, K and L | J, K, L | a capable model; the owner approves screenshots |
+| N | Intervals: clear drills, black and white | Ready now | nothing (K adds the colour switch later) | a capable model |
+| O | Practice: show the plan before Start | Ready now | nothing | a capable model |
+| P | Progressions: the improvising workshop | P1 after J; P2 with L | J, L | the strongest model writes specs and reviews; a capable model builds |
+| Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
 
@@ -41,6 +50,8 @@ npm run app:build  # Mac app in release/
 In the owner's words: "getting comfortable on the guitar, practice, training and discovery", "partially just eye candy, and a visual reference for me", and "I like to noodle and improvise, so anything that can inspire me and get my creative juices flowing".
 
 So the measure of any feature is whether it helps someone with a guitar in their hands. That person is looking at the screen from playing distance and cannot easily reach the mouse.
+
+**The owner as a player (2026-11-12).** A returning intermediate: played most of their life, used to read and write notation, improvised a little, can learn intermediate solos, and has not played seriously for about ten years. Picking the guitar up now, they "default to just the major scales that I remember, the chord shapes, and there's no intent behind the playing". The goal: "solo over chord progressions and become a stronger improviser", move up and down the neck "and not get locked into the CAGED positioning", so that noodling becomes focused. Each mode should teach one subject that you then apply. Judge new features by whether they give intent while playing: which notes matter on this chord, a reason to move along the neck, a constraint to play inside.
 
 ## What is already strong (do not break it)
 
@@ -219,6 +230,8 @@ Follow-ups from the owner's review, where the original rules were musically wron
 
 ## D. Discover mode
 
+**Folded in on 2026-11-12, no separate mode.** The moves become the Progressions library (P1), the sounds become a drone in Scales (M), and the lenses and sparks become prompts (P3, P4). The text below is kept as the source for that work.
+
 **Why.** The owner asked for "a 'discovery' section where I can hear weird chord progressions, unique scales, different ways to think about notes". The gap today: the app shows where notes are but never puts harmony under them, and a mode only sounds like itself against a chord.
 
 **The one new ingredient is a sustained sound.** `GuitarAudioEngine` (`src/lib/audio/engine.ts`) plays samples and patterns (`playPattern`) but has no drone. Add a pad voice with Tone (slow attack, chorus, low-pass) into the existing reverb and limiter.
@@ -254,6 +267,8 @@ Four parts:
 ---
 
 ## E. Practice that adapts, and a jam loop
+
+**2026-11-12:** the jam loop moved to Progressions (P2). Adaptive practice stays here and follows O.
 
 **Today.** The session is the same four blocks every day (Roots 2 min, Scale 3, Ear 2, Changes 3), always minor, always the lowest pentatonic box, always the same three ear intervals and i–iv–V. Ratings are saved and never used. See `src/components/PracticeSession.tsx` and `src/lib/practice/`.
 
@@ -364,6 +379,136 @@ The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifth
 
 ---
 
+## The 2026-11-12 plan: several builders at once
+
+The owner walked through every mode of the new layout on 2026-11-12 and agreed the packages below. Their limits are tight, so the plan is built for several sessions or people working at the same time.
+
+**Order.** I (small fixes) is in progress. J (the split) goes next and alone, because almost every change today runs through `App.tsx` (about 1,430 lines). After J, the lanes run in parallel. N and O touch their own files and can start now.
+
+| Lane | Packages | Owns | Leaves alone |
+|---|---|---|---|
+| Frame | K, Q | `Frame`, the top strip, the side panel, `SettingsPanel`, `Home` | mode components |
+| Playback | L, P2 | `src/lib/audio/`, `PlayControl` | mode components, apart from wiring `PlayControl` in |
+| Modes | M (and C) | the Notes, Chords and Scales control components | the frame and the audio engine |
+| Intervals | N | `IntervalTrainer` and its CSS, interval colours | everything else |
+| Practice | O, then E | `PracticeSession`, `src/lib/practice/` | everything else |
+| Progressions | P1, P3, P4 | the progression library and Progressions components | the audio engine (ask the Playback lane) |
+
+**Rules for parallel work.**
+- One builder per lane at a time.
+- After J, `App.tsx` only takes one-line wiring changes.
+- A change to a shared type (`src/types/`) gets a line in the log, so the other lanes see it.
+- Each lane works on its own branch and asks before merging into `vibrato-next`.
+
+**Later:** notation, showing the current chord or scale on a staff (the owner reads music).
+
+## I. Quick fixes from the 2026-11-12 walkthrough
+
+In progress in its own session and branch. Merge after review.
+
+- [ ] Progressions: every chord in the panel follows the position bar, not only the first.
+- [ ] Notes: names on the dots when several notes are selected.
+- [ ] No squares on a clicked note. During playback, the sounding dot brightens instead.
+- [ ] Side panel: no scrollbar (still scrollable), and opening, closing and content changes animate.
+- [ ] Scales: a "Start on" label for Root / 3rd / 5th, the note a scale run starts on.
+- [ ] Theory: a "Dial | Neck" switch, and "← Back to <topic>" after a link jumps to another mode.
+
+## J. Split `App.tsx` into mode components
+
+**Why:** two builders cannot work at once while nearly every change edits one 1,430-line file.
+
+- Each mode's deck controls and side-panel content become their own components (for example `NotesControls`, `ChordsControls`, `ScalesControls`, `ProgressionsControls`, `PracticeControls`, `TheoryControls`). Mode state moves into hooks where that is simpler.
+- The frame gets named slots: deck, panel, settings, home.
+- No change in behaviour or look.
+
+**Done when:**
+- Tests, lint and `tsc` pass.
+- Screenshots of every mode at 1440×900, in both themes, match before and after.
+- `App.tsx` is mostly wiring (aim for under 600 lines).
+
+## K. Settings page in the side panel
+
+- A Settings button in the top strip, next to Theme and Panel. Settings opens as a page in the side panel, replacing its content while open and animating like other panel changes. The button or Esc closes it.
+- It holds Sound (guitar, volume, mute, room), Tempo, Labels (note names, intervals, fingers, none) and Interval colours (off by default, see N).
+- Those controls leave the decks.
+
+**Done when:** no deck holds a sound, tempo or label control; Settings is one click away in every mode; choices are remembered.
+
+## L. One Play control
+
+- One `PlayControl` in every mode: Play/Stop, plus a small menu beside it with Direction (up, down, up and down), Start on (root, 3rd, 5th; scales), Strum or Arpeggio (chords) and Loop. A tempo readout beside it opens Settings at Tempo.
+- "Neck up" and "Neck down" become arrows on the position bar.
+- Space plays and stops in every mode.
+
+**Done when:** every mode uses it and the old playback buttons are gone.
+
+## M. Mode controls: Notes, Chords, Scales
+
+- **Space:** less dead space above and below the fretboard. The deck may grow when a mode needs room.
+- **Chords:** the position bar sits halfway between the top of the neck area and the fretboard, with Play/Strum to its left. "Type" becomes a Chord menu grouped as triads, sevenths and extended, with one line on the chord's formula and sound. The side panel's "This key" stays as the chords of the key.
+- **Scales:** the Type menu gets a one-line description (formula, character, where it fits). The System switch defaults to CAGED, with one line under it: "CAGED: five shapes tied to the chord shapes, for knowing where you are. 3 per string: longer runs, faster."
+- **Scales drone:** a drone on the root (P2's pad voice), so a scale is heard against its home. This replaces Discover's "Sounds".
+- Package C (all five chord shapes, small triads) lands in this lane too.
+
+**Done when:** the owner approves screenshots of each mode, and no page scrolls at 1440×900, 1280×720 or 960×640.
+
+## N. Intervals: clear drills, black and white
+
+- Two groups: **Learn** (See, Shapes, Find) and **Train** (Ear, Shell chords, Guide tones). Build folds into Shell chords. Under the tabs, one line says what you'll do.
+- Interval colours are off by default; K adds a switch to turn them on. The shapes stay, because they read in black and white.
+
+**Done when:** each drill's label and line say what it does (owner check), and the default view is black and white.
+
+## O. Practice: show the plan before Start
+
+- Before Start, show the session: its four blocks, what each trains, and their minutes, with the key, tempo and guitar.
+- Choosing a focus (only ear, only scales…) comes later with adaptive practice (E).
+
+**Done when:** someone opening Practice for the first time can tell what the ten minutes hold before pressing Start.
+
+## P. Progressions: the improvising workshop
+
+**Why.** The owner wants to solo over progressions with intent and move along the neck without getting locked into CAGED boxes. Patterns without intent come from not knowing which notes matter on each chord, and from never being made to leave a position. This mode gives targets and reasons to move.
+
+**P1. A library sorted by what each progression teaches.** Each entry has its chords, why it is interesting, what to aim for, and a recording that uses it. Most entries are already written in `docs/discover-starter-content.json` (`moves`); add the classics in the first group.
+
+| Group | Progressions |
+|---|---|
+| Hear the changes | 12-bar blues (I7 IV7 V7), minor blues, ii–V–I, I–vi–ii–V |
+| One scale, changing colour | I–IV vamp (Mixolydian), i7–IV7 (Dorian vamp), Lydian float |
+| Borrowed colour | I–♭VII–IV, the "Creep" lift (I–III–IV–iv), Mario cadence (♭VI–♭VII–I) |
+| Minor drama | Andalusian (i–♭VII–♭VI–V), line cliché, villain mediant |
+| Further out | major-3rd cycle, backdoor, tritone sub, city pop |
+
+**P2. Jam loop.** A count-in, then a loop of 4 or 8 bars at the Settings tempo, played by strummed guitar or a pad. The metronome is optional. The pad voice is new audio work for the Playback lane.
+
+**P3. Targets on the neck.**
+- The neck shows the current chord's tones everywhere, with the 3rd and 7th emphasized.
+- On the last beat before a change, it shows the next chord's nearest target notes. The guide-tone logic in `changesTargeting.ts` already finds them.
+- Lenses for moving:
+  - **Whole neck.**
+  - **Region:** a 4 to 5 fret window.
+  - **One string:** play horizontally.
+  - **Climb:** the window moves up one position each time round the loop.
+
+**P4. One prompt per pass.** Drawn from Discover's sparks and lenses: "land on the 3rd of each chord on beat 1", "only the notes that change", "one string only", "two beats of silence after every phrase".
+
+**P5 (later). Song form.** Sections and bar counts (AABA, verse and chorus), so a progression becomes a structure.
+
+**Done when (P1–P4):**
+- Pick an entry, press Play, and while the loop runs the neck shows where to land on the next chord.
+- Switching lens redraws without stopping the loop.
+- The prompt changes each pass.
+
+## Q. Home screen and resizable panel
+
+- Clicking vibrato~ goes Home: the wordmark on the lava, "Continue" with the last mode, and three choices: Practice, Explore (a random progression or scale with its story) and Learn (Theory).
+- The side panel can be resized by dragging its edge, within limits, and remembers its width.
+
+**Done when:** Home is reachable from the wordmark, each choice lands in the right mode, and the panel width is remembered.
+
+---
+
 ## Log
 
 - **2026-11-10.** Owner asked for a full review: teaching, look and feel, new features.
@@ -380,3 +525,4 @@ The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifth
 - **2026-11-11.** Package H built on `claude/key-dial-f10673`: the key dial replaces the circle of fifths and chord wheel in Theory (In key, Borrowed, Dominants), with music logic in `keyDial.ts` tested in all 12 keys. Chord playing on click is left open.
 - **2026-11-12.** Key dial now fills the Theory stage (caption moved out of `KeyDial` into the stage's left column; `onCaption` prop). Measured at 1440×900, 1280×720 and 960×640, Vibrato dark and Scholar, all three views: no page scroll; no text overlap at the two larger sizes; reduced motion jumps with no turn. 960×640 is tight (see package H).
 - **2026-11-12.** Key dial given the deck's height in Theory (see package H). Neck top unchanged in every mode; Scales and Practice measured the same as before (deck 232 px at 1440×900, 216 below 760 px).
+- **2026-11-12.** Owner walked through the new layout. Agreed: a Settings page, one Play control, simpler mode controls, an Intervals regroup in black and white, a Practice preview, a home screen and a resizable panel. Progressions becomes the improvising workshop. Discover folds into M and P. Packages I to Q added; order: I, then J alone, then lanes in parallel (N and O can start now).
