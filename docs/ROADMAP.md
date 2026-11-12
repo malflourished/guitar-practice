@@ -347,13 +347,18 @@ Scholar: clean and Print.
 
 ## H. Theory figures: one key dial
 
-**Waiting for the owner** to review the mock-up in [design/key-wheel](design/key-wheel/README.md).
+**Built on branch `claude/key-dial-f10673`, not yet merged.** The owner approved the mock-up ("Yes, build it"); the dial replaced both figures in Theory. See [design/key-wheel](design/key-wheel/README.md) for the design rules.
 
-The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifths "is closer to what I'm looking for"; "both could use an overhaul for overall design cleanup". The proposal replaces both with one dial: the circle of fifths with the key's seven chords in a turning window, plus Borrowed and Dominants views. The README there has the design rules and the build plan.
+The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifths "is closer to what I'm looking for"; "both could use an overhaul for overall design cleanup". One dial: the circle of fifths with the key's seven chords in a turning window, plus Borrowed and Dominants views.
 
 - [x] Mock-up and images.
-- [ ] Owner review.
-- [ ] Build it into the app, after package A sizes the Theory stage.
+- [x] Owner review ("Yes, build it").
+- [x] Music logic in `src/lib/music/keyDial.ts`, tested in all 12 keys and both modes.
+- [x] `KeyDial` component; the Theory toggle is In key / Borrowed / Dominants (`TheoryDiagram` is now those three values).
+- [x] `CircleOfFifths`, `ChordWheel` and `chordWheel.ts` removed. `circleOfFifths.ts` stays: the key panel (`KeyContext`) uses `getRelativeMajor` and `getRelativeMinor`.
+- [ ] Merge with package A and check the dial at the size the frame gives it (393 px at 1440×900; the dial wants about 480 px so the 12 px text floor does not crowd the vii° cells).
+- [ ] Pass the notation preference (sharps or flats) from `App.tsx` to `KeyDial` (`notation` prop). Until then F♯/G♭ and D♯m/E♭m follow "sharps" unless the user clicks the cell twice.
+- [ ] Clicking a chord plays it, as elsewhere in the app.
 
 ---
 
@@ -370,3 +375,4 @@ The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifth
 - **2026-11-11.** Owner asked to be told when a rule is musically wrong, and approved four follow-ups to package B. The shell-voicing root (`pickShellRoot`) had already landed. The other three: black-key roots spelled by the name that needs fewer accidentals (B♭ major, not A# major with C## and F##); the reach limit applied only across strings, so same-string shapes return; and the I–vi caption names the leap.
 - **2026-11-11.** Owner asked for an overhaul of the circle of fifths and chord wheel. Mock-up of one key dial added in `docs/design/key-wheel` (package H).
 - **2026-11-11.** Package A built: the page is one fixed frame (top strip, neck, deck, side panel) and never scrolls, measured in every mode, drill and Practice state at four window sizes and in all three themes. The neck fills the space left (string gap 36 px at 960×640 up to 64 at 1728×1080) and the strings sit at the same height in every mode. Changes to the plan: tempo and transport went to the deck, because the strip is full at 960 px; the key became a menu in the strip; the Build drill's targets became a select. `scripts/check-layout.cjs` added for future layout work. Not pushed until the owner confirms.
+- **2026-11-11.** Package H built on `claude/key-dial-f10673`: the key dial replaces the circle of fifths and chord wheel in Theory (In key, Borrowed, Dominants), with music logic in `keyDial.ts` tested in all 12 keys. Chord playing on click is left open.
