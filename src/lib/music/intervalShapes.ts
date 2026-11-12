@@ -28,7 +28,12 @@ function midiOf(pos: FretPosition): number {
   return OPEN_STRING_MIDI[pos.string] + pos.fret;
 }
 
-/** Widest fret span a hand can reach comfortably; wider shapes are dropped. */
+/**
+ * Widest fret span a hand can hold across two strings; wider cross-string
+ * shapes are dropped. Same-string shapes are exempt: two notes on one string
+ * never sound together, so they are always played one after the other, and the
+ * fret count is the lesson (a 5th is seven frets up the string).
+ */
 export const MAX_DYAD_REACH = 4;
 
 const RELATIONSHIPS: { step: number; relationship: DyadRelationship }[] = [
@@ -45,8 +50,8 @@ const RELATIONSHIPS: { step: number; relationship: DyadRelationship }[] = [
  * offset differs by one fret from the all-fourths strings).
  *
  * Only physically reachable shapes are returned: the target must be on a real
- * string and fret, and no more than MAX_DYAD_REACH frets from the root, so some
- * intervals yield fewer than three.
+ * string and fret, and a cross-string target no more than MAX_DYAD_REACH frets
+ * from the root, so some intervals yield fewer than three.
  */
 export function getIntervalDyadShapes(
   anchor: FretPosition,
@@ -61,7 +66,7 @@ export function getIntervalDyadShapes(
     if (string < 0 || string >= STRING_COUNT) continue;
     const fret = targetMidi - OPEN_STRING_MIDI[string];
     if (fret < 0 || fret > FRET_COUNT) continue;
-    if (Math.abs(fret - anchor.fret) > MAX_DYAD_REACH) continue;
+    if (step !== 0 && Math.abs(fret - anchor.fret) > MAX_DYAD_REACH) continue;
     const target: FretPosition = { string, fret, note: getNoteAt(string, fret) };
     const strings = new Set([anchor.string, string]);
     shapes.push({

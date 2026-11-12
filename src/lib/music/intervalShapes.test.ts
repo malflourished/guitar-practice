@@ -45,17 +45,30 @@ describe('getIntervalDyadShapes', () => {
     expect(shapes.every((s) => s.relationship === 'same-string')).toBe(true);
   });
 
-  it('never offers a shape spanning more than 4 frets', () => {
+  it('never offers a cross-string shape spanning more than 4 frets', () => {
     for (let string = 0; string < 6; string += 1) {
       for (let fret = 0; fret <= 12; fret += 1) {
         const anchor: FretPosition = { string, fret, note: 'C' };
         for (let semitones = 1; semitones <= 12; semitones += 1) {
           for (const shape of getIntervalDyadShapes(anchor, semitones)) {
+            if (shape.relationship === 'same-string') continue;
             expect(Math.abs(shape.fretOffset)).toBeLessThanOrEqual(MAX_DYAD_REACH);
           }
         }
       }
     }
+  });
+
+  it('keeps same-string shapes of any size: the fret count is the lesson', () => {
+    // A perfect 5th is seven frets up the string; an octave is twelve.
+    const fifth = getIntervalDyadShapes(lowEA, 7).find(
+      (s) => s.relationship === 'same-string',
+    );
+    expect(fifth?.fretOffset).toBe(7);
+    const octave = getIntervalDyadShapes(lowEA, 12).find(
+      (s) => s.relationship === 'same-string',
+    );
+    expect(octave?.fretOffset).toBe(12);
   });
 
   it('drops the six-fret string skip for a major 3rd', () => {
