@@ -19,6 +19,10 @@ export interface UseNeckView {
   /** Secondary handle index; equals positionIndex when the span is collapsed. */
   spanEndIndex: number;
   setSpanEndIndex: (index: number) => void;
+  /** Write the saved position and span end for several scopes at once. */
+  setScopePositions: (
+    entries: { scope: string; position: number; spanEnd: number }[],
+  ) => void;
   /** Low/high bounds of the visible span (inclusive), already clamped. */
   rangeStart: number;
   rangeEnd: number;
@@ -78,6 +82,21 @@ export function useNeckView(
     setSpanEndByScope((prev) => ({ ...prev, [scope]: index }));
   };
 
+  const setScopePositions = (
+    entries: { scope: string; position: number; spanEnd: number }[],
+  ) => {
+    setPositionByScope((prev) => {
+      const next = { ...prev };
+      for (const entry of entries) next[entry.scope] = entry.position;
+      return next;
+    });
+    setSpanEndByScope((prev) => {
+      const next = { ...prev };
+      for (const entry of entries) next[entry.scope] = entry.spanEnd;
+      return next;
+    });
+  };
+
   const applySpanPreset = (preset: NeckViewMode) => {
     if (preset === 'single') {
       setSpanEndByScope((prev) => ({ ...prev, [scope]: positionIndex }));
@@ -114,6 +133,7 @@ export function useNeckView(
     setPositionIndex,
     spanEndIndex,
     setSpanEndIndex,
+    setScopePositions,
     rangeStart,
     rangeEnd,
     applySpanPreset,

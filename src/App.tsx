@@ -48,6 +48,7 @@ import {
   buildLadderProgressionChordViews,
   buildScalePositions,
   buildSavedProgressionChordViews,
+  followProgressionRegions,
   buildSingleStringScale,
   buildSpellingMap,
   filterToChordTones,
@@ -250,6 +251,13 @@ function App() {
     oneOf(['scale', 'arpeggio'] as const),
   );
   const [theoryShowFretboard, setTheoryShowFretboard] = useState(false);
+  // Set when a Theory link jumps to another mode; shows "← Back to <topic>".
+  const [theoryReturn, setTheoryReturn] = useState<{
+    mode: StudyMode;
+    topicId: string;
+    title: string;
+    showFretboard: boolean;
+  } | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const [showFingers, setShowFingers] = usePersistentState(
     'show-fingers',
@@ -471,7 +479,8 @@ function App() {
   });
   const {
     positionIndex,
-    setPositionIndex,
+    setPositionIndex: setSinglePositionIndex,
+    setScopePositions,
     activeRegion: activePositionRegion,
     positionByScope,
   } = neckView;
@@ -491,6 +500,41 @@ function App() {
     progressionId,
     positionByScope,
   ]);
+
+  // In Progressions the position bar (and its span) moves every chord, not just
+  // the selected one: each chord takes the shape nearest the chosen frets.
+  const followProgressionPosition = (primary: number, spanEnd: number) => {
+    const a = displayRegions[primary];
+    const b = displayRegions[spanEnd];
+    if (!a || !b) return;
+    const primaryTarget = { startFret: a.startFret, endFret: a.endFret };
+    const spanTarget = { startFret: b.startFret, endFret: b.endFret };
+    const primaries = followProgressionRegions(resolvedProgressionSteps, primaryTarget);
+    const ends = followProgressionRegions(resolvedProgressionSteps, spanTarget);
+    setScopePositions(
+      resolvedProgressionSteps.map((step, index) => ({
+        scope: getProgressionStepPositionScope(progressionId, index, step.quality),
+        position: index === progressionStepIndex ? primary : primaries[index],
+        spanEnd: index === progressionStepIndex ? spanEnd : ends[index],
+      })),
+    );
+  };
+
+  const setPositionIndex = (index: number) => {
+    if (studyMode !== 'progressions') {
+      setSinglePositionIndex(index);
+      return;
+    }
+    const collapsed = neckView.spanEndIndex === positionIndex;
+    followProgressionPosition(index, collapsed ? index : neckView.spanEndIndex);
+  };
+  const setSpanEndIndex = (index: number) => {
+    if (studyMode !== 'progressions') {
+      neckView.setSpanEndIndex(index);
+      return;
+    }
+    followProgressionPosition(positionIndex, index);
+  };
 
   const audio = useInstrument();
 
@@ -886,6 +930,18 @@ function App() {
     setTheoryShowFretboard(false);
   };
 
+  // The way back lasts only while the player stays where the link sent them.
+  if (theoryReturn && studyMode !== theoryReturn.mode) setTheoryReturn(null);
+
+  const handleBackToTheory = () => {
+    if (!theoryReturn) return;
+    audio.stopAll();
+    setStudyMode('theory');
+    setTheoryTopicId(theoryReturn.topicId);
+    setTheoryShowFretboard(theoryReturn.showFretboard);
+    setTheoryReturn(null);
+  };
+
   const handleTheoryKeySelect = (note: NoteName, mode: KeyMode) => {
     setActiveNotes(new Set([note]));
     setKeyCenter(note);
@@ -903,6 +959,12 @@ function App() {
   const handleTheoryPracticeLink = () => {
     const link = activeTheoryTopic.practiceLink;
     if (!link) return;
+    setTheoryReturn({
+      mode: link.mode,
+      topicId: activeTheoryTopic.id,
+      title: activeTheoryTopic.title,
+      showFretboard: theoryShowFretboard,
+    });
     setStudyMode(link.mode);
     if (link.scaleQuality) {
       setScaleQuality(link.scaleQuality);
@@ -1037,6 +1099,16 @@ function App() {
         studyMode={studyMode}
         onStudyModeChange={handleStudyModeChange}
       />
+      {theoryReturn && (
+        <button
+          type="button"
+          className={`${glass.pill} backToTheory`}
+          title={`Back to ${theoryReturn.title} in Theory`}
+          onClick={handleBackToTheory}
+        >
+          ← Back<span className="backToTheoryTopic"> to {theoryReturn.title}</span>
+        </button>
+      )}
       <StripEnd>
         {singleRootMode && studyMode !== 'practice' && (
           <Popover
@@ -1154,7 +1226,7 @@ function App() {
             selectedIndex={positionIndex}
             onChange={setPositionIndex}
             spanEndIndex={neckView.spanEndIndex}
-            onSpanEndChange={neckView.setSpanEndIndex}
+            onSpanEndChange={setSpanEndIndex}
             allowRange={neckViewEnabled}
             disabled={ladderActive || traversalActive}
           />
@@ -1241,6 +1313,15 @@ function App() {
           <button type="button" className={glass.pill} onClick={handleClearAll}>
             Clear
           </button>
+          <button
+            type="button"
+            className={showNoteLabels ? glass.pillSelected : glass.pill}
+            aria-pressed={showNoteLabels}
+            title="Show note names on the dots"
+            onClick={() => setShowNoteLabels((prev) => !prev)}
+          >
+            Names
+          </button>
         </div>
       </>
     ) : studyMode === 'theory' ? (
@@ -1300,7 +1381,7 @@ function App() {
   );
 
   const side = (
-    <SidePanel label="Side panel">
+    <SidePanel key={studyMode} label="Side panel">
       {keyContext}
 
       {studyMode === 'chords' && chordPositionViews.length > 0 && (
@@ -1416,7 +1497,7 @@ function App() {
               noteColors={noteColors}
               audio={audio}
             />
-            <SidePanel label="Side panel">{keyContext}</SidePanel>
+            <SidePanel key={studyMode} label="Side panel">{keyContext}</SidePanel>
           </>
         ) : (
           <>
