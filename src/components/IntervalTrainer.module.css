@@ -231,12 +231,11 @@
 
 .legendItem {
   display: inline-flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  padding: 0.35rem 0.6rem;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.3rem 0.7rem;
   border: 1px solid var(--fretboard-control-border);
   border-radius: var(--radius-control);
-  min-width: 7rem;
 }
 
 .legendName {
