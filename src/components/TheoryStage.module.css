@@ -47,10 +47,10 @@
   justify-content: center;
 }
 
-/* div: beats the diagrams' own width rule. */
-.diagram > div {
-  width: min(100cqw, 100cqh);
-  margin: 0;
+/* The dial sizes itself to the space and puts its caption underneath. */
+.diagram > figure {
+  width: 100%;
+  height: 100%;
 }
 
 .diagramToggle {

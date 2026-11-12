@@ -171,15 +171,6 @@ export {
   prevCircleKey,
 } from './circleOfFifths';
 export {
-  getChordWheelWedges,
-  getDiatonicHighlights,
-  getSelectedWheelIndex,
-  isChordWheelHighlight,
-  type ChordWheelHighlight,
-  type ChordWheelRing,
-  type ChordWheelWedge,
-} from './chordWheel';
-export {
   DEFAULT_THEORY_TOPIC_ID,
   THEORY_SECTIONS,
   THEORY_TOPICS,

@@ -1,0 +1,245 @@
+/* The key dial. The svg draws in a 1000-unit view box; colours come from the
+   app's theme variables. Vibrato takes its accent from the key colour the app
+   puts on .themeRoot (--blob-1); Scholar is ink only. */
+
+.root {
+  --kd-ink: var(--text-primary);
+  --kd-accent: color-mix(in oklab, var(--blob-1, var(--text-primary)) 50%, var(--kd-ink));
+  --kd-accent-2: color-mix(in oklab, var(--blob-1, var(--text-primary)) 38%, var(--kd-ink) 62%);
+  --kd-window: color-mix(in oklab, var(--blob-1, var(--text-primary)) 14%, transparent);
+  --kd-home: color-mix(in oklab, var(--blob-1, var(--text-primary)) 18%, transparent);
+
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+:global(.themeRoot[data-ui-theme='scholar']) .root {
+  --kd-accent: var(--text-primary);
+  --kd-accent-2: color-mix(in srgb, var(--text-primary) 62%, transparent);
+  --kd-window: color-mix(in srgb, var(--text-primary) 4.5%, transparent);
+  --kd-home: color-mix(in srgb, var(--text-primary) 7.5%, transparent);
+}
+
+/* The dial takes the largest square the space allows. */
+.dialBox {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dial {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  display: block;
+  overflow: visible;
+  font-family: var(--font-sans);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dial text {
+  text-anchor: middle;
+  fill: var(--kd-ink);
+}
+
+.hair {
+  fill: none;
+  stroke: var(--kd-ink);
+  vector-effect: non-scaling-stroke;
+}
+
+.tick {
+  stroke: var(--kd-ink);
+  vector-effect: non-scaling-stroke;
+}
+
+.sig {
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  fill-opacity: 0.42;
+  transition: fill-opacity 0.3s;
+}
+
+.dial .sigHome {
+  fill: var(--kd-accent);
+  fill-opacity: 1;
+}
+
+.label {
+  font-weight: 300;
+  transition:
+    fill-opacity 0.35s,
+    transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.major .label {
+  fill-opacity: 0.58;
+}
+
+.minor .label {
+  fill-opacity: 0.42;
+}
+
+.dim .label {
+  fill-opacity: 0.3;
+}
+
+.alt {
+  font-weight: 300;
+  fill-opacity: 0.32;
+}
+
+.cell:not(.lit):not(.lit2):hover .label {
+  fill-opacity: 0.85;
+}
+
+.cell.lit .label {
+  fill-opacity: 1;
+  font-weight: 400;
+}
+
+.dial .cell.lit2 .label {
+  fill: var(--kd-accent-2);
+  fill-opacity: 1;
+  font-weight: 400;
+}
+
+.dial .cell.home .label {
+  fill: var(--kd-accent);
+}
+
+.hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.dim .hit {
+  cursor: default;
+}
+
+.cell:focus {
+  outline: none;
+}
+
+.cell:focus-visible .label {
+  fill-opacity: 1;
+  text-decoration: underline;
+}
+
+.win {
+  fill: var(--kd-window);
+  stroke: var(--kd-accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.homeCell {
+  fill: var(--kd-home);
+  stroke: none;
+}
+
+.sep {
+  fill: none;
+  stroke: var(--kd-accent);
+  stroke-opacity: 0.3;
+  vector-effect: non-scaling-stroke;
+}
+
+.ghost {
+  fill: none;
+  stroke: var(--kd-accent-2);
+  stroke-width: 1.25;
+  stroke-dasharray: 5 6;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.ghostOn {
+  opacity: 0.8;
+}
+
+.homeTick {
+  stroke: var(--kd-accent);
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.numeral {
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  animation: numeralIn 0.3s ease-out;
+}
+
+.dial .numeral {
+  fill: var(--kd-accent);
+  fill-opacity: 0.78;
+}
+
+.dial .numeralSecondary {
+  fill: var(--kd-accent-2);
+  fill-opacity: 0.9;
+}
+
+.dial .numeralHome {
+  fill-opacity: 1;
+}
+
+@keyframes numeralIn {
+  from {
+    opacity: 0;
+  }
+}
+
+.plateKey {
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.plateSub {
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  fill-opacity: 0.6;
+}
+
+.plateRel {
+  font-weight: 300;
+  fill-opacity: 0.45;
+}
+
+.caption {
+  flex: 0 0 auto;
+  max-width: 40rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.caption p {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .label,
+  .ghost,
+  .sig {
+    transition: none;
+  }
+
+  .numeral {
+    animation: none;
+  }
+}

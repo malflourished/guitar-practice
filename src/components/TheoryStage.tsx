@@ -4,13 +4,13 @@ import type {
   TheoryDiagram,
   TheoryTopic,
 } from '../types/music';
-import { ChordWheel } from './ChordWheel';
-import { CircleOfFifths } from './CircleOfFifths';
+import { KeyDial } from './KeyDial';
 import styles from './TheoryStage.module.css';
 
 const DIAGRAM_OPTIONS: { id: TheoryDiagram; label: string }[] = [
-  { id: 'circle-of-fifths', label: 'Circle of Fifths' },
-  { id: 'chord-wheel', label: 'Chord Wheel' },
+  { id: 'in-key', label: 'In key' },
+  { id: 'borrowed', label: 'Borrowed' },
+  { id: 'dominants', label: 'Dominants' },
 ];
 
 interface TheoryStageProps {
@@ -39,19 +39,12 @@ export function TheoryStage({
 
       {diagramView ? (
         <div className={styles.diagram}>
-          {diagramView === 'chord-wheel' ? (
-            <ChordWheel
-              selectedRoot={selectedRoot}
-              keyMode={keyMode}
-              onSelectKey={onSelectKey}
-            />
-          ) : (
-            <CircleOfFifths
-              selectedRoot={selectedRoot}
-              keyMode={keyMode}
-              onSelectKey={onSelectKey}
-            />
-          )}
+          <KeyDial
+            selectedRoot={selectedRoot}
+            keyMode={keyMode}
+            onSelectKey={onSelectKey}
+            view={diagramView}
+          />
         </div>
       ) : null}
     </section>
