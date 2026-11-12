@@ -18,15 +18,19 @@ describe('interval drills', () => {
     expect(DRILL_GROUPS.map((g) => g.label)).toEqual(['Learn', 'Train']);
   });
 
-  it('lists See, Shapes, Find under Learn, in that order', () => {
-    expect(drillsInGroup('learn').map((d) => d.label)).toEqual(['See', 'Shapes', 'Find']);
+  it('lists See, Shapes, Guide tones under Learn, in that order', () => {
+    expect(drillsInGroup('learn').map((d) => d.label)).toEqual([
+      'See',
+      'Shapes',
+      'Guide tones',
+    ]);
   });
 
-  it('lists Ear, Shell chords, Guide tones under Train, in that order', () => {
+  it('lists Find, Ear, Shell chords under Train, in that order', () => {
     expect(drillsInGroup('train').map((d) => d.label)).toEqual([
+      'Find',
       'Ear',
       'Shell chords',
-      'Guide tones',
     ]);
   });
 

@@ -814,6 +814,8 @@ export function IntervalTrainer({
               </div>
             )}
 
+            {/* Shapes, Build it and Guide tones always use the app's key. */}
+            {drill !== 'shapes' && drill !== 'build' && drill !== 'changes' && (
             <button
               type="button"
               className={randomRoot ? styles.toggleActive : styles.toggle}
@@ -823,6 +825,7 @@ export function IntervalTrainer({
             >
               Random root
             </button>
+            )}
         </DeckRow>
         {(drill === 'find' || drill === 'identify') && (
           <div className={styles.poolRow}>

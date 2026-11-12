@@ -1,8 +1,9 @@
 /**
  * The Intervals drills, in two labelled groups (roadmap package N).
  *
- * Learn is looking and finding, with the answer in view. Train is where the
- * app asks and you answer. Each drill's `line` says, in plain words, what you
+ * Learn is the drills where the answer is in view. Train is where the app
+ * asks and you answer (Find is graded, Ear has nothing on the neck, Shell
+ * chords ends in a quiz). Each drill's `line` says, in plain words, what you
  * will do there; the tabs show it under the selected drill.
  */
 
@@ -35,9 +36,15 @@ export const DRILLS: DrillDef[] = [
     line: 'The same interval on different pairs of strings: how its shape changes from the root.',
   },
   {
+    id: 'guide',
+    label: 'Guide tones',
+    group: 'learn',
+    line: 'Follow the 3rds and 7ths through a progression and see how little they move.',
+  },
+  {
     id: 'find',
     label: 'Find',
-    group: 'learn',
+    group: 'train',
     line: 'Hear an interval above the root, then click that note on the neck.',
   },
   {
@@ -51,12 +58,6 @@ export const DRILLS: DrillDef[] = [
     label: 'Shell chords',
     group: 'train',
     line: 'Root, 3rd and 7th: the three notes that name a seventh chord. See them, then build them.',
-  },
-  {
-    id: 'guide',
-    label: 'Guide tones',
-    group: 'train',
-    line: 'Follow the 3rds and 7ths through a progression and see how little they move.',
   },
 ];
 
