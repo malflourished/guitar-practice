@@ -161,11 +161,11 @@ export function PracticeSession({ root, notation, audio, onRootChange }: Props) 
     `Play each highlighted ${rootLabel} root, then its fifth. Say the note names aloud. Let each note ring for two beats.`,
     'Follow the loop up and down the shape. Keep your pick motion small and even. One note per eighth note; relaxed hands before speed.',
     'Listen to the two notes, then name their distance. Each question counts your first answer. Replay as often as you need.',
-    'One bar per chord. Start by playing the root on beat one, then improvise with the highlighted chord tones. Let the major V pull you home.',
+    `One bar per chord. Start by playing the root on beat one, then improvise with the highlighted chord tones. On the V, aim for its 3rd (${formatNoteDisplay(semitoneToNote(rootPc + 11), notation)}), a half step below the root. The pentatonic lacks it.`,
   ];
 
-  const soundSettings = <div className={styles.soundSettings}>
-    <label>Guitar<select aria-label="Practice guitar sound" disabled={active} value={audio.instrument} onChange={e => audio.setInstrument(e.target.value as GuitarInstrumentName)}>{GUITAR_INSTRUMENTS.map(instrument => <option key={instrument.name} value={instrument.name}>{instrument.label}</option>)}</select></label>
+  const soundSettings = (withGuitar = true) => <div className={styles.soundSettings}>
+    {withGuitar && <label>Guitar<select aria-label="Practice guitar sound" disabled={active} value={audio.instrument} onChange={e => audio.setInstrument(e.target.value as GuitarInstrumentName)}>{GUITAR_INSTRUMENTS.map(instrument => <option key={instrument.name} value={instrument.name}>{instrument.label}</option>)}</select></label>}
     <label>Volume<input aria-label="Practice volume" type="range" min="0" max="1" step="0.01" value={audio.volume} onChange={e => audio.setVolume(Number(e.target.value))} /></label>
     <label>Room<input aria-label="Room ambience" type="range" min="0" max="0.5" step="0.01" value={audio.room} onChange={e => audio.setRoom(Number(e.target.value))} /></label>
     <button type="button" className={styles.quietButton} aria-pressed={audio.muted} onClick={() => audio.setMuted(!audio.muted)}>{audio.muted ? 'Unmute' : 'Mute'}</button>
@@ -184,17 +184,17 @@ export function PracticeSession({ root, notation, audio, onRootChange }: Props) 
 
   const soundSection = <section className={styles.sideSection} aria-label="Practice sound">
     <h2 className={styles.sideTitle}>Sound</h2>
-    {soundSettings}
+    {soundSettings()}
   </section>;
 
   if (status === 'ready') return <>
     <Neck className={styles.practice}>
       <div className={styles.landing} data-status={status}>
         <header className={styles.welcome}>
-          <div><p className={styles.eyebrow}>YOUR DAILY PRACTICE · 10 MINUTES</p><h1>Find your flow.</h1><p className={styles.intro}>A little focus. A few good repetitions.<br />Take what you know and turn it into music.</p></div>
-          <div className={styles.duration} aria-label="10 minutes"><span>10</span><small>MINUTES, JUST FOR YOU</small></div>
+          <p className={styles.eyebrow}>YOUR DAILY PRACTICE · {SESSION_SECONDS / 60} MINUTES · {PRACTICE_BLOCKS.length} BLOCKS</p>
+          <h1>Ten minutes in {rootLabel} minor</h1>
         </header>
-        <div className={styles.plan}>{PRACTICE_BLOCKS.map((item, index) => <div className={styles.planBlock} key={item.id}><div className={styles.planTop}><span>0{index + 1}</span><span>{item.seconds / 60} MIN</span></div><h2>{item.title}</h2><p>{item.detail}</p></div>)}</div>
+        <ol className={styles.plan} aria-label="Today’s practice plan">{PRACTICE_BLOCKS.map((item, index) => <li className={styles.planBlock} key={item.id} style={{ flexGrow: item.seconds }}><div className={styles.planTop}><span>0{index + 1}</span><span>{item.seconds / 60} MIN</span></div><h2>{item.title}</h2><p className={styles.planDoes}>{item.does}</p><p className={styles.planWhy}>{item.why}</p></li>)}</ol>
       </div>
       {notices}
     </Neck>
@@ -202,9 +202,10 @@ export function PracticeSession({ root, notation, audio, onRootChange }: Props) 
       <div className={styles.startBar}><div className={styles.setup}>
         <label>KEY<select aria-label="Practice key" value={root} onChange={e => onRootChange(e.target.value as NoteName)}>{ALL_NOTES.map(note => <option key={note} value={note}>{formatNoteDisplay(note, notation)} minor</option>)}</select></label>
         <label>TEMPO<select aria-label="Practice tempo" value={tempo} onChange={e => setTempo(Number(e.target.value))}>{[48, 60, 72, 84, 96, 108].map(bpm => <option key={bpm} value={bpm}>{bpm} BPM</option>)}</select></label>
+        <label>GUITAR<select aria-label="Practice guitar sound" value={audio.instrument} onChange={e => audio.setInstrument(e.target.value as GuitarInstrumentName)}>{GUITAR_INSTRUMENTS.map(instrument => <option key={instrument.name} value={instrument.name}>{instrument.label}</option>)}</select></label>
       </div><button className={styles.primary} onClick={start}>Start my practice <span aria-hidden="true">↗</span></button></div>
       <p className={styles.footnote}>Four beats to get ready. Pause whenever you need. Your place is saved on this device.</p>
-      <DeckRow end className={styles.deckEnd}>{soundSettings}</DeckRow>
+      <DeckRow end className={styles.deckEnd}>{soundSettings(false)}</DeckRow>
     </Deck>
     <SidePanel className={styles.practice} label="Practice history">{historySection}</SidePanel>
   </>;
@@ -221,7 +222,7 @@ export function PracticeSession({ root, notation, audio, onRootChange }: Props) 
     </Neck>
     <Deck className={styles.practice} label="Practice saved">
       <DeckRow><button className={styles.primary} onClick={() => { dispatch({ type: 'reset' }); setAnswer(null); answered.current = false; }}>Back to my practice <span aria-hidden="true">↗</span></button></DeckRow>
-      <DeckRow end className={styles.deckEnd}>{soundSettings}</DeckRow>
+      <DeckRow end className={styles.deckEnd}>{soundSettings()}</DeckRow>
     </Deck>
     <SidePanel className={styles.practice} label="Practice history">{historySection}</SidePanel>
   </>;
