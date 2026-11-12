@@ -4,6 +4,7 @@ import {
   getChangesProgression,
   CHANGES_PROGRESSIONS,
   getGuideToneMotion,
+  getLeapCaption,
   pickShellRoot,
   planGuideTones,
 } from './changesTargeting';
@@ -161,5 +162,28 @@ describe('getGuideToneMotion held', () => {
       seventh: { ...plan[1].seventh!, string: 1, fret: 6 },
     };
     expect(getGuideToneMotion(steps[0], steps[1], plan[0], moved).held).toBe(false);
+  });
+});
+
+describe('getLeapCaption', () => {
+  it('names the leap when the root falls a third (Cmaj7 to Am7)', () => {
+    const { steps, plan } = planFor('C', 'turnaround-1625');
+    expect(getLeapCaption(steps[0], steps[1], plan[0], plan[1])).toBe(
+      'Root falls a third: 7 → ♭3 rises a half step, 3 → ♭7 leaps up a minor third',
+    );
+  });
+
+  it('stays quiet when every voice moves two frets or less', () => {
+    for (const progression of CHANGES_PROGRESSIONS) {
+      for (const key of ALL_NOTES) {
+        const { steps, plan } = planFor(key, progression.id);
+        for (let i = 1; i < plan.length; i += 1) {
+          const caption = getLeapCaption(steps[i - 1], steps[i], plan[i - 1], plan[i]);
+          const isIToVi = progression.id === 'turnaround-1625' && i === 1;
+          if (!isIToVi) expect(caption, `${key} ${progression.id} ${i}`).toBeNull();
+          else expect(caption, `${key}`).toMatch(/^Root falls a third: /);
+        }
+      }
+    }
   });
 });

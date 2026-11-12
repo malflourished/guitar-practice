@@ -57,6 +57,7 @@ export {
   planGuideTones,
   pickShellRoot,
   getGuideToneMotion,
+  getLeapCaption,
   type ChangesProgressionDef,
   type ChangesStepView,
   type GuideTonePlacement,

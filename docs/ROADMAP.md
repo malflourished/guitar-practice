@@ -150,6 +150,7 @@ Follow-ups from the owner's review, where the original rules were musically wron
 
 - [x] **Keys on black notes were spelled badly.** With sharps preferred, B♭ major read A#, B#, C##, D#, E#, F##, G##. With flats preferred, C# minor read D♭ minor with F♭ and B♭♭. A black-key root now takes whichever name needs fewer accidentals, which is the circle of fifths' choice. The sharps/flats switch only breaks the F#/G♭ major and D#/E♭ minor ties. This covers the fretboard, the key panel, chord names and the title. Progression chords are spelled by their key.
 - [x] **The reach limit hid same-string shapes.** Two notes on one string are always played one after the other, and "a 5th is seven frets up the string" is the lesson. The 4-fret limit now applies only to shapes across strings, where the hand has to hold both notes.
+- [x] **"Guide tones barely move" is only true when the root moves by a 4th or 5th.** In I–vi the root falls a third, so one guide tone has to leap (Cmaj7 to Am7: E to G). The caption used to name only the smooth voice. It now says "Root falls a third: 7 → ♭3 rises a half step, 3 → ♭7 leaps up a minor third", so the exception teaches something.
 
 ---
 
@@ -301,3 +302,4 @@ Scholar: clean and Print.
 - **2026-11-11.** Analog texture made the default look: Subtle on Vibrato, Print on Scholar, on for everyone, with a Texture on/off button in the theme dock. The lab panel stays as a hidden tuning tool on the backquote key.
 - **2026-11-11.** Package B done: changes drill guide tones on the D and G strings (I–vi in the turnaround needs one 3-fret move, the pitches allow nothing smaller), key panel spelled by key, dyad shapes limited to 4 frets, active CAGED letter in text colour (14.5:1 or better), selected pill stronger than hover.
 - **2026-11-11.** Packages B and F reviewed against the running app and confirmed. One addition from the review: the Changes drill now shows each chord's root on the low E or A string under its guide tones (`pickShellRoot`), so root, 3rd and 7th make a shell voicing. Before, G7's root sat at fret 3 while its guide tones were at frets 9 and 10.
+- **2026-11-11.** Owner asked to be told when a rule is musically wrong, and approved four follow-ups to package B. The shell-voicing root (`pickShellRoot`) had already landed. The other three: black-key roots spelled by the name that needs fewer accidentals (B♭ major, not A# major with C## and F##); the reach limit applied only across strings, so same-string shapes return; and the I–vi caption names the leap.

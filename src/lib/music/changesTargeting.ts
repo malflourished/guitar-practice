@@ -407,3 +407,62 @@ export function getGuideToneMotion(
   }
   return best ?? { semitones: 0, fromLabel: '3', toLabel: '3', held: false };
 }
+
+const LEAP_NAMES: Record<number, string> = { 3: 'a minor third', 4: 'a major third' };
+
+/** How one voice moves along its string, in words. */
+function describeVoiceMove(frets: number): string {
+  const size = Math.abs(frets);
+  if (size === 0) return 'holds';
+  if (size <= 2) {
+    return `${frets > 0 ? 'rises' : 'falls'} a ${size === 1 ? 'half' : 'whole'} step`;
+  }
+  return `leaps ${frets > 0 ? 'up' : 'down'} ${LEAP_NAMES[size] ?? `${size} frets`}`;
+}
+
+/**
+ * The caption for a change where one guide tone has to leap, which happens
+ * when the root moves by a third (Cmaj7 to Am7: B rises a half step to C, but
+ * E must leap to G). Names both voices, smooth one first, so the exception
+ * teaches something. Returns null when every voice moves two frets or less;
+ * the usual held/voice-leading caption covers those.
+ */
+export function getLeapCaption(
+  prev: ChangesStepView,
+  curr: ChangesStepView,
+  prevPlacement: GuideTonePlacement,
+  currPlacement: GuideTonePlacement,
+): string | null {
+  const labelOn = (
+    step: ChangesStepView,
+    placement: GuideTonePlacement,
+    string: number,
+  ) => (placement.third.string === string ? step.thirdLabel : step.seventhLabel);
+
+  const voices = GUIDE_STRINGS.flatMap((string) => {
+    const from = fretOnString(prevPlacement, string);
+    const to = fretOnString(currPlacement, string);
+    if (from === null || to === null) return [];
+    return [
+      {
+        frets: to - from,
+        text: `${labelOn(prev, prevPlacement, string)} → ${labelOn(
+          curr,
+          currPlacement,
+          string,
+        )} ${describeVoiceMove(to - from)}`,
+      },
+    ];
+  });
+  if (!voices.some((v) => Math.abs(v.frets) > 2)) return null;
+
+  voices.sort((a, b) => Math.abs(a.frets) - Math.abs(b.frets));
+  const rootUp = (noteToSemitone(curr.root) - noteToSemitone(prev.root) + 12) % 12;
+  const rootMove =
+    rootUp === 8 || rootUp === 9
+      ? 'Root falls a third'
+      : rootUp === 3 || rootUp === 4
+        ? 'Root rises a third'
+        : 'No step-wise path here';
+  return `${rootMove}: ${voices.map((v) => v.text).join(', ')}`;
+}

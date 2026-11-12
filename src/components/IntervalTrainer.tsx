@@ -14,6 +14,7 @@ import {
   getDyadRelationshipLabel,
   getFormulaTarget,
   getGuideToneMotion,
+  getLeapCaption,
   planGuideTones,
   pickShellRoot,
   getIntervalColor,
@@ -493,6 +494,15 @@ export function IntervalTrainer({
           guidePlan[changeIndex],
         )
       : null;
+  const leapCaption =
+    guideMotion && guidePlan[changeIndex - 1] && guidePlan[changeIndex]
+      ? getLeapCaption(
+          changesSteps[changeIndex - 1],
+          changesSteps[changeIndex],
+          guidePlan[changeIndex - 1],
+          guidePlan[changeIndex],
+        )
+      : null;
   const intervalDef = question ? getIntervalDef(question.semitones) : null;
   const gbWarning =
     showScope &&
@@ -835,13 +845,14 @@ export function IntervalTrainer({
           )}
           {guideMotion && (
             <p className={styles.guess}>
-              {guideMotion.held
+              {leapCaption ??
+                (guideMotion.held
                 ? `Common tone held: ${guideMotion.fromLabel} → ${guideMotion.toLabel}`
                 : guideMotion.semitones === 0
                   ? `Same note, new spot: ${guideMotion.fromLabel} → ${guideMotion.toLabel}`
                   : `Voice-leading: ${guideMotion.fromLabel} → ${guideMotion.toLabel} moves ${guideMotion.semitones} semitone${
                     guideMotion.semitones === 1 ? '' : 's'
-                  }`}
+                  }`)}
             </p>
           )}
           {guessLabel && !solved && drill !== 'identify' && !revealed && (
