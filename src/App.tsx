@@ -999,6 +999,9 @@ function App() {
     positionRegions.length > 0 &&
     (studyMode !== 'theory' || theoryShowFretboard);
   const showTheoryStage = studyMode === 'theory';
+  // The dial takes the deck's height; its controls move into the stage.
+  const theoryDialShown =
+    studyMode === 'theory' && !theoryShowFretboard && Boolean(activeTheoryTopic.diagram);
   const showIntervalTrainer = studyMode === 'intervals';
   const showFretboard =
     studyMode !== 'practice' && studyMode !== 'intervals' && (studyMode !== 'theory' || theoryShowFretboard);
@@ -1127,6 +1130,21 @@ function App() {
     </button>
   ) : null;
 
+  const theoryActions = (
+    <TheoryActions
+      topic={activeTheoryTopic}
+      diagramView={theoryDiagramView}
+      onDiagramViewChange={(view) =>
+        setDiagramChoice({ topicId: activeTheoryTopic.id, view })
+      }
+      showFretboard={theoryShowFretboard}
+      onShowFretboardChange={handleTheoryShowFretboard}
+      onPracticeLink={
+        activeTheoryTopic.practiceLink ? handleTheoryPracticeLink : undefined
+      }
+    />
+  );
+
   const neck = (
     <Neck
       bar={
@@ -1173,6 +1191,7 @@ function App() {
           keyMode={keyMode}
           diagramView={theoryDiagramView}
           onSelectKey={handleTheoryKeySelect}
+          controls={theoryDialShown ? theoryActions : undefined}
         />
       ) : null}
       {audioError}
@@ -1225,18 +1244,7 @@ function App() {
         </div>
       </>
     ) : studyMode === 'theory' ? (
-      <TheoryActions
-        topic={activeTheoryTopic}
-        diagramView={theoryDiagramView}
-        onDiagramViewChange={(view) =>
-          setDiagramChoice({ topicId: activeTheoryTopic.id, view })
-        }
-        showFretboard={theoryShowFretboard}
-        onShowFretboardChange={handleTheoryShowFretboard}
-        onPracticeLink={
-          activeTheoryTopic.practiceLink ? handleTheoryPracticeLink : undefined
-        }
-      />
+      theoryActions
     ) : (
       <StudyModeControls
         studyMode={studyMode}
@@ -1389,6 +1397,7 @@ function App() {
         side={sideState}
         focus={focusMode}
         practice={studyMode === 'practice'}
+        noDeck={theoryDialShown}
         onCloseSide={() => setDrawerOpen(false)}
       >
         {strip}
@@ -1412,7 +1421,7 @@ function App() {
         ) : (
           <>
             {neck}
-            {deck}
+            {theoryDialShown ? null : deck}
             {side}
           </>
         )}

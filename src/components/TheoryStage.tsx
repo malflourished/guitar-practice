@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type {
   KeyMode,
   NoteName,
@@ -21,6 +21,8 @@ interface TheoryStageProps {
   /** The diagram shown, if the topic has one. */
   diagramView?: TheoryDiagram;
   onSelectKey: (root: NoteName, mode: KeyMode) => void;
+  /** The theory controls, shown under the caption when the dial has the deck's space. */
+  controls?: ReactNode;
 }
 
 /** The topic's title, summary and diagram: what Theory shows in the neck. */
@@ -30,6 +32,7 @@ export function TheoryStage({
   keyMode,
   diagramView,
   onSelectKey,
+  controls,
 }: TheoryStageProps) {
   const [caption, setCaption] = useState<string[]>([]);
   return (
@@ -46,6 +49,9 @@ export function TheoryStage({
               <p key={line}>{line}</p>
             ))}
           </div>
+        ) : null}
+        {diagramView && controls ? (
+          <div className={styles.controls}>{controls}</div>
         ) : null}
       </header>
 

@@ -19,11 +19,13 @@ interface FrameProps {
   side: SideState;
   focus: boolean;
   practice?: boolean;
+  /** The mode shows no deck: the neck takes its height. */
+  noDeck?: boolean;
   onCloseSide: () => void;
   children: ReactNode;
 }
 
-export function Frame({ side, focus, practice, onCloseSide, children }: FrameProps) {
+export function Frame({ side, focus, practice, noDeck, onCloseSide, children }: FrameProps) {
   return (
     <FrameContext.Provider value={{ side, closeSide: onCloseSide }}>
       <div
@@ -31,6 +33,7 @@ export function Frame({ side, focus, practice, onCloseSide, children }: FramePro
         data-side={side}
         data-focus={focus ? 'true' : undefined}
         data-practice={practice ? 'true' : undefined}
+        data-deck={noDeck ? 'none' : undefined}
       >
         <div className={styles.surface} aria-hidden="true" />
         {children}

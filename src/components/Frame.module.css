@@ -47,6 +47,30 @@
   display: none;
 }
 
+/* A mode with no deck (Theory with the dial): the neck takes the deck's height.
+   The neck's top edge stays where it is in every other mode. */
+.frame[data-deck='none'] {
+  grid-template-rows: var(--strip-h) minmax(0, 1fr);
+  grid-template-areas:
+    'strip'
+    'neck';
+}
+
+.frame[data-deck='none'][data-side='docked'] {
+  grid-template-areas:
+    'strip strip'
+    'neck side';
+}
+
+.frame[data-deck='none'][data-focus='true'] {
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: 'neck';
+}
+
+.frame[data-deck='none'] .surface {
+  grid-row: neck-start / neck-end;
+}
+
 @media (max-height: 760px) {
   .frame {
     --frame-pad: 8px;
