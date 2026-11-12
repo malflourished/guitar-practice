@@ -48,6 +48,7 @@ import {
   buildLadderProgressionChordViews,
   buildScalePositions,
   buildSavedProgressionChordViews,
+  followProgressionRegions,
   buildSingleStringScale,
   buildSpellingMap,
   filterToChordTones,
@@ -471,7 +472,8 @@ function App() {
   });
   const {
     positionIndex,
-    setPositionIndex,
+    setPositionIndex: setSinglePositionIndex,
+    setScopePositions,
     activeRegion: activePositionRegion,
     positionByScope,
   } = neckView;
@@ -491,6 +493,41 @@ function App() {
     progressionId,
     positionByScope,
   ]);
+
+  // In Progressions the position bar (and its span) moves every chord, not just
+  // the selected one: each chord takes the shape nearest the chosen frets.
+  const followProgressionPosition = (primary: number, spanEnd: number) => {
+    const a = displayRegions[primary];
+    const b = displayRegions[spanEnd];
+    if (!a || !b) return;
+    const primaryTarget = { startFret: a.startFret, endFret: a.endFret };
+    const spanTarget = { startFret: b.startFret, endFret: b.endFret };
+    const primaries = followProgressionRegions(resolvedProgressionSteps, primaryTarget);
+    const ends = followProgressionRegions(resolvedProgressionSteps, spanTarget);
+    setScopePositions(
+      resolvedProgressionSteps.map((step, index) => ({
+        scope: getProgressionStepPositionScope(progressionId, index, step.quality),
+        position: index === progressionStepIndex ? primary : primaries[index],
+        spanEnd: index === progressionStepIndex ? spanEnd : ends[index],
+      })),
+    );
+  };
+
+  const setPositionIndex = (index: number) => {
+    if (studyMode !== 'progressions') {
+      setSinglePositionIndex(index);
+      return;
+    }
+    const collapsed = neckView.spanEndIndex === positionIndex;
+    followProgressionPosition(index, collapsed ? index : neckView.spanEndIndex);
+  };
+  const setSpanEndIndex = (index: number) => {
+    if (studyMode !== 'progressions') {
+      neckView.setSpanEndIndex(index);
+      return;
+    }
+    followProgressionPosition(positionIndex, index);
+  };
 
   const audio = useInstrument();
 
@@ -1154,7 +1191,7 @@ function App() {
             selectedIndex={positionIndex}
             onChange={setPositionIndex}
             spanEndIndex={neckView.spanEndIndex}
-            onSpanEndChange={neckView.setSpanEndIndex}
+            onSpanEndChange={setSpanEndIndex}
             allowRange={neckViewEnabled}
             disabled={ladderActive || traversalActive}
           />
