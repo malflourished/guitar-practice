@@ -7,8 +7,9 @@ import type {
   StudyMode,
 } from '../../types/music';
 import { getDiatonicRoot } from './diatonic';
-import { formatNoteDisplay, type NotationPreference } from './notes';
+import type { NotationPreference } from './notes';
 import { getChordQualityLabel } from './chords';
+import { formatChordRoot, getKeySpellingMap } from './noteSpelling';
 
 const CHORD_SUFFIX: Partial<Record<ChordQuality, string>> = {
   major: '',
@@ -294,10 +295,10 @@ export function formatChordName(
   root: NoteName,
   quality: ChordQuality,
   notation: NotationPreference,
-  /** Key-aware root spelling; defaults to the global sharp/flat switch. */
+  /** Key-aware root spelling; defaults to the spelling the chord reads best in. */
   rootSpelling?: string,
 ): string {
-  const rootLabel = rootSpelling ?? formatNoteDisplay(root, notation);
+  const rootLabel = rootSpelling ?? formatChordRoot(root, quality, notation);
   const suffix = CHORD_SUFFIX[quality];
   if (suffix !== undefined) {
     return `${rootLabel}${suffix}`;
@@ -312,7 +313,8 @@ export function resolveProgressionStep(
   notation: NotationPreference,
 ): ResolvedProgressionStep {
   const root = getDiatonicRoot(keyRoot, keyMode, step.degree);
-  const chordName = formatChordName(root, step.quality, notation);
+  const keySpelling = getKeySpellingMap(keyRoot, keyMode, notation).get(root);
+  const chordName = formatChordName(root, step.quality, notation, keySpelling);
   return {
     root,
     quality: step.quality,

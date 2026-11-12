@@ -721,6 +721,8 @@ function App() {
           qualityLabel,
           notation,
           activePositionRegion,
+          undefined,
+          spellingMap,
         );
       }
       return getFretboardTitle(
@@ -737,9 +739,11 @@ function App() {
               numeral: activeProgressionStep.numeral,
             }
           : undefined,
+        spellingMap,
       );
     },
     [
+      spellingMap,
       activeNotes,
       studyMode,
       qualityLabel,

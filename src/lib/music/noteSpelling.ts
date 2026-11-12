@@ -92,11 +92,49 @@ function spellByLetterSteps(
   });
 }
 
+/** The other name of a black-key root (C# and Db), or null for any other note. */
+function enharmonicRoot(root: SpelledNote): SpelledNote | null {
+  const index = LETTER_ORDER.indexOf(root.letter);
+  if (root.accidental === 1 && root.letter !== 'E' && root.letter !== 'B') {
+    return { letter: LETTER_ORDER[(index + 1) % 7], accidental: -1 };
+  }
+  if (root.accidental === -1 && root.letter !== 'F' && root.letter !== 'C') {
+    return { letter: LETTER_ORDER[(index + 6) % 7], accidental: 1 };
+  }
+  return null;
+}
+
+function accidentalTotal(notes: SpelledNote[]): number {
+  return notes.reduce((sum, note) => sum + Math.abs(note.accidental), 0);
+}
+
+/**
+ * Spell a scale or chord, renaming a black-key root to its other name when
+ * that needs fewer accidentals. A# major becomes Bb major (two flats instead
+ * of A#, B#, C##, D#, E#, F##, G##), and C# minor stays C# minor rather than
+ * Db minor with Fb and Bbb. That is the circle of fifths' choice. On a tie
+ * (F# or Gb major, D# or Eb minor) the root keeps the name it came in with,
+ * which follows the sharps/flats preference.
+ */
+function spellWithBestRoot(
+  root: SpelledNote,
+  intervals: number[],
+  letterSteps: number[],
+): SpelledNote[] {
+  const spelled = spellByLetterSteps(root, intervals, letterSteps);
+  const other = enharmonicRoot(root);
+  if (!other) return spelled;
+  const otherSpelled = spellByLetterSteps(other, intervals, letterSteps);
+  return accidentalTotal(otherSpelled) < accidentalTotal(spelled)
+    ? otherSpelled
+    : spelled;
+}
+
 export function spellChord(
   root: SpelledNote,
   quality: ChordQuality,
 ): SpelledNote[] {
-  return spellByLetterSteps(
+  return spellWithBestRoot(
     root,
     getChordIntervals(quality),
     getChordLetterSteps(quality),
@@ -107,11 +145,20 @@ export function getSpelledScaleNotes(
   root: SpelledNote,
   quality: ScaleQuality,
 ): SpelledNote[] {
-  return spellByLetterSteps(
+  return spellWithBestRoot(
     root,
     getScaleIntervals(quality),
     getScaleLetterSteps(quality),
   );
+}
+
+/** A chord root's name, spelled the way its chord reads best (Bb, not A#, for a major chord). */
+export function formatChordRoot(
+  root: NoteName,
+  quality: ChordQuality,
+  preference: NotationPreference,
+): string {
+  return formatSpelled(spellChord(spelledRootFromNoteName(root, preference), quality)[0]);
 }
 
 export function getSpelledChordNotes(

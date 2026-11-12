@@ -146,6 +146,10 @@ Five places where the picture contradicts the lesson. Each is small and independ
 - [x] **Hover looks more "on" than selected.** In `src/styles/glass.module.css`, `.pill:hover` uses `--glass-bg-hover` (0.14 alpha) and `.pillSelected` uses `--glass-bg` (0.06).
   **Fix:** selected is always the strongest state.
 
+Follow-ups from the owner's review, where the original rules were musically wrong:
+
+- [x] **Keys on black notes were spelled badly.** With sharps preferred, B♭ major read A#, B#, C##, D#, E#, F##, G##. With flats preferred, C# minor read D♭ minor with F♭ and B♭♭. A black-key root now takes whichever name needs fewer accidentals, which is the circle of fifths' choice. The sharps/flats switch only breaks the F#/G♭ major and D#/E♭ minor ties. This covers the fretboard, the key panel, chord names and the title. Progression chords are spelled by their key.
+
 ---
 
 ## C. Chord shapes and small triads

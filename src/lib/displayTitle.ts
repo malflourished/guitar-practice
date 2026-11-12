@@ -34,6 +34,8 @@ export function getFretboardTitle(
     chordName: string;
     numeral: string;
   },
+  /** The fretboard's key-aware note names; the root's name is taken from here. */
+  noteLabels?: Map<NoteName, string> | null,
 ): string {
   if (studyMode === 'progressions' && progressionOptions) {
     const progression = getProgressionById(progressionOptions.progressionId);
@@ -52,9 +54,10 @@ export function getFretboardTitle(
   }
 
   if (studyMode !== 'notes') {
-    const root = formatSpelled(
-      spelledRootFromNoteName(getRootNote(activeNotes), notation),
-    );
+    const rootNote = getRootNote(activeNotes);
+    const root =
+      noteLabels?.get(rootNote) ??
+      formatSpelled(spelledRootFromNoteName(rootNote, notation));
     const modeLabel = studyMode === 'chords' ? 'Chord' : 'Scale';
     const positionSuffix =
       (studyMode === 'chords' || studyMode === 'scales') && positionRegion
