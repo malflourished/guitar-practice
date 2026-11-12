@@ -102,7 +102,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
     id: 'circle-of-fifths',
     section: 'The Map',
     title: 'Circle of Fifths',
-    diagram: 'circle-of-fifths',
+    diagram: 'in-key',
     fretboardDemo: { scaleQuality: 'major' },
     practiceLink: { mode: 'scales', scaleQuality: 'major' },
     theory: {
@@ -120,7 +120,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
     id: 'twelve-notes',
     section: 'The Map',
     title: 'The 12 Notes',
-    diagram: 'circle-of-fifths',
+    diagram: 'in-key',
     theory: {
       title: 'The 12 Notes',
       summary:
@@ -173,7 +173,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
     id: 'major-scale',
     section: 'Keys & Scales',
     title: 'Major Scale',
-    diagram: 'circle-of-fifths',
+    diagram: 'in-key',
     fretboardDemo: { scaleQuality: 'major' },
     practiceLink: { mode: 'scales', scaleQuality: 'major' },
     theory: {
@@ -198,7 +198,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
     id: 'key-signatures',
     section: 'Keys & Scales',
     title: 'Key Signatures',
-    diagram: 'circle-of-fifths',
+    diagram: 'in-key',
     theory: {
       title: 'Key Signatures',
       summary:
@@ -213,7 +213,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
     id: 'relative-minor',
     section: 'Keys & Scales',
     title: 'Relative Minor',
-    diagram: 'circle-of-fifths',
+    diagram: 'in-key',
     fretboardDemo: { scaleQuality: 'minor' },
     practiceLink: { mode: 'scales', scaleQuality: 'minor' },
     theory: {
@@ -230,7 +230,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
     id: 'diatonic-chords',
     section: 'Diatonic Harmony',
     title: 'Diatonic Chords',
-    diagram: 'chord-wheel',
+    diagram: 'in-key',
     fretboardDemo: { scaleQuality: 'major' },
     practiceLink: { mode: 'progressions' },
     theory: {
@@ -239,7 +239,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
         'Seven chords built from the scale degrees of a key — the palette for most progressions.',
       body: [
         'In major: I and IV and V are major, ii iii vi are minor, vii° is diminished. Stack thirds on each scale degree to get the chord quality.',
-        'The chord wheel lights up all seven diatonic chords for any key you pick. I sits on the inner ring, vi on the middle, ii on the outer — IV and V are the neighbors on either side. Click a major or minor label to change key.',
+        'The key dial lights up all seven diatonic chords for any key you pick. IV, I and V sit side by side on the outer ring, their relative minors ii, vi and iii directly inside, and vii° under V. Click a major or minor label to change key.',
         'Switch to Progressions mode to hear common formulas built from this same chord family.',
       ],
       sections: [
@@ -265,7 +265,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
     id: 'roman-numerals',
     section: 'Diatonic Harmony',
     title: 'Roman Numerals',
-    diagram: 'chord-wheel',
+    diagram: 'in-key',
     practiceLink: { mode: 'progressions' },
     theory: {
       title: 'Roman Numerals',
@@ -273,7 +273,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
         'Label chords by scale degree so progressions transpose to any key on the circle.',
       body: [
         'Uppercase numerals are major (I, IV, V); lowercase are minor (ii, iii, vi). A ° marks diminished (vii°).',
-        'The chord wheel labels each highlighted segment with its Roman numeral so you can see I–IV–V as neighbors and ii–iii–vi on the outer rings. I–V–vi–IV means the same shape in C (C–G–Am–F) as in G (G–D–Em–C).',
+        'The key dial labels each lit chord with its Roman numeral, so you can see IV–I–V as neighbors with ii–vi–iii beneath them. The shape never changes: turn the dial and I–V–vi–IV means the same thing in C (C–G–Am–F) as in G (G–D–Em–C). Borrowed shows the parallel key\'s chords; Dominants shows the chords that lead into the key\'s own.',
       ],
       examples: [
         { label: 'C major', chords: 'C – G – Am – F (I – V – vi – IV)' },
@@ -286,7 +286,7 @@ export const THEORY_TOPICS: TheoryTopic[] = [
     id: 'harmonic-function',
     section: 'Diatonic Harmony',
     title: 'Harmonic Function',
-    diagram: 'chord-wheel',
+    diagram: 'in-key',
     practiceLink: { mode: 'progressions' },
     theory: {
       title: 'Harmonic Function',

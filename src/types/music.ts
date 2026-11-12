@@ -45,8 +45,11 @@ export type NeckViewMode = 'single' | 'connected' | 'full';
  */
 export type HarmonyLayer = 'scale' | 'arpeggio';
 
-/** Interactive diagram shown in theory mode for a topic. */
-export type TheoryDiagram = 'circle-of-fifths' | 'chord-wheel';
+/**
+ * What the key dial shows in theory mode: the key's own chords, the parallel
+ * key's (borrowed), or the secondary dominants.
+ */
+export type TheoryDiagram = 'in-key' | 'borrowed' | 'dominants';
 
 /** What to render on the fretboard when "Show on fretboard" is enabled. */
 export interface TheoryFretboardDemo {
