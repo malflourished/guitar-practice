@@ -356,7 +356,8 @@ The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifth
 - [x] Music logic in `src/lib/music/keyDial.ts`, tested in all 12 keys and both modes.
 - [x] `KeyDial` component; the Theory toggle is In key / Borrowed / Dominants (`TheoryDiagram` is now those three values).
 - [x] `CircleOfFifths`, `ChordWheel` and `chordWheel.ts` removed. `circleOfFifths.ts` stays: the key panel (`KeyContext`) uses `getRelativeMajor` and `getRelativeMinor`.
-- [ ] Merge with package A and check the dial at the size the frame gives it (393 px at 1440×900; the dial wants about 480 px so the 12 px text floor does not crowd the vii° cells).
+- [x] Dial fills the Theory stage: words (title, summary, caption) in a left column, the dial the full height on the right. Rendered size 502 px at 1440×900, 358 at 1280×720, 278 at 960×640. Below 400 px the dim labels outside the window go; below 350 the relative-key line goes. At 960×640 the vii° and iii cells beside V still touch at the 12 px floor: decide whether to drop the numerals there.
+- [ ] Merge with package A.
 - [ ] Pass the notation preference (sharps or flats) from `App.tsx` to `KeyDial` (`notation` prop). Until then F♯/G♭ and D♯m/E♭m follow "sharps" unless the user clicks the cell twice.
 - [ ] Clicking a chord plays it, as elsewhere in the app.
 
@@ -376,3 +377,4 @@ The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifth
 - **2026-11-11.** Owner asked for an overhaul of the circle of fifths and chord wheel. Mock-up of one key dial added in `docs/design/key-wheel` (package H).
 - **2026-11-11.** Package A built: the page is one fixed frame (top strip, neck, deck, side panel) and never scrolls, measured in every mode, drill and Practice state at four window sizes and in all three themes. The neck fills the space left (string gap 36 px at 960×640 up to 64 at 1728×1080) and the strings sit at the same height in every mode. Changes to the plan: tempo and transport went to the deck, because the strip is full at 960 px; the key became a menu in the strip; the Build drill's targets became a select. `scripts/check-layout.cjs` added for future layout work. Not pushed until the owner confirms.
 - **2026-11-11.** Package H built on `claude/key-dial-f10673`: the key dial replaces the circle of fifths and chord wheel in Theory (In key, Borrowed, Dominants), with music logic in `keyDial.ts` tested in all 12 keys. Chord playing on click is left open.
+- **2026-11-12.** Key dial now fills the Theory stage (caption moved out of `KeyDial` into the stage's left column; `onCaption` prop). Measured at 1440×900, 1280×720 and 960×640, Vibrato dark and Scholar, all three views: no page scroll; no text overlap at the two larger sizes; reduced motion jumps with no turn. 960×640 is tight (see package H).

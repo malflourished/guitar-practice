@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -70,6 +71,8 @@ interface KeyDialProps {
   view: TheoryDiagram;
   /** Which name a black-key root takes when the two cost the same (F♯ or G♭). */
   notation?: NotationPreference;
+  /** Told the two caption lines for what the dial shows; the caller places them. */
+  onCaption?: (lines: [string, string]) => void;
 }
 
 function usePrefersReducedMotion(): () => boolean {
@@ -88,6 +91,7 @@ export function KeyDial({
   onSelectKey,
   view,
   notation = 'sharps',
+  onCaption,
 }: KeyDialProps) {
   // The one position printed both ways. The app only knows pitches, so the
   // dial remembers which name was clicked last (F♯ again gives G♭).
@@ -106,6 +110,9 @@ export function KeyDial({
     () => describeKeyDial({ major: keyName, mode: keyMode, view }),
     [keyName, keyMode, view],
   );
+  useEffect(() => {
+    onCaption?.(info.caption);
+  }, [info, onCaption]);
   const infoKey = `${keyName}|${keyMode}|${view}`;
   const [litKey, setLitKey] = useState(infoKey);
   const lit = litKey === infoKey;
@@ -295,6 +302,8 @@ export function KeyDial({
               return DIAL_MAJORS.map((_, p) => {
                 const [x, y] = point(rc, p * 30);
                 const entry = litCells.get(`${ring}${p}`);
+                // Small dials drop the diminished labels outside the window (and, smaller still, the unlit minors), so the text floor never crowds.
+                if (!entry && ((ring === 'dim' && scale < 0.4) || (ring === 'minor' && scale < 0.3))) return null;
                 const text = entry ? entry.cell.label : defaultCellLabel(ring, p);
                 const alternate = clickable && DIAL_ALTERNATE[p] !== undefined && !entry;
                 const shift = (spec.gap + capS) / 2;
@@ -364,16 +373,13 @@ export function KeyDial({
           <text x={C} y={C + 64} className={styles.plateSub} style={{ fontSize: fs(20) }}>
             {info.plate.sub}
           </text>
-          <text x={C} y={C + 98} className={styles.plateRel} style={{ fontSize: fs(22) }}>
-            {info.plate.rel}
-          </text>
+          {scale >= 0.35 ? (
+            <text x={C} y={C + 98} className={styles.plateRel} style={{ fontSize: fs(22) }}>
+              {info.plate.rel}
+            </text>
+          ) : null}
         </svg>
       </div>
-      <figcaption className={styles.caption}>
-        {info.caption.map((line) => (
-          <p key={line}>{line}</p>
-        ))}
-      </figcaption>
     </figure>
   );
 }

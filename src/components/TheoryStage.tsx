@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type {
   KeyMode,
   NoteName,
@@ -30,11 +31,22 @@ export function TheoryStage({
   diagramView,
   onSelectKey,
 }: TheoryStageProps) {
+  const [caption, setCaption] = useState<string[]>([]);
   return (
-    <section className={styles.stage} aria-label={topic.title}>
+    <section
+      className={diagramView ? styles.stageWithDial : styles.stage}
+      aria-label={topic.title}
+    >
       <header className={styles.header}>
         <h2 className={styles.title}>{topic.title}</h2>
         <p className={styles.summary}>{topic.theory.summary}</p>
+        {diagramView ? (
+          <div className={styles.caption}>
+            {caption.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </div>
+        ) : null}
       </header>
 
       {diagramView ? (
@@ -44,6 +56,7 @@ export function TheoryStage({
             keyMode={keyMode}
             onSelectKey={onSelectKey}
             view={diagramView}
+            onCaption={setCaption}
           />
         </div>
       ) : null}

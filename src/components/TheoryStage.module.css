@@ -47,7 +47,46 @@
   justify-content: center;
 }
 
-/* The dial sizes itself to the space and puts its caption underneath. */
+/* With a dial: words on the left, the dial the full height of the stage on the
+   right. The neck is always wider than tall, so no breakpoint is needed. */
+.stageWithDial {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(15rem, 24rem) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  column-gap: 1.5rem;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.stageWithDial .header {
+  align-self: center;
+  text-align: left;
+  gap: 0.75rem;
+}
+
+.stageWithDial .summary {
+  margin: 0;
+}
+
+.caption {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.caption p {
+  margin: 0 0 0.35rem;
+}
+
+.stageWithDial .diagram {
+  min-width: 0;
+  min-height: 0;
+}
+
 .diagram > figure {
   width: 100%;
   height: 100%;
