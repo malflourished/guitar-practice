@@ -33,18 +33,17 @@
 
 /* ---- Landing: welcome and plan in the neck, start in the deck ---- */
 .landing { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding: 0.25rem clamp(1.2rem, 3vw, 2.5rem) 1rem; }
-.welcome { display: flex; justify-content: space-between; align-items: center; gap: 2rem; padding: 0 0 2rem; }
-.duration { display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid var(--practice-line); border-radius: 50%; flex: 0 0 170px; height: 170px; background: radial-gradient(ellipse at 35% 20%, #e4edce12, transparent 75%); }
-.duration span { font-size: 4.5rem; line-height: 1.1; font-weight: 300; letter-spacing: -0.09em; padding-right: 0.09em; }
-.duration small { font-size: 0.75rem; letter-spacing: 0.13em; margin-top: 0.5rem; }
-.plan { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--practice-line); border-bottom: 1px solid var(--practice-line); }
-.planBlock { padding: 1.35rem 1.1rem 1.5rem; border-right: 1px solid var(--practice-line); }
+.welcome { padding: 0 0 1.6rem; }
+.plan { list-style: none; margin: 0; padding: 0; display: flex; border-top: 1px solid var(--practice-line); border-bottom: 1px solid var(--practice-line); }
+.planBlock { flex-basis: 0; min-width: 0; padding: 1.4rem 1.2rem 1.6rem; border-right: 1px solid var(--practice-line); }
 .planBlock:first-child { padding-left: 0; }
 .planBlock:last-child { border-right: 0; padding-right: 0; }
-.planTop { display: flex; justify-content: space-between; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--practice-muted); margin-bottom: 1.5rem; }
-.planBlock p { font-size: 0.77rem; line-height: 1.7; color: var(--practice-muted); margin-top: 0.65rem; }
+.planTop { display: flex; justify-content: space-between; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--practice-muted); margin-bottom: 1.2rem; }
+.planBlock h2 { font-size: 1.25rem; }
+.practice .planDoes { font-size: 0.9rem; line-height: 1.55; color: var(--practice-text); margin-top: 0.8rem; }
+.practice .planWhy { font-size: 0.78rem; line-height: 1.6; color: var(--practice-muted); margin-top: 0.6rem; }
 .startBar { display: flex; justify-content: space-between; align-items: end; gap: 1rem; }
-.setup { display: flex; gap: 1.6rem; }
+.setup { display: flex; flex-wrap: wrap; gap: 1.2rem 1.6rem; }
 .setup label { display: grid; gap: 0.45rem; color: var(--practice-muted); font-size: 0.75rem; letter-spacing: 0.12em; }
 .primary { background: var(--practice-accent); color: var(--practice-ink); border: 1px solid transparent; border-radius: 9px; padding: 0.85rem 1.2rem; min-height: 48px; font-size: 0.9rem !important; font-weight: 400 !important; display: inline-flex; gap: 2rem; justify-content: space-between; align-items: center; }
 .primary:hover { filter: brightness(1.06); transform: translateY(-1px); }
@@ -128,14 +127,14 @@
 
 /* ---- Short windows (1280×720, 960×640): same pieces, less air ---- */
 @media (max-height: 760px) {
-  .duration { display: none; }
-  .welcome { padding-bottom: 1rem; }
+    .welcome { padding-bottom: 1rem; }
   .landing .eyebrow { margin-bottom: 0.4rem; }
   .landing h1 { font-size: clamp(1.6rem, 3.4vw, 2.8rem); }
   .practice .intro { margin-top: 0.5rem; line-height: 1.6; }
   .planBlock { padding: 0.75rem 0.9rem 0.85rem; }
-  .planTop { margin-bottom: 0.5rem; }
-  .planBlock p { line-height: 1.5; margin-top: 0.35rem; }
+  .planTop { margin-bottom: 0.4rem; }
+  .practice .planDoes { margin-top: 0.4rem; line-height: 1.4; }
+  .practice .planWhy { margin-top: 0.3rem; line-height: 1.4; }
   .earCard { padding: 0.9rem 1.2rem; }
   .earCard .eyebrow { margin-bottom: 0.35rem; }
   .earCard h2 { font-size: 1.2rem; margin-bottom: 0.6rem; }
@@ -148,12 +147,18 @@
   .practice .resultTip { line-height: 1.6; }
 }
 
+@media (max-height: 700px) {
+  .landing .eyebrow { display: none; }
+  .landing h1 { font-size: 1.6rem; }
+  .welcome { padding-bottom: 0.7rem; }
+  .planBlock h2 { font-size: 1.05rem; }
+  .practice .planDoes { font-size: 0.82rem; }
+  .practice .planWhy { font-size: 0.74rem; }
+}
+
 @media (max-width: 700px) {
-  .duration { display: none; }
-  .plan { grid-template-columns: repeat(2, 1fr); }
-  .planBlock { padding: 0.8rem !important; }
-  .planBlock:nth-child(2) { border-right: 0; }
-  .planBlock:nth-child(-n+2) { border-bottom: 1px solid var(--practice-line); }
+    .plan { flex-wrap: wrap; }
+  .planBlock { flex: 1 1 45% !important; padding: 0.8rem !important; }
   .startBar { align-items: stretch; flex-direction: column; }
   .primary { justify-content: center; }
   .beats { display: none; }

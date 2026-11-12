@@ -109,3 +109,12 @@ describe('interval scores', () => {
     expect(validScore({ ...score, streak: -1 })).toBe(false);
   });
 });
+
+describe('the plan shown before Start', () => {
+  it('lists four blocks in order, each with a line on what and why, adding up to ten minutes', () => {
+    expect(PRACTICE_BLOCKS.map((b) => b.id)).toEqual(['roots', 'scale', 'ear', 'changes']);
+    expect(PRACTICE_BLOCKS.map((b) => b.seconds / 60)).toEqual([2, 3, 2, 3]);
+    expect(PRACTICE_BLOCKS.reduce((sum, b) => sum + b.seconds, 0)).toBe(600);
+    for (const b of PRACTICE_BLOCKS) { expect(b.does.length).toBeGreaterThan(0); expect(b.why.length).toBeGreaterThan(0); }
+  });
+});
