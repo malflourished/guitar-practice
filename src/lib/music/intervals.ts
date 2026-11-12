@@ -241,6 +241,18 @@ export function getIntervalColor(semitones: number): string {
   return INTERVAL_COLORS[key] ?? INTERVAL_COLORS[0];
 }
 
+/**
+ * The function colour for an interval, or `undefined` when colours are off.
+ * Undefined makes a marker or chip fall back to the theme's own ink, so the
+ * default view is black and white and intervals read by shape and label.
+ */
+export function getIntervalAccent(
+  semitones: number,
+  colored: boolean,
+): string | undefined {
+  return colored ? getIntervalColor(semitones) : undefined;
+}
+
 /** Relative luminance (0–1) of a #rrggbb color, for contrast decisions. */
 function hexLuminance(hex: string): number {
   const value = hex.replace('#', '');
@@ -259,7 +271,10 @@ export interface IntervalMarker {
   semitones: number;
   label: string;
   shape: ChordToneShape;
-  color: string;
+  /** Function colour; `undefined` when colours are off (theme ink is used). */
+  color: string | undefined;
+  /** Label colour that reads on `color`; `undefined` when colours are off. */
+  textColor: string | undefined;
   isRoot: boolean;
 }
 
@@ -272,13 +287,15 @@ export function getIntervalMarker(
   root: NoteName,
   note: NoteName,
   style: 'function' | 'degree' = 'function',
+  colored = false,
 ): IntervalMarker {
   const semitones = intervalBetween(root, note);
   return {
     semitones,
     label: getIntervalLabel(semitones, style),
     shape: getIntervalShape(semitones),
-    color: getIntervalColor(semitones),
+    color: getIntervalAccent(semitones, colored),
+    textColor: colored ? getIntervalTextColor(semitones) : undefined,
     isRoot: semitones === 0,
   };
 }

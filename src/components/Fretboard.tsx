@@ -20,7 +20,6 @@ import {
   formatNoteDisplay,
   getChordToneForNote,
   getIntervalMarker,
-  getIntervalTextColor,
   samePitchClass,
   type GhostLayer,
   type NotationPreference,
@@ -60,7 +59,7 @@ interface FretboardProps {
    * Interval-trainer labeling: render every note as its interval (function or
    * scale-degree) above the given root, with function colors and shapes.
    */
-  intervalLabeling?: { root: NoteName; style: 'function' | 'degree' } | null;
+  intervalLabeling?: { root: NoteName; style: 'function' | 'degree'; colors?: boolean } | null;
   noteColors: Record<NoteName, string>;
   onPlayNote?: (position: FretPosition) => void;
   /**
@@ -224,6 +223,7 @@ export function Fretboard({
         intervalLabeling.root,
         note,
         intervalLabeling.style,
+        intervalLabeling.colors,
       );
       return (
         <NoteMarker
@@ -289,10 +289,12 @@ export function Fretboard({
     const small = wide || radius <= SMALL_LABEL_RADIUS * textScale;
     const intervalTextStyle = intervalLabeling
       ? {
-          fill: getIntervalTextColor(
-            getIntervalMarker(intervalLabeling.root, note, intervalLabeling.style)
-              .semitones,
-          ),
+          fill: getIntervalMarker(
+            intervalLabeling.root,
+            note,
+            intervalLabeling.style,
+            intervalLabeling.colors,
+          ).textColor,
         }
       : undefined;
     return (

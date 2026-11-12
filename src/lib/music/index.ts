@@ -15,6 +15,7 @@ export {
 export {
   INTERVALS,
   INTERVAL_COLORS,
+  getIntervalAccent,
   getIntervalColor,
   getIntervalDef,
   getIntervalLabel,
