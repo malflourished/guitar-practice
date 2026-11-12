@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" data-theme="vibrato">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Key dial · mock-up</title>
+<style>
+  /* Inter from the app's own dependencies, so run npm install first. */
+  @font-face { font-family: Inter; font-weight: 300; font-display: block; src: url('../../../node_modules/@fontsource/inter/files/inter-latin-300-normal.woff2') format('woff2'); }
+  @font-face { font-family: Inter; font-weight: 400; font-display: block; src: url('../../../node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2') format('woff2'); }
+
+  :root { --kd-hue: 135; }
+  html[data-theme='vibrato'] {
+    color-scheme: dark;
+    --ink: #ecebe6;
+    --bg: #0b0d0c;
+    --kd-ink: #ecebe6;
+    --kd-accent: oklch(0.88 0.11 var(--kd-hue));
+    --kd-accent-2: oklch(0.8 0.06 var(--kd-hue));
+    --kd-window: oklch(0.8 0.12 var(--kd-hue) / 0.1);
+    --kd-home: oklch(0.8 0.12 var(--kd-hue) / 0.12);
+  }
+  html[data-theme='scholar'] {
+    color-scheme: light;
+    --ink: #1d1b19;
+    --bg: #f3f1ea;
+    --kd-ink: #1d1b19;
+    --kd-accent: #1d1b19;
+    --kd-accent-2: rgb(29 27 25 / 0.62);
+    --kd-window: rgb(29 27 25 / 0.045);
+    --kd-home: rgb(29 27 25 / 0.075);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    overflow: hidden;
+    color: var(--ink);
+    background: var(--bg);
+    font-family: Inter, system-ui, sans-serif;
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+  }
+  html[data-theme='vibrato'] body {
+    background:
+      radial-gradient(65vw 70vh at 14% 18%, oklch(0.44 0.085 var(--kd-hue) / 0.55), transparent 70%),
+      radial-gradient(60vw 65vh at 88% 86%, oklch(0.4 0.07 calc(var(--kd-hue) + 50) / 0.5), transparent 70%),
+      var(--bg);
+  }
+
+  .stage {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    justify-items: center;
+    align-items: center;
+    gap: 10px;
+    padding: 28px 16px 26px;
+  }
+  header { text-align: center; }
+  h1 { margin: 0; font-size: 26px; font-weight: 300; letter-spacing: 0.01em; }
+  header p { margin: 6px 0 0; font-size: 15px; opacity: 0.6; }
+  #dial { height: 100%; min-height: 0; max-width: 92vw; aspect-ratio: 1; }
+  #dial svg { display: block; width: 100%; height: 100%; }
+
+  .controls { display: grid; justify-items: center; gap: 12px; }
+  .views {
+    display: inline-flex;
+    padding: 3px;
+    border: 1px solid color-mix(in oklab, var(--ink) 22%, transparent);
+    border-radius: 999px;
+  }
+  .views button, .theme button {
+    all: unset;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font: 400 12px/1 Inter, system-ui, sans-serif;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--ink) 58%, transparent);
+  }
+  .views button[aria-pressed='true'], .theme button[aria-pressed='true'] {
+    color: var(--ink);
+    background: color-mix(in oklab, var(--ink) 13%, transparent);
+  }
+  .caption {
+    margin: 0;
+    max-width: 680px;
+    min-height: 2.9em;
+    text-align: center;
+    white-space: pre-line;
+    font-size: 15px;
+    line-height: 1.45;
+    color: color-mix(in oklab, var(--ink) 72%, transparent);
+  }
+
+  .theme { position: fixed; top: 14px; right: 14px; z-index: 5; display: flex; align-items: center; gap: 2px; }
+  .theme span { margin-right: 6px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.45; }
+
+  /* A stand-in for the app's analog texture (Subtle on Vibrato, Print on Scholar). */
+  .grain, .vignette { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
+  .grain {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.9' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+  html[data-theme='vibrato'] .grain { mix-blend-mode: overlay; opacity: 0.22; }
+  html[data-theme='scholar'] .grain { mix-blend-mode: multiply; opacity: 0.16; filter: grayscale(1); }
+  html[data-theme='vibrato'] .vignette { background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgb(0 0 0 / 0.5) 120%); }
+  html[data-theme='scholar'] .vignette { background: radial-gradient(ellipse at 50% 50%, transparent 58%, rgb(120 84 40 / 0.14) 125%); mix-blend-mode: multiply; }
+</style>
+</head>
+<body>
+<main class="stage">
+  <header>
+    <h1>Roman Numerals</h1>
+    <p>Name chords by scale degree, and a progression moves to any key unchanged.</p>
+  </header>
+  <div id="dial"></div>
+  <div class="controls">
+    <div class="views" role="group" aria-label="What the dial shows">
+      <button type="button" data-view="key">In key</button>
+      <button type="button" data-view="borrowed">Borrowed</button>
+      <button type="button" data-view="dominants">Dominants</button>
+    </div>
+    <p class="caption" id="caption"></p>
+  </div>
+</main>
+<div class="theme" role="group" aria-label="Theme for this mock-up">
+  <span>Mock-up</span>
+  <button type="button" data-theme="vibrato">Vibrato</button>
+  <button type="button" data-theme="scholar">Scholar</button>
+</div>
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<script>
+  window.__errors = [];
+  window.addEventListener('error', (event) => window.__errors.push(String(event.message)));
+</script>
+<script src="key-wheel.js"></script>
+<script>
+  // URL options: ?theme=scholar&key=Gb&mode=minor&view=borrowed (b = flat, s = sharp)
+  const params = new URLSearchParams(location.search);
+  const spell = (s) => s && s[0].toUpperCase() + s.slice(1).replace(/b/g, '♭').replace(/s/g, '♯');
+  const theme = params.get('theme') === 'scholar' ? 'scholar' : 'vibrato';
+  document.documentElement.dataset.theme = theme;
+
+  const caption = document.getElementById('caption');
+  const viewButtons = document.querySelectorAll('.views button');
+  const dial = KeyDial.mount(document.getElementById('dial'), {
+    initial: {
+      key: spell(params.get('key')) || 'D',
+      mode: params.get('mode') === 'minor' ? 'minor' : 'major',
+      view: params.get('view') || 'key',
+    },
+    onChange(info) {
+      document.documentElement.style.setProperty('--kd-hue', String((info.k * 30 + 75) % 360));
+      caption.textContent = info.caption.join('\n');
+      viewButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === info.state.view)));
+    },
+  });
+
+  viewButtons.forEach((b) => b.addEventListener('click', () => dial.set({ view: b.dataset.view })));
+  const themeButtons = document.querySelectorAll('.theme button');
+  themeButtons.forEach((b) => {
+    b.setAttribute('aria-pressed', String(b.dataset.theme === theme));
+    b.addEventListener('click', () => {
+      document.documentElement.dataset.theme = b.dataset.theme;
+      themeButtons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    });
+  });
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowRight') dial.step(1);
+    if (event.key === 'ArrowLeft') dial.step(-1);
+  });
+  window.__kd = dial;
+</script>
+</body>
+</html>

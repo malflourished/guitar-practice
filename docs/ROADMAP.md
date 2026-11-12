@@ -16,6 +16,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | E | Practice that adapts, jam loop | Ready after A | A | a capable model |
 | F | Look: analog texture | Default look done and reviewed, 2026-11-11. Open: measure its cost on real hardware | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
+| H | Theory figures: one key dial | Mock-up ready. **Waiting for the owner** | owner sign-off, then A | a capable model: the mock-up is the reference implementation |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
 
@@ -292,6 +293,18 @@ Scholar: clean and Print.
 
 ---
 
+## H. Theory figures: one key dial
+
+**Waiting for the owner** to review the mock-up in [design/key-wheel](design/key-wheel/README.md).
+
+The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifths "is closer to what I'm looking for"; "both could use an overhaul for overall design cleanup". The proposal replaces both with one dial: the circle of fifths with the key's seven chords in a turning window, plus Borrowed and Dominants views. The README there has the design rules and the build plan.
+
+- [x] Mock-up and images.
+- [ ] Owner review.
+- [ ] Build it into the app, after package A sizes the Theory stage.
+
+---
+
 ## Log
 
 - **2026-11-10.** Owner asked for a full review: teaching, look and feel, new features.
@@ -303,3 +316,4 @@ Scholar: clean and Print.
 - **2026-11-11.** Package B done: changes drill guide tones on the D and G strings (I–vi in the turnaround needs one 3-fret move, the pitches allow nothing smaller), key panel spelled by key, dyad shapes limited to 4 frets, active CAGED letter in text colour (14.5:1 or better), selected pill stronger than hover.
 - **2026-11-11.** Packages B and F reviewed against the running app and confirmed. One addition from the review: the Changes drill now shows each chord's root on the low E or A string under its guide tones (`pickShellRoot`), so root, 3rd and 7th make a shell voicing. Before, G7's root sat at fret 3 while its guide tones were at frets 9 and 10.
 - **2026-11-11.** Owner asked to be told when a rule is musically wrong, and approved four follow-ups to package B. The shell-voicing root (`pickShellRoot`) had already landed. The other three: black-key roots spelled by the name that needs fewer accidentals (B♭ major, not A# major with C## and F##); the reach limit applied only across strings, so same-string shapes return; and the I–vi caption names the leap.
+- **2026-11-11.** Owner asked for an overhaul of the circle of fifths and chord wheel. Mock-up of one key dial added in `docs/design/key-wheel` (package H).
