@@ -1346,7 +1346,7 @@ function App() {
   );
 
   const side = (
-    <SidePanel label="Side panel">
+    <SidePanel key={studyMode} label="Side panel">
       {keyContext}
 
       {studyMode === 'chords' && chordPositionViews.length > 0 && (
@@ -1462,7 +1462,7 @@ function App() {
               noteColors={noteColors}
               audio={audio}
             />
-            <SidePanel label="Side panel">{keyContext}</SidePanel>
+            <SidePanel key={studyMode} label="Side panel">{keyContext}</SidePanel>
           </>
         ) : (
           <>

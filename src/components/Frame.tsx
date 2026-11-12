@@ -1,4 +1,4 @@
-import { useContext, type ReactNode } from 'react';
+import { useContext, useEffect, useState, type ReactNode } from 'react';
 import { FrameContext, type SideState } from './frameContext';
 import styles from './Frame.module.css';
 
@@ -11,6 +11,13 @@ import styles from './Frame.module.css';
  * `<SidePanel/>`); the frame's CSS grid places them by area, so a mode can
  * split its own state across regions without lifting it into App.
  */
+
+/** How long the side panel takes to fade in or out. */
+const SIDE_FADE_MS = 200;
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 const join = (...names: (string | false | undefined)[]) =>
   names.filter(Boolean).join(' ');
@@ -25,9 +32,24 @@ interface FrameProps {
   children: ReactNode;
 }
 
-export function Frame({ side, focus, practice, noDeck, onCloseSide, children }: FrameProps) {
+export function Frame({ side: wanted, focus, practice, noDeck, onCloseSide, children }: FrameProps) {
+  // On close the panel stays for one fade before the grid gives its column
+  // back; opening and switching are immediate (the panel fades itself in).
+  const [shown, setShown] = useState<SideState>(wanted);
+  if (wanted !== 'closed' && shown !== wanted) setShown(wanted);
+  const closing = wanted === 'closed' && shown !== 'closed';
+  useEffect(() => {
+    if (!closing) return undefined;
+    const timer = window.setTimeout(
+      () => setShown('closed'),
+      prefersReducedMotion() ? 0 : SIDE_FADE_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [closing]);
+  const side = shown;
+
   return (
-    <FrameContext.Provider value={{ side, closeSide: onCloseSide }}>
+    <FrameContext.Provider value={{ side, closing, closeSide: onCloseSide }}>
       <div
         className={`app ${styles.frame}`}
         data-side={side}
@@ -124,13 +146,14 @@ interface SidePanelProps {
 }
 
 export function SidePanel({ label, className, children }: SidePanelProps) {
-  const { side, closeSide } = useContext(FrameContext);
+  const { side, closing, closeSide } = useContext(FrameContext);
   if (side === 'closed') return null;
   return (
     <aside
       className={join(styles.side, className)}
       data-region="side"
       data-side={side}
+      data-closing={closing ? 'true' : undefined}
       aria-label={label}
     >
       {side === 'drawer' && (
