@@ -251,6 +251,13 @@ function App() {
     oneOf(['scale', 'arpeggio'] as const),
   );
   const [theoryShowFretboard, setTheoryShowFretboard] = useState(false);
+  // Set when a Theory link jumps to another mode; shows "← Back to <topic>".
+  const [theoryReturn, setTheoryReturn] = useState<{
+    mode: StudyMode;
+    topicId: string;
+    title: string;
+    showFretboard: boolean;
+  } | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const [showFingers, setShowFingers] = usePersistentState(
     'show-fingers',
@@ -923,6 +930,18 @@ function App() {
     setTheoryShowFretboard(false);
   };
 
+  // The way back lasts only while the player stays where the link sent them.
+  if (theoryReturn && studyMode !== theoryReturn.mode) setTheoryReturn(null);
+
+  const handleBackToTheory = () => {
+    if (!theoryReturn) return;
+    audio.stopAll();
+    setStudyMode('theory');
+    setTheoryTopicId(theoryReturn.topicId);
+    setTheoryShowFretboard(theoryReturn.showFretboard);
+    setTheoryReturn(null);
+  };
+
   const handleTheoryKeySelect = (note: NoteName, mode: KeyMode) => {
     setActiveNotes(new Set([note]));
     setKeyCenter(note);
@@ -940,6 +959,12 @@ function App() {
   const handleTheoryPracticeLink = () => {
     const link = activeTheoryTopic.practiceLink;
     if (!link) return;
+    setTheoryReturn({
+      mode: link.mode,
+      topicId: activeTheoryTopic.id,
+      title: activeTheoryTopic.title,
+      showFretboard: theoryShowFretboard,
+    });
     setStudyMode(link.mode);
     if (link.scaleQuality) {
       setScaleQuality(link.scaleQuality);
@@ -1074,6 +1099,16 @@ function App() {
         studyMode={studyMode}
         onStudyModeChange={handleStudyModeChange}
       />
+      {theoryReturn && (
+        <button
+          type="button"
+          className={`${glass.pill} backToTheory`}
+          title={`Back to ${theoryReturn.title} in Theory`}
+          onClick={handleBackToTheory}
+        >
+          ← Back<span className="backToTheoryTopic"> to {theoryReturn.title}</span>
+        </button>
+      )}
       <StripEnd>
         {singleRootMode && studyMode !== 'practice' && (
           <Popover

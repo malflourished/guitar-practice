@@ -122,7 +122,32 @@ export function TheoryActions({
       ) : null}
 
       <div className={styles.actions}>
-        {topic.fretboardDemo ? (
+        {topic.fretboardDemo && diagramView ? (
+          <div className={styles.viewSwitch} role="group" aria-label="Show on">
+            {(
+              [
+                { neck: false, label: 'Dial' },
+                { neck: true, label: 'Neck' },
+              ] as const
+            ).map(({ neck, label }) => (
+              <button
+                key={label}
+                type="button"
+                className={
+                  showFretboard === neck
+                    ? styles.viewSwitchSelected
+                    : styles.viewSwitchButton
+                }
+                aria-pressed={showFretboard === neck}
+                onClick={() => {
+                  if (showFretboard !== neck) onShowFretboardChange(neck);
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        ) : topic.fretboardDemo ? (
           <button
             type="button"
             className={
