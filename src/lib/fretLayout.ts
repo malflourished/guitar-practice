@@ -1,4 +1,4 @@
-import { FRET_COUNT } from './music';
+import { FRET_COUNT, STRING_COUNT } from './music';
 
 /** Non-scaling layout dimensions in SVG units. */
 export const FRETBOARD_LAYOUT = {
@@ -14,6 +14,52 @@ export const FRETBOARD_LAYOUT = {
   openLaneX: 40,
   stringLabelX: 14,
 } as const;
+
+/** Room under the strings for the CAGED / position letters. */
+export const BADGE_ROW_HEIGHT = 24;
+
+/**
+ * Board height at scale 1 with the badge row. A board that fills the neck
+ * always reserves the badge row, so the strings sit at the same height in
+ * every mode, with or without letters.
+ */
+export const BASE_BOARD_HEIGHT =
+  FRETBOARD_LAYOUT.topPadding +
+  (STRING_COUNT - 1) * FRETBOARD_LAYOUT.stringGap +
+  FRETBOARD_LAYOUT.bottomPadding +
+  8 +
+  BADGE_ROW_HEIGHT;
+
+/** Only reached in windows smaller than the app's minimum (960×640). */
+export const MIN_BOARD_SCALE = 0.8;
+export const MAX_STRING_GAP = 64;
+
+/**
+ * Largest string gap for a window this wide, so the neck grows with the
+ * window instead of only with its height: 36 px at 960, about 55 at 1440,
+ * and 64 from about 1660 up.
+ */
+export function maxStringGap(viewportWidth: number): number {
+  return Math.min(
+    MAX_STRING_GAP,
+    Math.max(FRETBOARD_LAYOUT.stringGap, viewportWidth / 26),
+  );
+}
+
+/**
+ * Vertical scale of a board that fills `availableHeight`: 1 is the old fixed
+ * board (36 px string gap), capped by `maxStringGap` for the window width.
+ */
+export function boardScale(availableHeight: number, viewportWidth: number): number {
+  const cap = maxStringGap(viewportWidth) / FRETBOARD_LAYOUT.stringGap;
+  const fit = availableHeight / BASE_BOARD_HEIGHT;
+  return Math.min(cap, Math.max(MIN_BOARD_SCALE, fit));
+}
+
+/** Dots and letters grow more slowly than the string gap. */
+export function labelScale(scale: number): number {
+  return 1 + (scale - 1) * 0.6;
+}
 
 /**
  * Default scale length (nut to bridge) in SVG units.
