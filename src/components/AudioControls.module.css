@@ -6,6 +6,21 @@
   gap: 0.65rem;
 }
 
+.anchorField {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.anchorLabel {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary, inherit);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
 .anchorGroup {
   display: inline-flex;
   align-items: stretch;

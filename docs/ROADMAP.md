@@ -17,13 +17,13 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | F | Look: analog texture | Default look done and reviewed, 2026-11-11. Open: measure its cost on real hardware | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
 | H | Theory figures: one key dial | Done, merged and pushed 2026-11-12 | – | – |
-| I | Quick fixes from the 2026-11-12 walkthrough | **In progress** in its own session and branch | nothing | a capable model |
-| J | Split `App.tsx` into mode components | **Next**, as soon as I is merged (both edit `App.tsx`) | I | a capable model, carefully: no change in behaviour or look |
+| I | Quick fixes from the 2026-11-12 walkthrough | Done, merged 2026-11-12 | nothing | a capable model |
+| J | Split `App.tsx` into mode components | **In progress** in its own session and branch | I | a capable model, carefully: no change in behaviour or look |
 | K | Settings page in the side panel | After J | J | a capable model |
 | L | One Play control for every mode | The component can start now; wiring after J | J for wiring | a capable model |
 | M | Mode controls: Notes, Chords, Scales | After J, K and L | J, K, L | a capable model; the owner approves screenshots |
-| N | Intervals: clear drills, black and white | Ready now | nothing (K adds the colour switch later) | a capable model |
-| O | Practice: show the plan before Start | Ready now | nothing | a capable model |
+| N | Intervals: clear drills, black and white | Built on its own branch; small follow-ups in progress, then merge | nothing (K adds the colour switch later) | a capable model |
+| O | Practice: show the plan before Start | Built on its own branch; small follow-ups in progress, then merge | nothing | a capable model |
 | P | Progressions: the improvising workshop | P1 after J; P2 with L | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
 
@@ -268,7 +268,7 @@ Four parts:
 
 ## E. Practice that adapts, and a jam loop
 
-**2026-11-12:** the jam loop moved to Progressions (P2). Adaptive practice stays here and follows O.
+**2026-11-12:** the jam loop moved to Progressions (P2). Adaptive practice stays here and follows O. Also widen the Ear block beyond ♭3, 5 and ♭7: they are all consonant and easy to tell apart, so the major 3rd and the tritone should join over time.
 
 **Today.** The session is the same four blocks every day (Roots 2 min, Scale 3, Ear 2, Changes 3), always minor, always the lowest pentatonic box, always the same three ear intervals and i–iv–V. Ratings are saved and never used. See `src/components/PracticeSession.tsx` and `src/lib/practice/`.
 
@@ -404,14 +404,16 @@ The owner walked through every mode of the new layout on 2026-11-12 and agreed t
 
 ## I. Quick fixes from the 2026-11-12 walkthrough
 
-In progress in its own session and branch. Merge after review.
+Done and merged on 2026-11-12.
 
-- [ ] Progressions: every chord in the panel follows the position bar, not only the first.
-- [ ] Notes: names on the dots when several notes are selected.
-- [ ] No squares on a clicked note. During playback, the sounding dot brightens instead.
-- [ ] Side panel: no scrollbar (still scrollable), and opening, closing and content changes animate.
-- [ ] Scales: a "Start on" label for Root / 3rd / 5th, the note a scale run starts on.
-- [ ] Theory: a "Dial | Neck" switch, and "← Back to <topic>" after a link jumps to another mode.
+- [x] Progressions: every chord in the panel follows the position bar, not only the first. Each chord takes its shape with the most fret overlap, or the nearest one.
+- [x] Notes: names on the dots when several notes are selected. Notes got its own Names button, on the same saved setting as Labels.
+- [x] No squares on a clicked note. During playback, the sounding dot brightens instead. On Scholar's near-black root dot this shows mostly as a glow.
+- [x] Side panel: no scrollbar (still scrollable), and opening, closing and content changes animate.
+- [x] Scales: a "Start on" label for Root / 3rd / 5th, the note a scale run starts on.
+- [x] Theory: a "Dial | Neck" switch, and "← Back to <topic>" after a link jumps to another mode. Topics with a fretboard demo but no dial keep Show/Hide.
+
+Not yet checked by eye: the panel animation, and the click behaviour in the installed app (the white and yellow squares could not be reproduced in a headless click).
 
 ## J. Split `App.tsx` into mode components
 
@@ -526,3 +528,4 @@ In progress in its own session and branch. Merge after review.
 - **2026-11-12.** Key dial now fills the Theory stage (caption moved out of `KeyDial` into the stage's left column; `onCaption` prop). Measured at 1440×900, 1280×720 and 960×640, Vibrato dark and Scholar, all three views: no page scroll; no text overlap at the two larger sizes; reduced motion jumps with no turn. 960×640 is tight (see package H).
 - **2026-11-12.** Key dial given the deck's height in Theory (see package H). Neck top unchanged in every mode; Scales and Practice measured the same as before (deck 232 px at 1440×900, 216 below 760 px).
 - **2026-11-12.** Owner walked through the new layout. Agreed: a Settings page, one Play control, simpler mode controls, an Intervals regroup in black and white, a Practice preview, a home screen and a resizable panel. Progressions becomes the improvising workshop. Discover folds into M and P. Packages I to Q added; order: I, then J alone, then lanes in parallel (N and O can start now).
+- **2026-11-12.** I (quick fixes) reviewed and merged. N and O built on their own branches; small follow-ups sent before merging. J started.

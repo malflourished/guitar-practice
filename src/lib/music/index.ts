@@ -91,6 +91,9 @@ export {
 export {
   buildProgressionChordView,
   buildSavedProgressionChordViews,
+  followProgressionRegions,
+  nearestRegionIndex,
+  type FretRange,
   type ProgressionChordView,
 } from './progressionChordViews';
 export {

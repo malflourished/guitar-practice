@@ -61,3 +61,57 @@ export function buildSavedProgressionChordViews(
     return buildProgressionChordView(step, regionIndex, notation);
   });
 }
+
+export interface FretRange {
+  startFret: number;
+  endFret: number;
+}
+
+/**
+ * The region of `regions` that best matches a fret range: most fret overlap
+ * wins; when nothing overlaps, the region whose centre is nearest wins. Chords
+ * have different numbers of shapes, so "the same position" has to mean "the
+ * same place on the neck", not the same index.
+ */
+export function nearestRegionIndex(
+  regions: FretRange[],
+  target: FretRange,
+): number {
+  let best = 0;
+  let bestOverlap = -1;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  const targetCentre = (target.startFret + target.endFret) / 2;
+  regions.forEach((region, index) => {
+    const overlap = Math.max(
+      0,
+      Math.min(region.endFret, target.endFret) -
+        Math.max(region.startFret, target.startFret),
+    );
+    const distance = Math.abs(
+      (region.startFret + region.endFret) / 2 - targetCentre,
+    );
+    if (
+      overlap > bestOverlap ||
+      (overlap === bestOverlap && distance < bestDistance)
+    ) {
+      best = index;
+      bestOverlap = overlap;
+      bestDistance = distance;
+    }
+  });
+  return best;
+}
+
+/**
+ * For every step, the region index nearest to a fret range — how a whole
+ * progression follows one position bar. A chord with no shape in that region
+ * gets its nearest shape.
+ */
+export function followProgressionRegions(
+  steps: ResolvedProgressionStep[],
+  target: FretRange,
+): number[] {
+  return steps.map((step) =>
+    nearestRegionIndex(buildChordPositions(step.root, step.quality), target),
+  );
+}

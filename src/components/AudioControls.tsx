@@ -6,11 +6,14 @@ import styles from './AudioControls.module.css';
 
 export type PlaybackMode = 'strum' | 'sequence' | 'progression';
 
-const SCALE_ANCHORS: { id: ScaleAnchor; label: string }[] = [
-  { id: 'root', label: 'Root' },
-  { id: 'third', label: '3rd' },
-  { id: 'fifth', label: '5th' },
+const SCALE_ANCHORS: { id: ScaleAnchor; label: string; name: string }[] = [
+  { id: 'root', label: 'Root', name: 'the root' },
+  { id: 'third', label: '3rd', name: 'the 3rd' },
+  { id: 'fifth', label: '5th', name: 'the 5th' },
 ];
+
+const ANCHOR_TIP =
+  'Start on: the scale note that scale runs (Ascending, Descending) start and end on. It changes playback only, not the notes shown.';
 
 interface AudioControlsProps {
   /**
@@ -157,16 +160,18 @@ export function AudioControls({
       aria-label={part === 'sound' ? 'Sound' : part === 'transport' ? 'Playback' : 'Audio'}
     >
       {showTransport && playbackMode === 'sequence' && scaleAnchor && onScaleAnchorChange && (
+        <div className={styles.anchorField} title={ANCHOR_TIP}>
+        <span className={styles.anchorLabel}>Start on</span>
         <div
           className={styles.anchorGroup}
           role="group"
-          aria-label="Start playback on"
-          title="Which chord tone the run starts on"
+          aria-label="Start on"
         >
-          {SCALE_ANCHORS.map(({ id, label }) => (
+          {SCALE_ANCHORS.map(({ id, label, name }) => (
             <button
               key={id}
               type="button"
+              title={`Scale runs start and end on ${name} (playback only)`}
               className={
                 scaleAnchor === id
                   ? styles.anchorButtonActive
@@ -178,6 +183,7 @@ export function AudioControls({
               {label}
             </button>
           ))}
+        </div>
         </div>
       )}
       {!showTransport ? null : playbackMode === 'sequence' ? (

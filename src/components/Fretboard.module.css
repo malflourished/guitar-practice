@@ -170,39 +170,27 @@
   font-size: calc(13px * var(--neck-text, 1));
 }
 
-.activeRing {
-  fill: none;
-  stroke: var(--active-ring-stroke);
-  stroke-width: 2;
-  pointer-events: none;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: activePulseOnce 0.5s ease-out forwards;
-  filter: drop-shadow(0 0 8px var(--active-ring-glow));
+.sounding {
+  /* The note being played automatically: its dot goes full strength and
+     brighter, with no ring or box around it. */
+  filter: brightness(1.7) drop-shadow(0 0 7px var(--active-ring-glow));
 }
 
-@keyframes activePulseOnce {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-    stroke-width: 2.5;
-  }
-
-  35% {
-    opacity: 0.9;
-    transform: scale(1.18);
-    stroke-width: 2;
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(1.38);
-    stroke-width: 1;
-  }
+.sounding circle,
+.sounding path,
+.sounding rect,
+.sounding polygon {
+  opacity: 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .activeRing {
-    animation: none;
-  }
+/* A click on a note plays it and draws nothing; only keyboard focus shows a
+   ring. */
+svg [role='button']:focus {
+  outline: none;
 }
+
+svg [role='button']:focus-visible {
+  outline: 2px solid var(--fretboard-focus-outline);
+  outline-offset: 3px;
+}
+

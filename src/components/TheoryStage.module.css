@@ -144,3 +144,41 @@
   letter-spacing: normal;
   font-size: 0.75rem;
 }
+
+/* Dial | Neck: one joined switch, one side always selected. */
+.viewSwitch {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--fretboard-control-border);
+  border-radius: var(--radius-control);
+}
+
+.viewSwitchButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.9rem;
+  background: transparent;
+  border: none;
+  color: var(--fretboard-control-text);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background var(--duration-key) var(--ease-calm),
+    color var(--duration-key) var(--ease-calm);
+}
+
+.viewSwitchButton:hover {
+  background: var(--fretboard-control-bg-hover);
+  color: var(--fretboard-control-text-hover);
+}
+
+.viewSwitchSelected {
+  composes: viewSwitchButton;
+  background: var(--fretboard-control-bg-active);
+  color: var(--fretboard-control-text-active);
+}

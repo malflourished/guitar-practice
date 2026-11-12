@@ -32,7 +32,6 @@ const SINGLE_MARKER_FRETS = [3, 5, 7, 9, 15, 17, 19, 21];
 const DOUBLE_MARKER_FRETS = [12, 24];
 const NOTE_DOT_SCALE = 0.8;
 const OPEN_NOTE_RADIUS = 13 * NOTE_DOT_SCALE;
-const ACTIVE_RING_PAD = 6 * NOTE_DOT_SCALE;
 const SMALL_LABEL_RADIUS = 11 * NOTE_DOT_SCALE;
 
 interface FretboardProps {
@@ -109,12 +108,6 @@ export function Fretboard({
   const containerWidth = containerSize.width;
 
   useEffect(() => {
-    containerRef.current?.querySelectorAll(`.${styles.activeRing}`).forEach(ring => {
-      ring.getAnimations().forEach(animation => { animation.currentTime = 0; });
-    });
-  }, [activePosition]);
-
-  useEffect(() => {
     const element = containerRef.current;
     if (!element) return;
 
@@ -136,7 +129,6 @@ export function Fretboard({
   const stringGap = FRETBOARD_LAYOUT.stringGap * scale;
   const topPadding = FRETBOARD_LAYOUT.topPadding * scale;
   const openNoteRadius = OPEN_NOTE_RADIUS * textScale;
-  const activeRingPad = ACTIVE_RING_PAD * textScale;
   // Larger open-string dots move right so they keep clear of the string letters.
   const openLaneX = FRETBOARD_LAYOUT.openLaneX + (openNoteRadius - OPEN_NOTE_RADIUS);
 
@@ -460,15 +452,6 @@ export function Fretboard({
                   onClick={onPlayNote ? () => onPlayNote(position) : undefined}
                   style={onPlayNote ? { cursor: 'pointer' } : undefined}
                 >
-                  {isActive(string, 0) && (
-                    <circle
-                      key={`pulse-open-${string}`}
-                      cx={openLaneX}
-                      cy={stringY(string)}
-                      r={openNoteRadius + activeRingPad}
-                      className={styles.activeRing}
-                    />
-                  )}
                   {overlapKeys?.has(cellKey(position)) && (
                     <circle
                       cx={openLaneX}
@@ -477,12 +460,14 @@ export function Fretboard({
                       className={styles.overlapRing}
                     />
                   )}
-                  {renderNoteMarker(
-                    note,
-                    openLaneX,
-                    stringY(string),
-                    openNoteRadius,
-                  )}
+                  <g className={isActive(string, 0) ? styles.sounding : undefined}>
+                    {renderNoteMarker(
+                      note,
+                      openLaneX,
+                      stringY(string),
+                      openNoteRadius,
+                    )}
+                  </g>
                   {renderLabel(
                     note,
                     finger,
@@ -507,15 +492,6 @@ export function Fretboard({
                   onClick={onPlayNote ? () => onPlayNote(position) : undefined}
                   style={onPlayNote ? { cursor: 'pointer' } : undefined}
                 >
-                  {isActive(string, fret) && (
-                    <circle
-                      key={`pulse-${string}-${fret}`}
-                      cx={fretCenterX(fret)}
-                      cy={stringY(string)}
-                      r={radius + activeRingPad}
-                      className={styles.activeRing}
-                    />
-                  )}
                   {overlapKeys?.has(cellKey(position)) && (
                     <circle
                       cx={fretCenterX(fret)}
@@ -524,12 +500,14 @@ export function Fretboard({
                       className={styles.overlapRing}
                     />
                   )}
-                  {renderNoteMarker(
-                    note,
-                    fretCenterX(fret),
-                    stringY(string),
-                    radius,
-                  )}
+                  <g className={isActive(string, fret) ? styles.sounding : undefined}>
+                    {renderNoteMarker(
+                      note,
+                      fretCenterX(fret),
+                      stringY(string),
+                      radius,
+                    )}
+                  </g>
                   {renderLabel(
                     note,
                     finger,

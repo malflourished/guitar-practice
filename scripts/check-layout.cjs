@@ -78,7 +78,7 @@ const STATES = [
   { name: 'theory-wheel', store: { ...mode('theory'), 'vibrato:theory-topic': '"diatonic-chords"' } },
   { name: 'theory-text', store: { ...mode('theory'), 'vibrato:theory-topic': '"chord-construction"' } },
   { name: 'theory-fretboard', store: { ...mode('theory'), 'vibrato:theory-topic': '"circle-of-fifths"' },
-    actions: [clickText('Show on fretboard')] },
+    actions: [clickText('Neck')] },
   { name: 'scales-panel-closed', store: { ...mode('scales'), 'vibrato:side-panel-open': 'false' } },
   { name: 'scales-drawer', store: mode('scales'), actions: [clickText('Panel')] },
   { name: 'scales-theme-menu', store: mode('scales'), actions: [clickText('Theme')] },
