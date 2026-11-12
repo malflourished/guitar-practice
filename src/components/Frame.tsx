@@ -7,9 +7,11 @@ import styles from './Frame.module.css';
  * strip, the neck (which takes every spare pixel), a deck of fixed height
  * under it, and a side panel that is the only region allowed to scroll.
  *
- * Mode components return their regions as siblings (`<Neck/>`, `<Deck/>`,
- * `<SidePanel/>`); the frame's CSS grid places them by area, so a mode can
- * split its own state across regions without lifting it into App.
+ * The frame has named slots: `strip`, `neck`, `deck`, `panel`, plus `settings`
+ * and `home`, which are empty for now (the Frame lane gives them a place in
+ * the grid). Regions render in that order and the CSS grid places them by
+ * area. A mode that draws its own regions (Practice, Intervals) passes them as
+ * `body` instead of `neck` and `deck`. `children` is for overlays.
  */
 
 /** How long the side panel takes to fade in or out. */
@@ -29,10 +31,31 @@ interface FrameProps {
   /** The mode shows no deck: the neck takes its height. */
   noDeck?: boolean;
   onCloseSide: () => void;
-  children: ReactNode;
+  strip?: ReactNode;
+  home?: ReactNode;
+  neck?: ReactNode;
+  deck?: ReactNode;
+  body?: ReactNode;
+  panel?: ReactNode;
+  settings?: ReactNode;
+  children?: ReactNode;
 }
 
-export function Frame({ side: wanted, focus, practice, noDeck, onCloseSide, children }: FrameProps) {
+export function Frame({
+  side: wanted,
+  focus,
+  practice,
+  noDeck,
+  onCloseSide,
+  strip,
+  home,
+  neck,
+  deck,
+  body,
+  panel,
+  settings,
+  children,
+}: FrameProps) {
   // On close the panel stays for one fade before the grid gives its column
   // back; opening and switching are immediate (the panel fades itself in).
   const [shown, setShown] = useState<SideState>(wanted);
@@ -58,6 +81,13 @@ export function Frame({ side: wanted, focus, practice, noDeck, onCloseSide, chil
         data-deck={noDeck ? 'none' : undefined}
       >
         <div className={styles.surface} aria-hidden="true" />
+        {strip}
+        {home}
+        {neck}
+        {deck}
+        {body}
+        {panel}
+        {settings}
         {children}
         {side === 'drawer' && (
           <div className={styles.backdrop} aria-hidden="true" onClick={onCloseSide} />

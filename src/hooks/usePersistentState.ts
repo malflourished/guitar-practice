@@ -45,3 +45,9 @@ export function oneOf<T extends string>(
   return (value): value is T =>
     typeof value === 'string' && (values as readonly string[]).includes(value);
 }
+
+export const isBoolean = (value: unknown): value is boolean =>
+  typeof value === 'boolean';
+
+export const isNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
