@@ -357,7 +357,8 @@ The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifth
 - [x] `KeyDial` component; the Theory toggle is In key / Borrowed / Dominants (`TheoryDiagram` is now those three values).
 - [x] `CircleOfFifths`, `ChordWheel` and `chordWheel.ts` removed. `circleOfFifths.ts` stays: the key panel (`KeyContext`) uses `getRelativeMajor` and `getRelativeMinor`.
 - [x] Dial fills the Theory stage: words (title, summary, caption) in a left column, the dial the full height on the right. Rendered size 502 px at 1440×900, 358 at 1280×720, 278 at 960×640. Below 400 px the dim labels outside the window go; below 350 the relative-key line goes. At 960×640 the vii° and iii cells beside V still touch at the 12 px floor: decide whether to drop the numerals there.
-- [ ] Merge with package A.
+- [x] Merge with package A (fast-forward into `vibrato-next`, 2026-11-12).
+- [ ] At 960×640 the dial is 278 px and vii° touches iii. Proposed fix: while the dial shows, Theory's pills move into the stage's left column and the deck's fixed 232 px goes to the neck, so the dial gains about 200 px at every window size.
 - [ ] Pass the notation preference (sharps or flats) from `App.tsx` to `KeyDial` (`notation` prop). Until then F♯/G♭ and D♯m/E♭m follow "sharps" unless the user clicks the cell twice.
 - [ ] Clicking a chord plays it, as elsewhere in the app.
 
