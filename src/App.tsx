@@ -1278,6 +1278,15 @@ function App() {
           <button type="button" className={glass.pill} onClick={handleClearAll}>
             Clear
           </button>
+          <button
+            type="button"
+            className={showNoteLabels ? glass.pillSelected : glass.pill}
+            aria-pressed={showNoteLabels}
+            title="Show note names on the dots"
+            onClick={() => setShowNoteLabels((prev) => !prev)}
+          >
+            Names
+          </button>
         </div>
       </>
     ) : studyMode === 'theory' ? (
