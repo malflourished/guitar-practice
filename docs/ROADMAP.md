@@ -22,8 +22,8 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | K | Settings page in the side panel | After J | J | a capable model |
 | L | One Play control for every mode | The component can start now; wiring after J | J for wiring | a capable model |
 | M | Mode controls: Notes, Chords, Scales | After J, K and L | J, K, L | a capable model; the owner approves screenshots |
-| N | Intervals: clear drills, black and white | Built on its own branch; small follow-ups in progress, then merge | nothing (K adds the colour switch later) | a capable model |
-| O | Practice: show the plan before Start | Built on its own branch; small follow-ups in progress, then merge | nothing | a capable model |
+| N | Intervals: clear drills, black and white | Done, merged 2026-11-12 | nothing (K adds the colour switch later) | a capable model |
+| O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
 | P | Progressions: the improvising workshop | P1 after J; P2 with L | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
 
@@ -433,6 +433,7 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 - A Settings button in the top strip, next to Theme and Panel. Settings opens as a page in the side panel, replacing its content while open and animating like other panel changes. The button or Esc closes it.
 - It holds Sound (guitar, volume, mute, room), Tempo, Labels (note names, intervals, fingers, none) and Interval colours (off by default, see N).
 - Those controls leave the decks.
+- The interval-colour setting already exists as `useIntervalColors` (`src/hooks/useIntervalColors.ts`, key `interval-colors`), read inside `IntervalTrainer`. Lift it to one shared place, so the Settings switch updates Intervals at once.
 
 **Done when:** no deck holds a sound, tempo or label control; Settings is one click away in every mode; choices are remembered.
 
@@ -456,7 +457,8 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 
 ## N. Intervals: clear drills, black and white
 
-- Two groups: **Learn** (See, Shapes, Find) and **Train** (Ear, Shell chords, Guide tones). Build folds into Shell chords. Under the tabs, one line says what you'll do.
+- Two groups, by whether the answer is in view: **Learn** (See, Shapes, Guide tones) and **Train** (Find, Ear, Shell chords). Build folds into Shell chords as "Build it", between "See it" and "Test it". Under the tabs, one line says what you'll do.
+- **Done and merged 2026-11-12.** Open: Build also assembles scales, which sits oddly under Shell chords. Revisit if it confuses.
 - Interval colours are off by default; K adds a switch to turn them on. The shapes stay, because they read in black and white.
 
 **Done when:** each drill's label and line say what it does (owner check), and the default view is black and white.
@@ -467,6 +469,8 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 - Choosing a focus (only ear, only scales…) comes later with adaptive practice (E).
 
 **Done when:** someone opening Practice for the first time can tell what the ten minutes hold before pressing Start.
+
+**Done and merged 2026-11-12.** The headline names the key ("Ten minutes in C minor"), and the Changes block tells you to aim for the V chord's 3rd, which the minor pentatonic doesn't contain.
 
 ## P. Progressions: the improvising workshop
 
@@ -529,3 +533,4 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 - **2026-11-12.** Key dial given the deck's height in Theory (see package H). Neck top unchanged in every mode; Scales and Practice measured the same as before (deck 232 px at 1440×900, 216 below 760 px).
 - **2026-11-12.** Owner walked through the new layout. Agreed: a Settings page, one Play control, simpler mode controls, an Intervals regroup in black and white, a Practice preview, a home screen and a resizable panel. Progressions becomes the improvising workshop. Discover folds into M and P. Packages I to Q added; order: I, then J alone, then lanes in parallel (N and O can start now).
 - **2026-11-12.** I (quick fixes) reviewed and merged. N and O built on their own branches; small follow-ups sent before merging. J started.
+- **2026-11-12.** N (Intervals) and O (Practice) reviewed and merged. J (the split) in progress.

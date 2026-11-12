@@ -64,12 +64,16 @@ const STATES = [
   { name: 'scales-major-caged', store: { ...mode('scales'), 'vibrato:scale-quality': '"major"', 'vibrato:scale-system': '"caged"' } },
   { name: 'chords', store: mode('chords') },
   { name: 'progressions', store: mode('progressions') },
-  ...['Learn', 'Shapes', 'Find', 'Identify', 'Shells', 'Build', 'Changes'].map((drill) => ({
-    name: `intervals-${drill.toLowerCase()}`, store: mode('intervals'),
+  ...['See', 'Shapes', 'Find', 'Ear', 'Shell chords', 'Guide tones'].map((drill) => ({
+    name: `intervals-${drill.toLowerCase().replace(' ', '-')}`, store: mode('intervals'),
     actions: [clickText(drill, '[aria-label="Interval drill"]')],
   })),
-  { name: 'intervals-identify-all12', store: mode('intervals'),
-    actions: [clickText('Identify', '[aria-label="Interval drill"]'), clickText('All 12')] },
+  ...['Build it', 'Test it'].map((step) => ({
+    name: `intervals-shell-${step.toLowerCase().replace(' ', '-')}`, store: mode('intervals'),
+    actions: [clickText('Shell chords', '[aria-label="Interval drill"]'), clickText(step, '[aria-label="Interval drill"]')],
+  })),
+  { name: 'intervals-ear-all12', store: mode('intervals'),
+    actions: [clickText('Ear', '[aria-label="Interval drill"]'), clickText('All 12')] },
   { name: 'theory-circle', store: { ...mode('theory'), 'vibrato:theory-topic': '"circle-of-fifths"' } },
   { name: 'theory-wheel', store: { ...mode('theory'), 'vibrato:theory-topic': '"diatonic-chords"' } },
   { name: 'theory-text', store: { ...mode('theory'), 'vibrato:theory-topic': '"chord-construction"' } },

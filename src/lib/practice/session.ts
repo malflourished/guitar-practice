@@ -3,13 +3,17 @@ import { ALL_NOTES } from '../colors';
 
 export const PRACTICE_BLOCKS = [
   { id: 'roots', title: 'Find your bearings', short: 'Roots', seconds: 120,
-    detail: 'Find the root and fifth. Let your ears settle into the key.' },
+    does: 'Find the root and the 5th in one window of the neck.',
+    why: 'They are the anchors every other note is heard against.' },
   { id: 'scale', title: 'Connect the notes', short: 'Scale', seconds: 180,
-    detail: 'Loop a minor pentatonic shape, up and down, in eighth notes.' },
+    does: 'Run the minor pentatonic box up and down in eighth notes, in time.',
+    why: 'Even, relaxed time is what turns a shape into playing.' },
   { id: 'ear', title: 'Hear the distance', short: 'Ear', seconds: 120,
-    detail: 'Recognize the minor third, perfect fifth, and minor seventh.' },
+    does: 'Hear the ♭3, 5 or ♭7 above the root and name it.',
+    why: 'Each interval has a sound; know it and you can find notes by ear.' },
   { id: 'changes', title: 'Make it musical', short: 'Changes', seconds: 180,
-    detail: 'Play over i–iv–V. Land on a chord tone when the harmony changes.' },
+    does: 'Play over i–iv–V, one bar per chord, landing on each new chord.',
+    why: 'Aiming at the change is the step from scale to music.' },
 ] as const;
 export const SESSION_SECONDS = PRACTICE_BLOCKS.reduce((sum, block) => sum + block.seconds, 0);
 export type Rating = 'clean' | 'working' | 'revisit';

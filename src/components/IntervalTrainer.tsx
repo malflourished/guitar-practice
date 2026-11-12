@@ -17,7 +17,7 @@ import {
   getLeapCaption,
   planGuideTones,
   pickShellRoot,
-  getIntervalColor,
+  getIntervalAccent,
   getIntervalDef,
   getIntervalDyadShapes,
   getNoteAt,
@@ -40,14 +40,29 @@ import {
 import { Fretboard } from './Fretboard';
 import { Deck, DeckRow, Neck } from './Frame';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { useIntervalColors } from '../hooks/useIntervalColors';
+import {
+  DRILLS,
+  DRILL_GROUPS,
+  SHELL_STEPS,
+  drillsInGroup,
+  type DrillId,
+  type ShellStepId,
+} from '../lib/music/intervalDrills';
 import { EMPTY_SCORE, validScore, recordResult } from '../lib/practice/score';
 import styles from './IntervalTrainer.module.css';
 
+/**
+ * What the board is showing. The tabs (`DrillId`) are what the player picks;
+ * Shell chords has three steps, and one of them (Build it) is the old Build
+ * drill, so the view is the tab plus its step.
+ */
 type Drill =
   | 'learn'
   | 'find'
   | 'identify'
   | 'shell'
+  | 'shellsee'
   | 'shapes'
   | 'build'
   | 'changes';
@@ -60,18 +75,20 @@ interface IntervalTrainerProps {
   audio: UseInstrument;
 }
 
-// Ordered to follow the two-point learning path: meet the interval, see its
-// generic shapes, drill recognition, then apply it to chord tones, full
-// formulas, and finally chord changes.
-const DRILLS: { id: Drill; label: string; blurb: string }[] = [
-  { id: 'learn', label: 'Learn', blurb: 'See and hear an interval everywhere it lives.' },
-  { id: 'shapes', label: 'Shapes', blurb: 'The generic two-point shapes for one interval.' },
-  { id: 'find', label: 'Find', blurb: 'Hear it, then find it on the neck.' },
-  { id: 'identify', label: 'Identify', blurb: 'Hear it, then name it by ear.' },
-  { id: 'shell', label: 'Shells', blurb: 'Build a chord from its 3rd and 7th.' },
-  { id: 'build', label: 'Build', blurb: 'Assemble a scale or chord from interval functions.' },
-  { id: 'changes', label: 'Changes', blurb: 'Outline a progression with its 3rds and 7ths.' },
-];
+function viewFor(tab: DrillId, step: ShellStepId): Drill {
+  switch (tab) {
+    case 'see':
+      return 'learn';
+    case 'ear':
+      return 'identify';
+    case 'guide':
+      return 'changes';
+    case 'shell':
+      return step === 'see' ? 'shellsee' : step === 'build' ? 'build' : 'shell';
+    default:
+      return tab;
+  }
+}
 
 const SCOPES: { id: DrillScope; label: string }[] = [
   { id: 'string', label: 'One string' },
@@ -117,7 +134,10 @@ export function IntervalTrainer({
   noteColors,
   audio,
 }: IntervalTrainerProps) {
-  const [drill, setDrill] = useState<Drill>('find');
+  const [tab, setTab] = useState<DrillId>('find');
+  const [shellStep, setShellStep] = useState<ShellStepId>('see');
+  const [intervalColors] = useIntervalColors();
+  const drill = viewFor(tab, shellStep);
   const [labelStyle, setLabelStyle] = useState<LabelStyle>('function');
   const [scope, setScope] = useState<DrillScope>('position');
   const [direction, setDirection] = useState<IntervalPlaybackDirection>('ascending');
@@ -125,7 +145,7 @@ export function IntervalTrainer({
   const [enabled, setEnabled] = useState<number[]>(DEFAULT_ENABLED);
   const [shellQuality, setShellQuality] = useState<ChordQuality>('maj7');
   const [shapeSemitones, setShapeSemitones] = useState(4);
-  const [formulaTargetId, setFormulaTargetId] = useState('scale:major');
+  const [formulaTargetId, setFormulaTargetId] = useState('chord:maj7');
   const [buildStep, setBuildStep] = useState(1);
   const [changesId, setChangesId] = useState('major-251');
   const [changesStep, setChangesStep] = useState(0);
@@ -182,7 +202,7 @@ export function IntervalTrainer({
       return;
     }
 
-    if (drill === 'shell') {
+    if (drill === 'shell' || drill === 'shellsee') {
       const shell = getShellDef(shellQuality);
       const anchors = getRootAnchors(qRoot).filter((a) => a.fret <= 17);
       const anchor = anchors.length ? pick(anchors) : getRootAnchors(qRoot)[0];
@@ -425,6 +445,16 @@ export function IntervalTrainer({
     if (!audio.muted && changesPositions.length) audio.strum(changesPositions);
   };
 
+  // Shell chords, See it: the voicing "Hear shell" plays (root, 3rd, 7th).
+  const shellSeeVoicing = useMemo<FretPosition[]>(() => {
+    const a = question?.anchor;
+    if (!a || drill !== 'shellsee') return [];
+    const shell = getShellDef(shellQuality);
+    const third = getDirectedTargets(a, shell.third, 'position')[0];
+    const seventh = getDirectedTargets(a, shell.seventh, 'position')[0];
+    return dedupe([a, third, seventh].filter(Boolean) as FretPosition[]);
+  }, [question, drill, shellQuality]);
+
   // Positions drawn on the board for the current drill + state.
   const boardPositions = useMemo<FretPosition[]>(() => {
     if (drill === 'shapes') {
@@ -464,6 +494,7 @@ export function IntervalTrainer({
       const reveal = revealed ? question.targets : [];
       return dedupe([...base, ...found, ...reveal]);
     }
+    if (drill === 'shellsee') return shellSeeVoicing;
     return [];
   }, [
     question,
@@ -473,6 +504,7 @@ export function IntervalTrainer({
     revealed,
     shapeAnchor,
     dyadShapes,
+    shellSeeVoicing,
     revealedTones,
     changesPositions,
     root,
@@ -540,6 +572,12 @@ export function IntervalTrainer({
         : revealed
           ? `It was the ${intervalDef.name}`
           : 'Name the interval you heard';
+    }
+    if (drill === 'shellsee') {
+      const shell = getShellDef(shellQuality);
+      const seventh = shell.seventh === 11 ? '7th' : '♭7';
+      const third = shell.third === 4 ? '3rd' : '♭3rd';
+      return `${question.root} ${shell.label} shell: root, ${third} and ${seventh}`;
     }
     if (drill === 'shell') {
       const shell = getShellDef(shellQuality);
@@ -634,7 +672,7 @@ export function IntervalTrainer({
               notation={notation}
               noteColors={noteColors}
               showNoteLabels
-              intervalLabeling={{ root: boardRoot, style: labelStyle }}
+              intervalLabeling={{ root: boardRoot, style: labelStyle, colors: intervalColors }}
               onCellClick={
                 drill === 'find'
                   ? handleFindClick
@@ -657,20 +695,35 @@ export function IntervalTrainer({
 
       <Deck label="Interval drill">
         <DeckRow>
-          <div className={styles.tabs} role="group" aria-label="Interval drill">
-            {DRILLS.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                className={drill === id ? styles.tabActive : styles.tab}
-                aria-pressed={drill === id}
-                onClick={() => setDrill(id)}
+          <div className={styles.groups}>
+            {DRILL_GROUPS.map((group) => (
+              <div
+                key={group.id}
+                className={styles.group}
+                role="group"
+                aria-label={`${group.label} drills`}
               >
-                {label}
-              </button>
+                <span className={styles.groupLabel}>{group.label}</span>
+                <div className={styles.tabs}>
+                  {drillsInGroup(group.id).map(({ id, label }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={tab === id ? styles.tabActive : styles.tab}
+                      aria-pressed={tab === id}
+                      onClick={() => setTab(id)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </DeckRow>
+        <p className={styles.drillLine}>
+          {DRILLS.find((d) => d.id === tab)?.line}
+        </p>
         <DeckRow>
             {showScope && (
               <div className={styles.segment} role="group" aria-label="Search scope">
@@ -688,7 +741,23 @@ export function IntervalTrainer({
               </div>
             )}
 
-            {drill === 'shell' && (
+            {tab === 'shell' && (
+              <div className={styles.segment} role="group" aria-label="Shell step">
+                {SHELL_STEPS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={shellStep === id ? styles.segmentBtnActive : styles.segmentBtn}
+                    aria-pressed={shellStep === id}
+                    onClick={() => setShellStep(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {(drill === 'shell' || drill === 'shellsee') && (
               <div className={styles.segment} role="group" aria-label="Shell quality">
                 {SHELL_QUALITIES.map((quality) => (
                   <button
@@ -698,7 +767,11 @@ export function IntervalTrainer({
                       shellQuality === quality ? styles.segmentBtnActive : styles.segmentBtn
                     }
                     aria-pressed={shellQuality === quality}
-                    onClick={() => setShellQuality(quality)}
+                    onClick={() => {
+                      setShellQuality(quality);
+                      // Build it follows the chord you picked.
+                      setFormulaTargetId(`chord:${quality}`);
+                    }}
                   >
                     {getShellDef(quality).label}
                   </button>
@@ -741,6 +814,8 @@ export function IntervalTrainer({
               </div>
             )}
 
+            {/* Shapes, Build it and Guide tones always use the app's key. */}
+            {drill !== 'shapes' && drill !== 'build' && drill !== 'changes' && (
             <button
               type="button"
               className={randomRoot ? styles.toggleActive : styles.toggle}
@@ -750,6 +825,7 @@ export function IntervalTrainer({
             >
               Random root
             </button>
+            )}
         </DeckRow>
         {(drill === 'find' || drill === 'identify') && (
           <div className={styles.poolRow}>
@@ -776,7 +852,7 @@ export function IntervalTrainer({
                     type="button"
                     className={on ? styles.chipOn : styles.chip}
                     aria-pressed={on}
-                    style={on ? { borderColor: getIntervalColor(semitones) } : undefined}
+                    style={on ? { borderColor: getIntervalAccent(semitones, intervalColors) } : undefined}
                     onClick={() =>
                       setEnabled((prev) =>
                         prev.includes(semitones)
@@ -803,7 +879,7 @@ export function IntervalTrainer({
                   type="button"
                   className={on ? styles.chipOn : styles.chip}
                   aria-pressed={on}
-                  style={on ? { borderColor: getIntervalColor(def.semitones) } : undefined}
+                  style={on ? { borderColor: getIntervalAccent(def.semitones, intervalColors) } : undefined}
                   onClick={() => setLearnInterval(def.semitones)}
                   title={def.name}
                 >
@@ -824,7 +900,7 @@ export function IntervalTrainer({
                     type="button"
                     className={on ? styles.chipOn : styles.chip}
                     aria-pressed={on}
-                    style={on ? { borderColor: getIntervalColor(def.semitones) } : undefined}
+                    style={on ? { borderColor: getIntervalAccent(def.semitones, intervalColors) } : undefined}
                     onClick={() => setShapeSemitones(def.semitones)}
                     title={def.name}
                   >
@@ -880,7 +956,7 @@ export function IntervalTrainer({
                     key={`${tone.interval}-${index}`}
                     type="button"
                     className={cls}
-                    style={shown ? { borderColor: getIntervalColor(tone.interval) } : undefined}
+                    style={shown ? { borderColor: getIntervalAccent(tone.interval, intervalColors) } : undefined}
                     onClick={() => setBuildStep(index + 1)}
                     title={
                       tone.altered ? `${tone.label} — altered from major` : tone.label
@@ -1005,7 +1081,7 @@ export function IntervalTrainer({
                 </button>
               </>
             )}
-            {drill === 'shell' && question?.anchor && (
+            {(drill === 'shell' || drill === 'shellsee') && question?.anchor && (
               <button
                 type="button"
                 className={styles.btn}
@@ -1027,7 +1103,7 @@ export function IntervalTrainer({
                 Reveal
               </button>
             )}
-            {(drill === 'find' || drill === 'identify' || drill === 'shell') && (
+            {(drill === 'find' || drill === 'identify' || drill === 'shell' || drill === 'shellsee') && (
               <button type="button" className={styles.btnPrimary} onClick={nextQuestion}>
                 Next
               </button>
