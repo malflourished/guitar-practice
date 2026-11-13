@@ -144,6 +144,17 @@ P3 shows the next chord's target notes on the last beat of a bar where `changeCo
 
 **3. Levels: measure, then set.** In a hidden Electron run at 90 BPM, put a meter on the engine's output and play two bars of the 12-bar blues with each layer alone: guitar on Quarter, bass, pad. Set the levels so the bass peaks about 3 dB under the guitar and the pad about 6 dB under it (±2 dB), and all three together peak below the limiter's −2 dB. Write the measured numbers here.
 
+**Measured levels (2026-11-13).** Hidden Electron, 90 BPM, steel acoustic at the default volume (0.75), the first four bars of a C blues (C7, C7, F7, F7), two bars measured after the count-in with an AudioWorklet meter on the engine's output (after the limiter). Each layer alone, then all three:
+
+| Layer | Peak | RMS |
+|---|---|---|
+| Guitar, Quarter | −5.0 dBFS | −21.0 dBFS |
+| Bass | −8.0 dBFS (3.0 under the guitar) | −18.4 dBFS |
+| Pad | −10.8 dBFS (5.8 under the guitar) | −23.3 dBFS |
+| All three | −2.6 dBFS | −15.7 dBFS |
+
+To make room, the guitar's jam strums are scaled to 0.6 of their old gain (`JAM_GUITAR_LEVEL` in `engine.ts`, applied after the sample layer is chosen, so the timbre is unchanged). Before that the guitar alone peaked at −0.7 dBFS, above the limiter's −2 dB, so no bass or pad could have fit. The bass voice sits at −7.5 dB and the pad at −17 dB. The bass is louder than the guitar by RMS (it is sustained, the guitar decays), so if it is too forward by ear, lower `BassVoice`'s default volume.
+
 **Tests (P2.1):**
 - `buildJamBar` for each guitar rhythm: Whole is one strum at beat 0, Half is strums at 0 and 2, Quarter is 0–3 plus the swung up-strums with Swing. Guitar Off has no strums. Pad On adds one pad event, Pad Off none.
 - Bass, in all 12 keys: every note inside MIDI 27–39; the root on beat 0 and the chord's 5th on beat 2; a slash chord's bass on both. Swing adds one pickup at 3 + 2/3, a half step below the next bar's bass; Straight has none.
@@ -153,7 +164,7 @@ P3 shows the next chord's target notes on the last beat of a bar where `changeCo
 - [ ] The bass and the pad can each be heard clearly in the mix, and the measured levels are written above.
 - [ ] Whole, Half and Quarter sound as described, and Quarter no longer smears.
 - [ ] Swing can be heard in every rhythm, through the bass pickup.
-- [ ] Tests, lint and `tsc` pass.
+- [x] Tests, lint and `tsc` pass.
 - [ ] The owner plays along again and hears the bass and the pad, and the rhythms feel right.
 
 ## Out of scope here

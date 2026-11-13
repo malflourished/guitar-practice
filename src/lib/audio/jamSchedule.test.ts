@@ -12,16 +12,19 @@ import {
 import {
   BASS_LOW,
   SWING_OFFSET,
-  bassMidi,
   buildJamBar,
+  chordFifthPc,
+  jamBarStep,
   jamPosition,
+  bassMidi,
+  type GuitarRhythm,
   type JamChord,
   type JamEvent,
 } from './jamSchedule';
 import { PAD_HIGH, PAD_LOW, chordPitchClasses, leadPadVoicings, voiceMoves } from './padVoicing';
 
 const KEYS: NoteName[] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const strumBar = { backing: 'strum', feel: 'straight', click: false } as const;
+const bar = { guitar: 'quarter', pad: false, feel: 'straight', click: false } as const;
 
 type Strum = Extract<JamEvent, { kind: 'strum' }>;
 type Bass = Extract<JamEvent, { kind: 'bass' }>;
@@ -35,48 +38,113 @@ const pitchClassesOf = (id: string, key: NoteName) =>
     chordPitchClasses(noteToSemitone(step.root), getChordIntervals(step.quality)),
   );
 
-describe('buildJamBar', () => {
-  it('straight: four down-strums on beats 0 to 3, beat 0 louder than the rest', () => {
-    const strums = strumsOf(buildJamBar({ rootPc: 0 }, strumBar));
-    expect(strums.map((s) => s.beat)).toEqual([0, 1, 2, 3]);
-    expect(strums.every((s) => !s.up)).toBe(true);
-    for (const other of strums.slice(1)) expect(other.velocity).toBeLessThan(strums[0].velocity);
+describe('buildJamBar: the guitar', () => {
+  it('Whole is one strum at beat 0; Half is strums at 0 and 2; Quarter is 0 to 3', () => {
+    const beats = (guitar: GuitarRhythm) =>
+      strumsOf(buildJamBar({ rootPc: 0 }, { ...bar, guitar })).map((s) => s.beat);
+    expect(beats('whole')).toEqual([0]);
+    expect(beats('half')).toEqual([0, 2]);
+    expect(beats('quarter')).toEqual([0, 1, 2, 3]);
   });
 
-  it('swing: also an up-strum 2/3 of the way after each down-strum, softer than the downs', () => {
-    const strums = strumsOf(buildJamBar({ rootPc: 0 }, { ...strumBar, feel: 'swing' }));
+  it('Off has no strums, in any feel', () => {
+    for (const feel of ['straight', 'swing'] as const) {
+      expect(strumsOf(buildJamBar({ rootPc: 0 }, { ...bar, guitar: 'off', feel }))).toHaveLength(0);
+    }
+  });
+
+  it('accents: beat 0 loudest, beat 2 at 0.8 in Half, the other down-strums softer', () => {
+    const half = strumsOf(buildJamBar({ rootPc: 0 }, { ...bar, guitar: 'half' }));
+    expect(half.map((s) => s.velocity)).toEqual([1, 0.8]);
+    const quarter = strumsOf(buildJamBar({ rootPc: 0 }, bar));
+    expect(quarter.every((s) => !s.up)).toBe(true);
+    for (const other of quarter.slice(1)) expect(other.velocity).toBeLessThan(quarter[0].velocity);
+  });
+
+  it('Swing adds an up-strum 2/3 after each down-strum on Quarter, softer than the downs', () => {
+    const strums = strumsOf(buildJamBar({ rootPc: 0 }, { ...bar, feel: 'swing' }));
     const downs = strums.filter((s) => !s.up);
     const ups = strums.filter((s) => s.up);
     expect(downs.map((s) => s.beat)).toEqual([0, 1, 2, 3]);
     expect(ups.map((s) => s.beat)).toEqual(downs.map((s) => s.beat + SWING_OFFSET));
-    for (const up of ups) {
-      for (const down of downs) expect(up.velocity).toBeLessThan(down.velocity);
-    }
+    for (const up of ups) for (const down of downs) expect(up.velocity).toBeLessThan(down.velocity);
+    // Whole and Half keep their strums; the swing is in the bass
+    expect(strumsOf(buildJamBar({ rootPc: 0 }, { ...bar, guitar: 'half', feel: 'swing' }))).toHaveLength(2);
   });
 
-  it('bass on beats 0 and 2, inside MIDI 40 to 52, in all 12 keys', () => {
+  it('Pad On adds one pad event for the bar, Pad Off none', () => {
+    const on = buildJamBar({ rootPc: 0, padMidis: [55, 59, 62] }, { ...bar, pad: true });
+    expect(on.filter((e) => e.kind === 'pad')).toEqual([{ kind: 'pad', beat: 0, midis: [55, 59, 62], duration: 4 }]);
+    expect(buildJamBar({ rootPc: 0, padMidis: [55, 59, 62] }, bar).some((e) => e.kind === 'pad')).toBe(false);
+    // the pad sounds alone when the guitar is off
+    const alone = buildJamBar({ rootPc: 0, padMidis: [55] }, { ...bar, guitar: 'off', pad: true });
+    expect(alone.map((e) => e.kind)).toContain('pad');
+    expect(alone.map((e) => e.kind)).not.toContain('strum');
+  });
+
+  it('the click is on every beat when asked, with beat 0 accented', () => {
+    const clicks = buildJamBar({ rootPc: 0 }, { ...bar, click: true }).filter((e) => e.kind === 'click');
+    expect(clicks.map((e) => e.kind === 'click' && e.accent)).toEqual([true, false, false, false]);
+    expect(buildJamBar({ rootPc: 0 }, bar).some((e) => e.kind === 'click')).toBe(false);
+  });
+});
+
+describe('buildJamBar: the bass', () => {
+  it('the root on beat 0 and the 5th on beat 2, inside MIDI 27 to 39, in all 12 keys', () => {
     for (let pc = 0; pc < 12; pc++) {
-      const bass = bassOf(buildJamBar({ rootPc: pc }, strumBar));
-      expect(bass.map((b) => b.beat)).toEqual([0, 2]);
-      for (const note of bass) {
-        expect(note.midi).toBeGreaterThanOrEqual(BASS_LOW);
-        expect(note.midi).toBeLessThanOrEqual(52);
-        expect(note.midi % 12).toBe(pc);
+      const notes = bassOf(buildJamBar({ rootPc: pc }, bar));
+      expect(notes.map((b) => b.beat)).toEqual([0, 2]);
+      expect(notes[0].midi % 12).toBe(pc);
+      expect(notes[1].midi % 12).toBe((pc + 7) % 12);
+      for (const note of notes) {
+        expect(note.midi).toBeGreaterThanOrEqual(27);
+        expect(note.midi).toBeLessThanOrEqual(39);
       }
     }
   });
 
-  it('a step with a bass plays it, not the root (the Lydian float’s II/I)', () => {
+  it('a chord’s own 5th: a diminished chord plays its ♭5', () => {
+    const fifth = chordFifthPc(2, getChordIntervals('m7b5'));
+    expect(fifth).toBe(8);
+    const notes = bassOf(buildJamBar({ rootPc: 2, fifthPc: fifth }, bar));
+    expect(notes[1].midi % 12).toBe(8);
+    expect(chordFifthPc(0, getChordIntervals('dom7'))).toBe(7);
+  });
+
+  it('a slash chord plays its bass on both beats (the Lydian float’s II/I)', () => {
     for (const key of KEYS) {
       const step = resolved('lydian-float', key)[1];
-      expect(step.bass).toBe(key);
       const rootPc = noteToSemitone(step.root);
       const bassPc = noteToSemitone(step.bass!);
       expect(bassPc).not.toBe(rootPc);
-      const notes = bassOf(buildJamBar({ rootPc, bassPc }, strumBar));
+      const notes = bassOf(buildJamBar({ rootPc, bassPc }, bar));
       expect(notes.map((b) => b.midi % 12)).toEqual([bassPc, bassPc]);
     }
-    expect(bassMidi(0)).toBe(48);
+  });
+
+  it('Swing adds one pickup at 3 + 2/3, a half step below the next bar’s bass; Straight has none', () => {
+    for (let pc = 0; pc < 12; pc++) {
+      const nextBassPc = (pc + 5) % 12;
+      const swung = bassOf(buildJamBar({ rootPc: pc, nextBassPc }, { ...bar, feel: 'swing' }));
+      const pickups = swung.filter((b) => b.beat > 2);
+      expect(pickups).toHaveLength(1);
+      expect(pickups[0].beat).toBeCloseTo(3 + 2 / 3);
+      expect(pickups[0].midi).toBe(bassMidi(nextBassPc) - 1);
+      for (const note of swung) {
+        expect(note.midi).toBeGreaterThanOrEqual(27);
+        expect(note.midi).toBeLessThanOrEqual(39);
+      }
+      expect(bassOf(buildJamBar({ rootPc: pc, nextBassPc }, bar))).toHaveLength(2);
+    }
+  });
+
+  it('the pickup leans into the next chord: jamBarStep hands it the next bar’s bass, wrapping', () => {
+    const chords = [{ rootPc: 0, quality: 'major' }, { rootPc: 2, quality: 'major', bassPc: 0 }];
+    expect(jamBarStep(chords, 0).nextBassPc).toBe(0);
+    expect(jamBarStep(chords, 1).nextBassPc).toBe(0);
+    const blues = [{ rootPc: 0, quality: 'dom7' }, { rootPc: 5, quality: 'dom7' }];
+    expect(jamBarStep(blues, 0).nextBassPc).toBe(5);
+    expect(jamBarStep(blues, 1).nextBassPc).toBe(0);
   });
 });
 
@@ -154,9 +222,10 @@ describe('library feel', () => {
 });
 
 describe('the spec’s numbers', () => {
-  it('swing lands 2/3 through the beat; the bass starts at MIDI 40; the pad stays in MIDI 52 to 67', () => {
+  it('swing lands 2/3 through the beat; the bass starts at MIDI 28; the pad stays in MIDI 52 to 67', () => {
     expect(SWING_OFFSET).toBeCloseTo(2 / 3);
-    expect(BASS_LOW).toBe(40);
+    expect(BASS_LOW).toBe(28);
+    expect(bassMidi(0)).toBe(36);
     expect([PAD_LOW, PAD_HIGH]).toEqual([52, 67]);
   });
 });
