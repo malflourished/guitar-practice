@@ -117,6 +117,45 @@ P3 shows the next chord's target notes on the last beat of a bar where `changeCo
 - [x] Tests, lint and `tsc` pass, and no page scrolls at 1440×900, 1280×720 or 960×640.
 - [ ] The owner has played along with at least the 12-bar blues and the Andalusian cadence and says it feels like a band, not a metronome.
 
+## After the first play-along (P2.1)
+
+**What the owner heard (2026-11-13):** the progressions sound nice and the guitar is clear, but no bass and no pad can be heard. Strumming the same chord on every beat sounds like an echo. The owner wants to choose how long a chord is held: the whole bar, or split.
+
+**Why the bass vanished.** This spec put the bass on the guitar sampler in MIDI 40–52. That is the register of the strummed shape's own lowest notes, in the same sound: under C7 (x32310) the bass C3 is the very note the A string plays. It doubled the guitar instead of sitting under it. The fix is a separate voice, an octave lower.
+
+**1. A bass voice.**
+- `BassVoice` in `src/lib/audio/bassVoice.ts`, beside `PadVoice`, into the same chain.
+- Register: the octave of the pitch class in MIDI 28–39 (E1–D♯2), always below the guitar's low E.
+- Sound: a round synth bass that laptop speakers still carry, so its harmonics matter more than its lowest partial. A sawtooth with a triangle at the same pitch, low-pass about 700 Hz with a short filter envelope. Attack about 5 ms, decay 0.25 s, sustain 0.5, release 0.15 s. One note at a time.
+- Notes: the root on beat 1 and the chord's own 5th on beat 3 (a diminished chord's ♭5), both in MIDI 28–39. A slash chord plays its bass on both beats, so the Lydian float keeps its pedal.
+- With Swing, a light pickup (velocity about 0.6) on the swung "and" of beat 4, a half step below the next bar's bass note. It may dip to MIDI 27.
+- Each note holds until the next one starts.
+
+**2. How long the guitar holds the chord.** Replace Backing (Strum, Pad) with two groups.
+- **Guitar:** Off, Whole, Half, Quarter.
+  - Whole: one down-strum on beat 1 that rings through the bar.
+  - Half: down-strums on beats 1 and 3, each ringing two beats.
+  - Quarter: down-strums on every beat (today's sound). With Swing, the swung up-strums too.
+  - A new strum damps the one before it within about 60 ms, instead of letting it fade over the sample's release, so repeated strums stop smearing into an echo. Quarter strums last about 0.8 of a beat.
+  - Accents: beat 1 at 1.0, beat 3 at 0.8 in Half, other beats 0.7, up-strums 0.45.
+- **Pad:** Off, On. It sounds under the guitar, or alone when Guitar is Off.
+- Defaults: Guitar Half, Pad On, Feel from the entry, Click Off, Loop On. A saved `backing` is dropped: `'pad'` becomes Guitar Off with Pad On, anything else takes the defaults.
+- Menu order: Guitar, Pad, Feel, Click, Loop, then "Move along the neck". Feel's hint: "Swing adds a bass pickup into each bar, and swung up-strums on quarters."
+
+**3. Levels: measure, then set.** In a hidden Electron run at 90 BPM, put a meter on the engine's output and play two bars of the 12-bar blues with each layer alone: guitar on Quarter, bass, pad. Set the levels so the bass peaks about 3 dB under the guitar and the pad about 6 dB under it (±2 dB), and all three together peak below the limiter's −2 dB. Write the measured numbers here.
+
+**Tests (P2.1):**
+- `buildJamBar` for each guitar rhythm: Whole is one strum at beat 0, Half is strums at 0 and 2, Quarter is 0–3 plus the swung up-strums with Swing. Guitar Off has no strums. Pad On adds one pad event, Pad Off none.
+- Bass, in all 12 keys: every note inside MIDI 27–39; the root on beat 0 and the chord's 5th on beat 2; a slash chord's bass on both. Swing adds one pickup at 3 + 2/3, a half step below the next bar's bass; Straight has none.
+- The pin test: `BASS_LOW` is 28.
+
+**Done when (P2.1):**
+- [ ] The bass and the pad can each be heard clearly in the mix, and the measured levels are written above.
+- [ ] Whole, Half and Quarter sound as described, and Quarter no longer smears.
+- [ ] Swing can be heard in every rhythm, through the bass pickup.
+- [ ] Tests, lint and `tsc` pass.
+- [ ] The owner plays along again and hears the bass and the pad, and the rhythms feel right.
+
 ## Out of scope here
 
 - Targets on the neck, lenses (whole neck, region, one string, climb) and prompts: P3 and P4.
