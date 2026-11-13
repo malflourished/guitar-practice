@@ -18,13 +18,13 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
 | H | Theory figures: one key dial | Done, merged and pushed 2026-11-12 | – | – |
 | I | Quick fixes from the 2026-11-12 walkthrough | Done, merged 2026-11-12 | nothing | a capable model |
-| J | Split `App.tsx` into mode components | **In progress** in its own session and branch | I | a capable model, carefully: no change in behaviour or look |
-| K | Settings page in the side panel | After J | J | a capable model |
-| L | One Play control for every mode | The component can start now; wiring after J | J for wiring | a capable model |
+| J | Split `App.tsx` into mode components | Done, merged 2026-11-12 (`App.tsx` 1,529 → 428 lines) | I | a capable model, carefully: no change in behaviour or look |
+| K | Settings page in the side panel | **In progress**, in one session with L | J | a capable model |
+| L | One Play control for every mode | **In progress**, in one session with K (after K) | J, K | a capable model |
 | M | Mode controls: Notes, Chords, Scales | After J, K and L | J, K, L | a capable model; the owner approves screenshots |
 | N | Intervals: clear drills, black and white | Done, merged 2026-11-12 | nothing (K adds the colour switch later) | a capable model |
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
-| P | Progressions: the improvising workshop | P1 after J; P2 with L | J, L | the strongest model writes specs and reviews; a capable model builds |
+| P | Progressions: the improvising workshop | P1 **in progress**; P2 to P4 after K and L | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
@@ -394,6 +394,8 @@ The owner walked through every mode of the new layout on 2026-11-12 and agreed t
 | Practice | O, then E | `PracticeSession`, `src/lib/practice/` | everything else |
 | Progressions | P1, P3, P4 | the progression library and Progressions components | the audio engine (ask the Playback lane) |
 
+**Change of plan (2026-11-12).** K and L run as one session, K first, because both rewrite the same deck controls, `AudioControls` and the display settings. P1 runs beside them and stays out of the decks.
+
 **Rules for parallel work.**
 - One builder per lane at a time.
 - After J, `App.tsx` only takes one-line wiring changes.
@@ -427,6 +429,11 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 - Tests, lint and `tsc` pass.
 - Screenshots of every mode at 1440×900, in both themes, match before and after.
 - `App.tsx` is mostly wiring (aim for under 600 lines).
+
+**Done and merged 2026-11-12.**
+- Structure: one folder per mode under `src/modes/` (see `src/modes/README.md`), with shared state in `src/hooks/`.
+- `src/styleOrder.ts` pins the order stylesheets load in, because some components override others. When a lane removes such an override, take that component off the list.
+- Checks at merge: 66 of 70 screenshots pixel-identical (the other 4 are animation jitter on the dial), the same 20 saved settings, 8 stored values and 10 keyboard shortcuts as before, and 224 tests passing.
 
 ## K. Settings page in the side panel
 
@@ -534,3 +541,4 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 - **2026-11-12.** Owner walked through the new layout. Agreed: a Settings page, one Play control, simpler mode controls, an Intervals regroup in black and white, a Practice preview, a home screen and a resizable panel. Progressions becomes the improvising workshop. Discover folds into M and P. Packages I to Q added; order: I, then J alone, then lanes in parallel (N and O can start now).
 - **2026-11-12.** I (quick fixes) reviewed and merged. N and O built on their own branches; small follow-ups sent before merging. J started.
 - **2026-11-12.** N (Intervals) and O (Practice) reviewed and merged. J (the split) in progress.
+- **2026-11-12.** J (the split) reviewed and merged. K and L start as one session; P1 starts beside them.
