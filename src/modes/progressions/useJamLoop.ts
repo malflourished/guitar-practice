@@ -13,6 +13,8 @@ import {
   type NextChange,
 } from '../../lib/audio/jamSchedule';
 import { jamGains, type JamMix } from '../../lib/audio/jamMix';
+import { drumPhrase, type DrumGroove } from '../../lib/audio/drumGrooves';
+import { getDrumSettings } from '../../lib/audio/synth/drums/drumSettings';
 import { getChordIntervals, noteToSemitone, type ResolvedProgressionStep } from '../../lib/music';
 import { jamChordsOf } from './jamChords';
 
@@ -60,9 +62,11 @@ interface JamLoopInput {
   chordPositions: FretPosition[][];
   /** How long the guitar holds each chord (the Guitar fader decides whether it sounds). */
   guitar: Exclude<JamBarOptions['guitar'], 'off'>;
-  /** The three faders, applied to the engine at once, also while the loop is stopped. */
+  /** The faders, applied to the engine at once, also while the loop is stopped. */
   mix: JamMix;
   feel: JamBarOptions['feel'];
+  /** What the drummer plays: the entry's groove for the feel now chosen. */
+  groove: DrumGroove;
   click: boolean;
   loop: boolean;
   tempo: number;
@@ -75,8 +79,11 @@ interface JamLoopInput {
  * Starts and stops the jam loop and tells the screen where it is. Choices
  * (guitar rhythm, feel, click, loop) are read at each bar line, and the tempo
  * and the mix faders at once, so changing them while it plays needs no
- * restart. From the second pass on, bar 1 carries a cymbal. When the loop ends
- * for any reason, the chord that was selected before Play comes back.
+ * restart. From the second pass on, bar 1 carries a cymbal. The drum kit's
+ * bar is asked for every time: its groove, a fill at the end of a phrase and
+ * a crash at the top of the next (the Drums fader decides whether it sounds).
+ * When the loop ends for any reason, the chord that was selected before Play
+ * comes back.
  */
 export function useJamLoop(input: JamLoopInput) {
   const { audio, steps, tempo } = input;
@@ -117,6 +124,8 @@ export function useJamLoop(input: JamLoopInput) {
               const latestNow = latest.current;
               const position = jamPosition(bar, latestNow.chords);
               const { stepIndex } = position;
+              const steps = latestNow.chords.length;
+              const drums = getDrumSettings();
               return {
                 events: buildJamBar(
                   jamBarStep(latestNow.chords, stepIndex, latestNow.padVoicings),
@@ -128,6 +137,16 @@ export function useJamLoop(input: JamLoopInput) {
                     click: latestNow.click,
                     // the top of the form, from the second pass on
                     cymbal: isTopOfForm(position),
+                    drums: {
+                      groove: latestNow.groove,
+                      bar,
+                      stepIndex,
+                      pass: position.pass,
+                      steps,
+                      ...drumPhrase(position, steps, latestNow.loop),
+                      humanize: drums.humanize,
+                      brushes: drums.kit === 'brushes',
+                    },
                   },
                 ),
                 strum: latestNow.chordPositions[stepIndex] ?? [],
@@ -170,10 +189,10 @@ export function useJamLoop(input: JamLoopInput) {
   // The faders reach the engine as they move, and at start-up from what was
   // saved, so the mix is set before Play. The engine ramps each change.
   const { setJamMix } = audio;
-  const { guitar: guitarLevel, bass: bassLevel, pad: padLevel } = input.mix;
+  const { guitar: guitarLevel, bass: bassLevel, pad: padLevel, drums: drumsLevel = 'off' } = input.mix;
   useEffect(() => {
-    setJamMix(jamGains({ guitar: guitarLevel, bass: bassLevel, pad: padLevel }));
-  }, [setJamMix, guitarLevel, bassLevel, padLevel]);
+    setJamMix(jamGains({ guitar: guitarLevel, bass: bassLevel, pad: padLevel, drums: drumsLevel }));
+  }, [setJamMix, guitarLevel, bassLevel, padLevel, drumsLevel]);
 
   // However the loop ended, put the screen back as it was.
   const wasRunning = useRef(false);

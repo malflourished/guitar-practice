@@ -5,6 +5,7 @@ import {
 } from '../lib/audio/playOptions';
 import type { JamFeel } from '../lib/audio/jamSchedule';
 import {
+  DEFAULT_DRUMS_LEVEL,
   DEFAULT_JAM_MIX,
   clampFaderLevel,
   isFaderLevel,
@@ -68,8 +69,8 @@ export function migratePlaySettings(storage: Storage3) {
 
 /**
  * What the Play menu remembers, under `vibrato:play-*`, shared by every mode:
- * the options, and the jam's mix (the three faders, saved for the player
- * rather than for an entry). Feel is remembered per progression and starts at
+ * the options, and the jam's mix (the four faders, saved for the player
+ * rather than for an entry; the Drums fader starts at off). Feel is remembered per progression and starts at
  * that entry's own feel (`entryFeel`), so choosing Swing for one entry does
  * not swing the others.
  */
@@ -113,6 +114,7 @@ export function usePlayOptions(entry?: { id: string; feel: JamFeel }) {
   const [guitarLevel, setGuitarLevel] = usePersistentState<FaderLevel>('play-guitar-level', DEFAULT_JAM_MIX.guitar, isFaderLevel);
   const [bassLevel, setBassLevel] = usePersistentState<FaderLevel>('play-bass-level', DEFAULT_JAM_MIX.bass, isFaderLevel);
   const [padLevel, setPadLevel] = usePersistentState<FaderLevel>('play-pad-level', DEFAULT_JAM_MIX.pad, isFaderLevel);
+  const [drumsLevel, setDrumsLevel] = usePersistentState<FaderLevel>('play-drums-level', DEFAULT_DRUMS_LEVEL, isFaderLevel);
   const entryId = entry?.id;
   const feel: JamFeel = (entryId !== undefined ? feelByEntry[entryId] : undefined) ?? entry?.feel ?? DEFAULT_PLAY_OPTIONS.feel;
   const options: PlayOptions = { direction, articulation, loop, reach, ladder, guitar, feel, click, jamLoop };
@@ -139,17 +141,19 @@ export function usePlayOptions(entry?: { id: string; feel: JamFeel }) {
       guitar: clampFaderLevel(guitarLevel),
       bass: clampFaderLevel(bassLevel),
       pad: clampFaderLevel(padLevel),
+      drums: clampFaderLevel(drumsLevel),
     }),
-    [guitarLevel, bassLevel, padLevel],
+    [guitarLevel, bassLevel, padLevel, drumsLevel],
   );
   const setMixLevel = useCallback(
     (layer: JamLayer, level: FaderLevel) => {
       const next = clampFaderLevel(level);
       if (layer === 'guitar') setGuitarLevel(next);
       else if (layer === 'bass') setBassLevel(next);
-      else setPadLevel(next);
+      else if (layer === 'pad') setPadLevel(next);
+      else setDrumsLevel(next);
     },
-    [setGuitarLevel, setBassLevel, setPadLevel],
+    [setGuitarLevel, setBassLevel, setPadLevel, setDrumsLevel],
   );
   return { options, setOptions, mix, setMixLevel };
 }

@@ -44,6 +44,8 @@ export interface DrumKit {
   /** How long the kit's room rings, in seconds, and its level at Room 1. */
   readonly roomSeconds: number;
   readonly roomLevel: number;
+  /** True while any voice or extra is sounding. */
+  readonly busy: boolean;
   configure(params: DrumParams): void;
   /** Play a piece now. `seconds` is how long a sweep lasts; other pieces ignore it. */
   hit(piece: DrumPiece, velocity: number, seconds: number): void;
@@ -108,14 +110,14 @@ export class AcousticKit implements DrumKit {
     this.sweep = new BrushSweep(sampleRate, random);
     this.strips = [
       strip(this.kick, 1, 0, 0.1),
-      strip(this.snare, 0.62, 0.04, 0.5),
+      strip(this.snare, 0.85, 0.04, 0.5),
       strip(this.rim, 0.5, 0.04, 0.55),
       strip(this.tomHigh, 0.7, -0.3, 0.45),
       strip(this.tomMid, 0.72, 0.1, 0.45),
       strip(this.tomLow, 0.78, 0.4, 0.45),
-      strip(this.hat, 0.9, -0.36, 0.14, true),
-      strip(this.ride, 1.1, 0.4, 0.2, true),
-      strip(this.crash, 1.25, -0.24, 0.25, true),
+      strip(this.hat, 0.3, -0.36, 0.14, true),
+      strip(this.ride, 0.28, 0.4, 0.2, true),
+      strip(this.crash, 0.27, -0.24, 0.25, true),
       strip(this.sweep, 0.55, 0.06, 0.4),
     ];
     this.configure(params);
@@ -176,6 +178,11 @@ export class AcousticKit implements DrumKit {
         this.crash.strike(metal, vary, variation);
         break;
     }
+  }
+
+  get busy(): boolean {
+    for (const { voice } of this.strips) if (voice.active) return true;
+    return false;
   }
 
   prepare(): void {
@@ -239,14 +246,14 @@ export class MachineKit implements DrumKit {
     this.burst = new GatedBurst(sampleRate, random);
     this.strips = [
       strip(this.kick, 1.5, 0, 0.05),
-      strip(this.snare, 0.95, 0, 0.3),
+      strip(this.snare, 1.15, 0, 0.3),
       strip(this.rim, 0.7, 0.05, 0.3),
       strip(this.tomHigh, 1, -0.35, 0.3),
       strip(this.tomMid, 1, 0.1, 0.3),
       strip(this.tomLow, 1.05, 0.45, 0.3),
-      strip(this.hat, 1.5, -0.3, 0.1, true),
-      strip(this.ride, 1.5, 0.35, 0.12, true),
-      strip(this.crash, 1.7, -0.2, 0.15, true),
+      strip(this.hat, 4, -0.3, 0.1, true),
+      strip(this.ride, 2.2, 0.35, 0.12, true),
+      strip(this.crash, 3.4, -0.2, 0.15, true),
     ];
     this.configure(params);
   }
@@ -300,7 +307,7 @@ export class MachineKit implements DrumKit {
         break;
       case 'hatFoot':
         // a machine has no pedal: a soft, very short closed hat, which also chokes an open one
-        this.hat.strike(this.hatStroke(level * 0.5, 0.03, 0.02));
+        this.hat.strike(this.hatStroke(level * 0.8, 0.03, 0.02));
         break;
       case 'ride': {
         const tone = params.cymbalTone;
@@ -323,6 +330,12 @@ export class MachineKit implements DrumKit {
         break;
       }
     }
+  }
+
+  get busy(): boolean {
+    if (this.burst.active) return true;
+    for (const { voice } of this.strips) if (voice.active) return true;
+    return false;
   }
 
   prepare(count: number): void {

@@ -3,6 +3,10 @@
  * Pure, so the engine only has to turn these events into sound.
  */
 
+import { buildDrumBar, type DrumBarRequest } from './drumGrooves';
+import { BEATS_PER_BAR, SWING_OFFSET } from './jamGrid';
+import type { DrumPiece } from './synth/drums/drumParams';
+
 /** How long the guitar holds each chord: a strum a bar, on 1 and 3, or on every beat. */
 export type GuitarHold = 'whole' | 'half' | 'quarter';
 /**
@@ -12,10 +16,7 @@ export type GuitarHold = 'whole' | 'half' | 'quarter';
 export type GuitarRhythm = 'off' | GuitarHold;
 export type JamFeel = 'straight' | 'swing';
 
-/** Beats per bar. The jam loop is 4/4. */
-export const BEATS_PER_BAR = 4;
-/** Where an up-strum or the bass pickup sits in a swung beat. */
-export const SWING_OFFSET = 2 / 3;
+export { BEATS_PER_BAR, SWING_OFFSET };
 /** The bass plays the octave of its pitch class that starts here (E1 to D♯2), under the guitar's low E. */
 export const BASS_LOW = 28;
 
@@ -25,7 +26,13 @@ export type JamEvent =
   | { kind: 'pad'; beat: number; midis: number[]; duration: number }
   | { kind: 'click'; beat: number; accent: boolean }
   /** A soft cymbal that marks the top of the form. */
-  | { kind: 'cymbal'; beat: number };
+  | { kind: 'cymbal'; beat: number }
+  /**
+   * One stroke of the drum kit. `beat` is on the grid; `offsetMs` is a small
+   * humanizing shift from it, in milliseconds. `beats` is how long a brush
+   * sweep lasts.
+   */
+  | { kind: 'drum'; beat: number; piece: DrumPiece; velocity: number; offsetMs: number; beats?: number };
 
 /** What a bar needs to know about its chord. */
 export interface JamBarStep {
@@ -51,6 +58,11 @@ export interface JamBarOptions {
    * Click, and no fader of its own.
    */
   cymbal?: boolean;
+  /**
+   * The drum kit's bar (see `drumGrooves.ts`). Like the pad, the caller always
+   * asks for it and the Drums fader decides whether it sounds.
+   */
+  drums?: DrumBarRequest;
 }
 
 /** The pitch class's note in the bass register: MIDI 28 to 39. */
@@ -67,7 +79,7 @@ export function chordFifthPc(rootPc: number, intervals: readonly number[]): numb
 /**
  * One bar: the bass (root on 1, 5th on 3, a pickup into the next bar when
  * swung), the guitar's strums, the pad, the cymbal if it is the top of the
- * form, then the click if it is on.
+ * form, the drum kit's bar if one is asked for, then the click if it is on.
  */
 export function buildJamBar(step: JamBarStep, options: JamBarOptions): JamEvent[] {
   const events: JamEvent[] = [];
@@ -99,6 +111,9 @@ export function buildJamBar(step: JamBarStep, options: JamBarOptions): JamEvent[
     events.push({ kind: 'pad', beat: 0, midis: step.padMidis, duration: BEATS_PER_BAR });
   }
   if (options.cymbal) events.push({ kind: 'cymbal', beat: 0 });
+  if (options.drums) {
+    for (const hit of buildDrumBar(options.drums)) events.push({ kind: 'drum', ...hit });
+  }
   if (options.click) {
     for (let beat = 0; beat < BEATS_PER_BAR; beat++) events.push({ kind: 'click', beat, accent: beat === 0 });
   }

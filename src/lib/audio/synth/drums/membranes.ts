@@ -246,11 +246,11 @@ function strength(velocity: number, exponent: number): number {
 const KICK_MODES = [
   // the three modes a centre stroke excites, lowered and spread by the air in the shell
   { ratio: 1, level: 1, decay: 1, order: 0 },
-  { ratio: 2.13, level: 0.55, decay: 0.55, order: 0.6 },
-  { ratio: 3.27, level: 0.26, decay: 0.36, order: 1.2 },
+  { ratio: 2.13, level: 0.8, decay: 0.55, order: 0.6 },
+  { ratio: 3.27, level: 0.45, decay: 0.36, order: 1.2 },
   // the head's slap: higher modes that last a few hundredths of a second, and that small speakers can carry
-  { ratio: 7.4, level: 0.13, decay: 0.14, order: 2 },
-  { ratio: 11.3, level: 0.08, decay: 0.1, order: 2.6 },
+  { ratio: 7.4, level: 0.3, decay: 0.16, order: 2 },
+  { ratio: 11.3, level: 0.2, decay: 0.12, order: 2.6 },
 ];
 
 export interface KickSettings {
@@ -293,7 +293,7 @@ export class AcousticKick implements DrumVoice {
     this.modes.stretch((0.1 + 0.55 * punch) * hard * hard, 0.022);
     // The beater's click: a knock of felt, higher and louder for a harder stroke.
     this.click.band(1500 + 2800 * hard * (0.4 + punch), 0.9);
-    this.click.start(level * (0.1 + 0.9 * punch) * 1.6, 0.012);
+    this.click.start(level * (0.1 + 0.9 * punch) * 4, 0.012);
     this.active = true;
   }
 

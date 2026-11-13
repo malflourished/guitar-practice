@@ -39,6 +39,12 @@ export interface PlateDesign {
   ringSlope: number;
   /** Extra short-lived partials for a ride's "ping". */
   ping?: { count: number; lowHz: number; highHz: number; seconds: number; level: number };
+  /**
+   * How the modes' levels lean with frequency at the middle of the Tone
+   * control: a mode's gain goes as (f / 1 kHz) to this power. Hi-hats lean
+   * hard to the treble; a crash is nearly level.
+   */
+  tilt: number;
   /** Where the noise above the modes starts, in hertz. */
   airHz: number;
 }
@@ -58,6 +64,8 @@ export interface PlateStroke {
   cascadeSeconds: number;
   /** The share of the wash that is there at once, 0 to 1; the rest blooms. */
   cascadeInstant: number;
+  /** Darken the wash: a low-pass on the noise that feeds the modes, in hertz. Left out, it is as bright as the cymbal. */
+  cascadeHz?: number;
   /** The noise above the modes, with its own rise and length. */
   air: number;
   airRise: number;
@@ -93,6 +101,8 @@ export class PlateCymbal implements DrumVoice {
   private cascadeFast = 0;
   private cascadeSlowStep = 0;
   private cascadeFastStep = 0;
+  private cascadeSmooth = 1;
+  private cascadeLast = 0;
   private airSlow = 0;
   private airFast = 0;
   private airSlowStep = 0;
@@ -142,6 +152,7 @@ export class PlateCymbal implements DrumVoice {
     this.cascadeFast += stroke.cascade * (1 - stroke.cascadeInstant);
     this.cascadeSlowStep = step(stroke.cascadeSeconds);
     this.cascadeFastStep = rise(stroke.cascadeRise);
+    this.cascadeSmooth = stroke.cascadeHz ? 1 - Math.exp((-2 * Math.PI * stroke.cascadeHz) / sampleRate) : 1;
     this.airSlow += stroke.air;
     this.airFast += stroke.air;
     this.airSlowStep = step(stroke.airSeconds);
@@ -175,18 +186,21 @@ export class PlateCymbal implements DrumVoice {
     let washing = false;
     if (this.cascadeSlow > ENVELOPE_FLOOR) {
       washing = true;
-      const { cascadeSlowStep, cascadeFastStep } = this;
-      let { cascadeSlow, cascadeFast } = this;
+      const { cascadeSlowStep, cascadeFastStep, cascadeSmooth } = this;
+      let { cascadeSlow, cascadeFast, cascadeLast } = this;
       for (let i = 0; i < count; i++) {
-        cascadeBuffer[i] = (cascadeSlow - cascadeFast) * random.bipolar();
+        cascadeLast += cascadeSmooth * ((cascadeSlow - cascadeFast) * random.bipolar() - cascadeLast);
+        cascadeBuffer[i] = cascadeLast;
         cascadeSlow *= cascadeSlowStep;
         cascadeFast *= cascadeFastStep;
       }
       this.cascadeSlow = cascadeSlow;
       this.cascadeFast = cascadeFast < ENVELOPE_FLOOR ? 0 : cascadeFast;
+      this.cascadeLast = cascadeLast;
     } else {
       this.cascadeSlow = 0;
       this.cascadeFast = 0;
+      this.cascadeLast = 0;
     }
 
     this.bank.process(out, striking ? strikeBuffer : null, washing ? cascadeBuffer : null, count);
@@ -226,7 +240,7 @@ export class PlateCymbal implements DrumVoice {
     this.pulseIndex = 0;
     this.pulseLength = 0;
     this.noiseLength = 0;
-    this.cascadeSlow = this.cascadeFast = this.airSlow = this.airFast = 0;
+    this.cascadeSlow = this.cascadeFast = this.cascadeLast = this.airSlow = this.airFast = 0;
     this.strikeBuffer.fill(0);
     this.cascadeBuffer.fill(0);
     this.active = false;
@@ -236,14 +250,14 @@ export class PlateCymbal implements DrumVoice {
     this.bank.forEachState(visit);
     this.clickFilter.state().forEach(visit);
     this.airFilter.state().forEach(visit);
-    [this.cascadeSlow, this.cascadeFast, this.airSlow, this.airFast].forEach(visit);
+    [this.cascadeSlow, this.cascadeFast, this.cascadeLast, this.airSlow, this.airFast].forEach(visit);
   }
 
   /** The bank's modes for the tone and ring now set. */
   private modeSpecs(): ModeSpec[] {
     const { design, tone, ringScale } = this;
     // Tone leans the whole cymbal: a dark one favours its low modes, a bright one its high modes.
-    const tilt = -0.25 + 0.9 * tone;
+    const tilt = design.tilt + 0.9 * (tone - 0.5);
     // so that the wash is as loud whatever the tilt: divide by the root of the sum of squares
     let power = 0;
     for (const hz of this.frequencies) power += tiltGain(hz, tilt) ** 2;
@@ -270,10 +284,11 @@ export class PlateCymbal implements DrumVoice {
 export const HAT_DESIGN: PlateDesign = {
   seed: 0x51f15e,
   modes: 30,
-  lowHz: 420,
-  highHz: 9800,
+  lowHz: 520,
+  highHz: 11000,
   ringSeconds: 0.5,
   ringSlope: 0.4,
+  tilt: 0.9,
   airHz: 7000,
 };
 
@@ -286,6 +301,7 @@ export const RIDE_DESIGN: PlateDesign = {
   ringSeconds: 0.9,
   ringSlope: 0.6,
   ping: { count: 7, lowHz: 2700, highHz: 7400, seconds: 0.4, level: 1 },
+  tilt: 0.4,
   airHz: 6000,
 };
 
@@ -297,6 +313,7 @@ export const CRASH_DESIGN: PlateDesign = {
   highHz: 8200,
   ringSeconds: 0.55,
   ringSlope: 0.6,
+  tilt: 0.5,
   airHz: 5200,
 };
 
@@ -382,11 +399,13 @@ export class HiHat implements DrumVoice {
       pulseSeconds: 0.0011,
       noise: 0.4 + 0.4 * variationAmount,
       click: 0,
-      cascade: level * 0.4,
+      cascade: level * 1.6,
       cascadeRise: 0.002,
       cascadeSeconds: 0.07 * tight,
       cascadeInstant: 0.2,
-      air: level * 0.06,
+      // the plates meet flat on: the clap is in the middle of the spectrum, not the top
+      cascadeHz: 2600,
+      air: level * 0.03,
       airRise: 0.002,
       airSeconds: 0.04 * tight,
     });
