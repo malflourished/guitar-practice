@@ -4,6 +4,7 @@ import { positionToMidi } from './pitch';
 import { DEFAULT_INSTRUMENT, GUITAR_INSTRUMENTS, INSTRUMENT_SAMPLES, chooseSample, type GuitarInstrumentName } from './instruments';
 import { loopTempo, type PlaybackOptions, type PracticePattern } from './pattern';
 import { PadVoice } from './padVoice';
+import { BassVoice } from './bassVoice';
 import { BEATS_PER_BAR, type JamEvent } from './jamSchedule';
 export { DEFAULT_INSTRUMENT, GUITAR_INSTRUMENTS, type GuitarInstrumentName };
 
@@ -52,6 +53,8 @@ export class GuitarAudioEngine {
   private limiter: Tone.Limiter | null = null;
   private click: Tone.Synth | null = null;
   private pad: PadVoice | null = null;
+  private bass: BassVoice | null = null;
+  private lastStrum: Tone.ToneBufferSource[] = [];
   private jamRunning = false;
   private graphReady: Promise<void> | null = null;
   private generation = 0;
@@ -235,12 +238,26 @@ export class GuitarAudioEngine {
     transport.start('+0.06', 0);
     return true;
   }
-  /** One strum of a jam bar: `velocity` is 1 for the accent, lower for the rest. */
+  /**
+   * One strum of a jam bar: `velocity` is 1 for the accent, lower for the rest.
+   * It damps the strum before it within about 60 ms, so repeated strums do not
+   * smear into an echo.
+   */
   private jamStrum(positions: FretPosition[], time: number, duration: number, up: boolean, velocity: number) {
+    for (const source of this.lastStrum) {
+      if (!this.sources.has(source)) continue; // already ended and disposed
+      source.fadeOut = 0.06;
+      source.stop(time);
+      for (const [string, held] of this.strings) if (held === source) this.strings.delete(string);
+    }
     const ordered = [...positions].sort((a, b) => up ? a.string - b.string : b.string - a.string);
     const spread = up ? 0.012 : 0.018;
-    ordered.forEach((p, index) => this.note(positionToMidi(p), time + index * spread, duration,
-      velocity * (0.86 + (index % 3) * 0.05), p.string));
+    this.lastStrum = [];
+    ordered.forEach((p, index) => {
+      const source = this.note(positionToMidi(p), time + index * spread, duration,
+        velocity * (0.86 + (index % 3) * 0.05), p.string);
+      if (source) this.lastStrum.push(source);
+    });
   }
   /** Change the tempo of a running jam: the Transport keeps its place, so nothing skips. */
   setJamTempo(bpm: number) {
@@ -287,8 +304,10 @@ export class GuitarAudioEngine {
       draw(time, () => options.onBeat(barNumber, beat));
       bar?.events.filter(event => Math.floor(event.beat) === beat).forEach(event => {
         const at = time + (event.beat - beat) * beatSeconds;
-        if (event.kind === 'bass') this.note(event.midi, at, event.duration * beatSeconds, 0.82);
-        else if (event.kind === 'strum') this.jamStrum(bar!.strum, at, beatSeconds * 2, event.up, event.velocity);
+        if (event.kind === 'bass') {
+          this.bass ??= new BassVoice(this.output ?? Tone.getDestination());
+          this.bass.play(event.midi, at, event.duration * beatSeconds, event.velocity);
+        } else if (event.kind === 'strum') this.jamStrum(bar!.strum, at, event.duration * beatSeconds, event.up, event.velocity);
         else if (event.kind === 'pad') {
           this.pad ??= new PadVoice(this.reverb ?? Tone.getDestination());
           this.pad.play(event.midis, at, event.duration * beatSeconds);
@@ -302,6 +321,8 @@ export class GuitarAudioEngine {
     this.generation++;
     this.jamRunning = false;
     this.pad?.stop();
+    this.bass?.stop();
+    this.lastStrum = [];
     this.previewGeneration++;
     Tone.getTransport().stop();
     Tone.getTransport().cancel();

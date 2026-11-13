@@ -5,6 +5,8 @@ import { chordPitchClasses, leadPadVoicings } from '../../lib/audio/padVoicing';
 import {
   BEATS_PER_BAR,
   buildJamBar,
+  chordFifthPc,
+  jamBarStep,
   jamPosition,
   type JamBarOptions,
   type JamChord,
@@ -47,7 +49,8 @@ interface JamLoopInput {
   steps: ResolvedProgressionStep[];
   /** The shapes the neck and panel show now, one per step (the strum follows them). */
   chordPositions: FretPosition[][];
-  backing: JamBarOptions['backing'];
+  guitar: JamBarOptions['guitar'];
+  pad: boolean;
   feel: JamBarOptions['feel'];
   click: boolean;
   loop: boolean;
@@ -74,6 +77,7 @@ export function useJamLoop(input: JamLoopInput) {
         rootPc: noteToSemitone(step.root),
         quality: step.quality,
         bassPc: step.bass ? noteToSemitone(step.bass) : undefined,
+        fifthPc: chordFifthPc(noteToSemitone(step.root), getChordIntervals(step.quality)),
       })),
     [steps],
   );
@@ -109,11 +113,15 @@ export function useJamLoop(input: JamLoopInput) {
             getBar: (bar) => {
               const latestNow = latest.current;
               const { stepIndex } = jamPosition(bar, latestNow.chords);
-              const chord = latestNow.chords[stepIndex];
               return {
                 events: buildJamBar(
-                  { ...chord, padMidis: latestNow.padVoicings[stepIndex] },
-                  { backing: latestNow.backing, feel: latestNow.feel, click: latestNow.click },
+                  jamBarStep(latestNow.chords, stepIndex, latestNow.padVoicings),
+                  {
+                    guitar: latestNow.guitar,
+                    pad: latestNow.pad,
+                    feel: latestNow.feel,
+                    click: latestNow.click,
+                  },
                 ),
                 strum: latestNow.chordPositions[stepIndex] ?? [],
               };

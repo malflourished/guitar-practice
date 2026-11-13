@@ -1,5 +1,5 @@
 import { Popover } from './Popover';
-import type { JamBacking, JamFeel } from '../lib/audio/jamSchedule';
+import type { GuitarRhythm, JamFeel } from '../lib/audio/jamSchedule';
 import type { ScaleAnchor } from '../lib/audio/pitch';
 import {
   playMenuOptions,
@@ -63,17 +63,21 @@ const LADDERS: Choice<PlayLadder>[] = [
   { id: 'down', label: 'Down the neck', title: 'Each chord a position lower' },
 ];
 
-const BACKINGS: Choice<JamBacking>[] = [
-  { id: 'strum', label: 'Strum', title: 'The guitar strums each chord, on every beat' },
-  { id: 'pad', label: 'Pad', title: 'A soft organ-like pad holds each chord for the bar' },
+const GUITARS: Choice<GuitarRhythm>[] = [
+  { id: 'off', label: 'Off', title: 'No guitar chords' },
+  { id: 'whole', label: 'Whole', title: 'One strum, left to ring through the bar' },
+  { id: 'half', label: 'Half', title: 'A strum on beats 1 and 3' },
+  { id: 'quarter', label: 'Quarter', title: 'A strum on every beat' },
 ];
+const SWING_HINT = 'Swing adds a bass pickup into each bar, and swung up-strums on quarters.';
 const FEELS: Choice<JamFeel>[] = [
   { id: 'straight', label: 'Straight', title: 'Even beats' },
-  { id: 'swing', label: 'Swing', title: 'A light up-strum swung between the beats' },
+  { id: 'swing', label: 'Swing', title: SWING_HINT },
 ];
 
 const TITLES: Record<PlayOptionId, string> = {
-  backing: 'Backing',
+  guitar: 'Guitar',
+  pad: 'Pad',
   feel: 'Feel',
   click: 'Click',
   jamLoop: 'Loop',
@@ -87,17 +91,19 @@ const TITLES: Record<PlayOptionId, string> = {
 
 function Choices<T extends string>({
   title,
+  hint,
   choices,
   value,
   onChange,
 }: {
   title: string;
+  hint?: string;
   choices: Choice<T>[];
   value: T;
   onChange: (value: T) => void;
 }) {
   return (
-    <div className={styles.group} role="radiogroup" aria-label={title}>
+    <div className={styles.group} role="radiogroup" aria-label={title} title={hint}>
       <span className={styles.groupTitle}>{title}</span>
       <div className={styles.choices}>
         {choices.map((choice) => (
@@ -222,14 +228,24 @@ export function PlayMenu({
                 onChange={(ladder) => onOptionsChange({ ladder })}
               />
             );
-          case 'backing':
+          case 'guitar':
             return (
               <Choices
                 key={id}
                 title={TITLES[id]}
-                choices={BACKINGS}
-                value={options.backing}
-                onChange={(backing) => onOptionsChange({ backing })}
+                choices={GUITARS}
+                value={options.guitar}
+                onChange={(guitar) => onOptionsChange({ guitar })}
+              />
+            );
+          case 'pad':
+            return (
+              <Toggle
+                key={id}
+                title={TITLES[id]}
+                hint="A soft pad holds each chord for the bar, under the guitar or alone."
+                on={options.pad}
+                onChange={(pad) => onOptionsChange({ pad })}
               />
             );
           case 'feel':
@@ -237,6 +253,7 @@ export function PlayMenu({
               <Choices
                 key={id}
                 title={TITLES[id]}
+                hint={SWING_HINT}
                 choices={FEELS}
                 value={options.feel}
                 onChange={(feel) => onOptionsChange({ feel })}
