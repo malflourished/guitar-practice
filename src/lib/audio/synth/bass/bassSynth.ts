@@ -63,11 +63,12 @@ const MIN_VELOCITY = 1e-4;
 const GRID = 128;
 
 /**
- * Output gain that matches `BassVoice` (the synth bass) at its default
- * level: with the default parameters, the blues reference line has the same
- * RMS in both. Measured in the sound lab; see docs/specs/S1-modelled-bass.md.
+ * Output gain that matches `BassVoice` (the synth bass) at its default level
+ * of -4.5 dB: with the default parameters, the reference line has the same
+ * RMS in both (-12.9 dBFS before the master volume). Measured in the sound
+ * lab on 2026-11-13; see docs/specs/S1-modelled-bass.md.
  */
-export const BASS_OUTPUT_GAIN = 0.5;
+export const BASS_OUTPUT_GAIN = 1.3;
 
 interface SynthEvent {
   frame: number;

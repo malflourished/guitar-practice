@@ -80,8 +80,8 @@ export const BASS_PARAM_SPECS: readonly BassParamSpec[] = [
 /** Starting points for the sound lab. Each lists only what differs from the default. */
 export const BASS_PRESETS: Readonly<Record<string, Partial<BassParams>>> = {
   round: {},
-  motown: { hardness: 0.2, pluckCm: 18, toneHz: 900, ringSeconds: 0.3, sustainSeconds: 2.5, drive: 0.35, releaseSeconds: 0.1 },
-  bright: { hardness: 0.5, pluckCm: 9, pickupCm: 6.5, toneHz: 4200, ringSeconds: 2.8, sustainSeconds: 11, drive: 0.2 },
+  motown: { hardness: 0.2, pluckCm: 18, toneHz: 900, ringSeconds: 0.3, sustainSeconds: 4, drive: 0.5, releaseSeconds: 0.1 },
+  bright: { hardness: 0.5, pluckCm: 9, pickupCm: 6.5, toneHz: 4200, ringSeconds: 2.8, sustainSeconds: 11, drive: 0.4 },
   pick: { hardness: 0.9, pluckCm: 12, toneHz: 3200, ringSeconds: 1.8, drive: 0.4, noise: 0.7 },
 };
 

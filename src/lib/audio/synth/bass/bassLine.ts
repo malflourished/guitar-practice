@@ -68,7 +68,8 @@ function jamBassLine(chords: readonly JamChord[], feel: JamFeel): BassLine {
   return { beats: chords.length * BEATS_PER_BAR, notes };
 }
 
-const BLUES_STEPS = [0, 0, 0, 0, 5, 5, 0, 0, 7, 5, 0, 7];
+/** The 12-bar blues as semitones above the key note: I, IV and V, all dominant 7ths. */
+export const BLUES_STEPS: readonly number[] = [0, 0, 0, 0, 5, 5, 0, 0, 7, 5, 0, 7];
 
 /** The jam's bass part for a 12-bar blues in the key with pitch class `keyPc` (0 is C). */
 export function bluesBassLine(keyPc: number, feel: JamFeel = 'swing'): BassLine {

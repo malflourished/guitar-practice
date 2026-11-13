@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import processorUrl from './bassProcessor.ts?worker&url';
+import processorCode from './bassProcessor.ts?worklet';
 import { BASS_PROCESSOR_NAME, type BassMessage, type BassProcessorOptions } from './bassMessages';
 import type { BassParams } from './bassParams';
 
@@ -15,10 +15,14 @@ export function loadModelledBass(context: Tone.BaseContext = Tone.getContext()):
   const raw = context.rawContext;
   let promise = loading.get(raw);
   if (!promise) {
-    // Straight to the context: Tone's own `addAudioWorkletModule` remembers only the first module it was given.
-    promise = raw.audioWorklet
-      ? raw.audioWorklet.addModule(processorUrl)
-      : Promise.reject(new Error('AudioWorklet is not available here.'));
+    if (raw.audioWorklet) {
+      // The processor arrives as one self-contained script (see vite.worklet.ts) and loads from a Blob.
+      // Straight to the context: Tone's own `addAudioWorkletModule` remembers only the first module it was given.
+      const url = URL.createObjectURL(new Blob([processorCode], { type: 'application/javascript' }));
+      promise = raw.audioWorklet.addModule(url).finally(() => URL.revokeObjectURL(url));
+    } else {
+      promise = Promise.reject(new Error('AudioWorklet is not available here.'));
+    }
     promise.catch(() => loading.delete(raw));
     loading.set(raw, promise);
   }
