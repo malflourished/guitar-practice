@@ -2,6 +2,7 @@ import type { FretPosition, NoteName } from '../../types/music';
 import type { Position } from '../music';
 import {
   orderScalePositions,
+  positionToMidi,
   type ScaleDirection,
   type ScaleOrdering,
 } from './pitch';
@@ -45,4 +46,15 @@ export function buildTraversalRun(
   }
 
   return { positions, regionForNote };
+}
+
+/** Up the neck, then back down it, without sounding the top note twice. */
+export function joinTraversals(up: TraversalRun, down: TraversalRun): TraversalRun {
+  const last = up.positions.at(-1);
+  const first = down.positions[0];
+  const skip = last && first && positionToMidi(last) === positionToMidi(first) ? 1 : 0;
+  return {
+    positions: [...up.positions, ...down.positions.slice(skip)],
+    regionForNote: [...up.regionForNote, ...down.regionForNote.slice(skip)],
+  };
 }

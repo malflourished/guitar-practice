@@ -19,6 +19,7 @@ import { useKeyState } from './hooks/useKeyState';
 import { useNeckPosition } from './hooks/useNeckPosition';
 import { oneOf, usePersistentState } from './hooks/usePersistentState';
 import { usePlayback } from './hooks/usePlayback';
+import { usePlaySpace } from './hooks/usePlaySpace';
 import { NOTE_COLORS } from './lib/colors';
 import { formatNoteDisplay } from './lib/music';
 import type { StudyMode } from './types/music';
@@ -119,7 +120,7 @@ function App() {
     neck,
     progressionViews,
   });
-  const { audioProps, traversalActive, tempo, setTempo } = usePlayback({
+  const { playProps, togglePlay, traversalActive, tempo, setTempo } = usePlayback({
     studyMode,
     audio,
     keyState,
@@ -148,6 +149,16 @@ function App() {
   const frame = useFrameState(hasSide);
   const switchMode = useStudyModeSwitch(modes, audio);
   const theoryMoves = useTheoryActions(modes, audio, neck.neckView);
+
+  // Space plays and stops wherever the deck has a Play control.
+  usePlaySpace(
+    studyMode !== 'practice' &&
+      studyMode !== 'intervals' &&
+      (studyMode !== 'theory' || theory.theoryShowFretboard),
+    () => {
+      if (!playProps.disabled || playProps.playing) togglePlay();
+    },
+  );
 
   const singleRootMode = isSingleRootMode(studyMode);
   const showPositionSlider =
@@ -311,7 +322,7 @@ function App() {
       controls={controls}
       showFretboard={showFretboard}
       showDisplayToggles={showPositionSlider}
-      audioProps={audioProps}
+      play={{ ...playProps, onOpenTempo: () => frame.openSettings('tempo') }}
       display={display}
       studyMode={studyMode}
       supportsChordTones={board.supportsChordTones}

@@ -167,6 +167,16 @@ export function PositionSlider({
       <span className={styles.counter} aria-hidden="true">
         {counterText}
       </span>
+      <button
+        type="button"
+        className={styles.arrow}
+        aria-label="Previous position, toward the nut"
+        title="Previous position, toward the nut"
+        disabled={disabled || selectedIndex <= 0}
+        onClick={() => moveBy('primary', -1)}
+      >
+        ‹
+      </button>
       <div
         ref={trackRef}
         className={disabled ? styles.trackDisabled : styles.track}
@@ -213,6 +223,16 @@ export function PositionSlider({
           onKeyDown={onPrimaryKeyDown}
         />
       </div>
+      <button
+        type="button"
+        className={styles.arrow}
+        aria-label="Next position, up the neck"
+        title="Next position, up the neck"
+        disabled={disabled || selectedIndex >= lastIndex}
+        onClick={() => moveBy('primary', 1)}
+      >
+        ›
+      </button>
       {canRange ? (
         <button
           type="button"

@@ -15,9 +15,9 @@ export interface UseInstrument extends EngineState {
   playNote: (midi: number) => void;
   hearInterval: (rootMidi: number, semitones: number) => void;
   playPosition: (position: FretPosition) => void;
-  playSequence: (positions: FretPosition[], bpm: number, id: string, onNote?: (index: number) => void) => void;
+  playSequence: (positions: FretPosition[], bpm: number, id: string, onNote?: (index: number) => void, loop?: boolean) => void;
   strum: (positions: FretPosition[]) => void;
-  playProgression: (chords: FretPosition[][], bpm: number, id: string, onStep?: (index: number) => void) => void;
+  playProgression: (chords: FretPosition[][], bpm: number, id: string, onStep?: (index: number) => void, loop?: boolean) => void;
   playPattern: (pattern: PracticePattern, options: PlaybackOptions, id?: string) => Promise<boolean>;
   stopAll: () => void;
 }
@@ -68,11 +68,11 @@ export function useInstrument(): UseInstrument {
     if (success) setPlayingId(id);
     return success;
   }, [engine]);
-  const playSequence = useCallback((positions: FretPosition[], bpm: number, id: string, onNote?: (index: number) => void) => {
-    void playPattern(sequencePattern(positions), { bpm, onEvent: e => onNote?.(e.index) }, id);
+  const playSequence = useCallback((positions: FretPosition[], bpm: number, id: string, onNote?: (index: number) => void, loop = false) => {
+    void playPattern(sequencePattern(positions), { bpm, loop, onEvent: e => onNote?.(e.index) }, id);
   }, [playPattern]);
-  const playProgression = useCallback((chords: FretPosition[][], bpm: number, id: string, onStep?: (index: number) => void) => {
-    void playPattern(chordPattern(chords), { bpm, onEvent: e => onStep?.(e.index) }, id);
+  const playProgression = useCallback((chords: FretPosition[][], bpm: number, id: string, onStep?: (index: number) => void, loop = false) => {
+    void playPattern(chordPattern(chords), { bpm, loop, onEvent: e => onStep?.(e.index) }, id);
   }, [playPattern]);
   return { ...state, playingPosition, playingId, setInstrument, setVolume, setMuted, setRoom,
     playNote, hearInterval, playPosition, strum, playPattern, playSequence, playProgression, stopAll };

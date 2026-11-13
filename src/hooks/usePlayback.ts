@@ -1,12 +1,13 @@
 import { useEffect, useMemo } from 'react';
-import type { PlaybackMode } from '../components/AudioControls';
 import { DEFAULT_TEMPO } from '../lib/audio/tempo';
+import type { ScaleDirection, ScaleOrdering } from '../lib/audio/pitch';
 import {
-  orderScalePositions,
-  type ScaleDirection,
-  type ScaleOrdering,
-} from '../lib/audio/pitch';
-import { buildTraversalRun } from '../lib/audio/traversal';
+  arpeggioNotes,
+  arpeggioProgressionPattern,
+  orderScaleRun,
+  type PlayMode,
+} from '../lib/audio/playOptions';
+import { buildTraversalRun, joinTraversals } from '../lib/audio/traversal';
 import {
   buildLadderProgressionChordViews,
   getChordIntervals,
@@ -24,6 +25,7 @@ import type { BoardData } from './useBoardData';
 import type { UseInstrument } from './useInstrument';
 import type { KeyState } from './useKeyState';
 import type { NeckPosition } from './useNeckPosition';
+import { usePlayOptions } from './usePlayOptions';
 import { isNumber, usePersistentState } from './usePersistentState';
 
 interface PlaybackInput {
@@ -39,9 +41,10 @@ interface PlaybackInput {
 }
 
 /**
- * Tempo and every way the neck plays: strum a chord, run a scale, walk the
- * boxes across the neck, play a progression or its ladder. Returns the props
- * the transport takes, and the tempo Settings edits.
+ * Tempo and every way the neck plays: strum or arpeggiate a chord, run a
+ * scale (in a box or across the neck), play a progression or climb it up the
+ * neck. One `togglePlay` starts what the Play menu says and stops anything
+ * playing. Returns the props `PlayControl` takes, and the tempo Settings edits.
  */
 export function usePlayback({
   studyMode,
@@ -73,15 +76,18 @@ export function usePlayback({
     DEFAULT_TEMPO,
     isNumber,
   );
-  const playbackMode: PlaybackMode =
-    studyMode === 'progressions'
-      ? 'progression'
-      : studyMode === 'chords'
-        ? 'strum'
-        : 'sequence';
   const effectiveScalePlayback =
     studyMode === 'scales' ||
     (studyMode === 'theory' && theoryShowFretboard);
+  const playMode: PlayMode =
+    studyMode === 'progressions'
+      ? 'progressions'
+      : studyMode === 'chords'
+        ? 'chords'
+        : effectiveScalePlayback
+          ? 'scales'
+          : 'notes';
+  const { options: playOptions, setOptions: setPlayOptions } = usePlayOptions();
   const scaleOrdering: ScaleOrdering =
     effectiveScalePlayback && scaleSystem === '3nps' ? 'builtIn' : 'pitch';
 
@@ -109,99 +115,117 @@ export function usePlayback({
     scaleQuality,
   ]);
 
-  const handleStrum = () => audio.strum(positions);
-  const handlePlayScale = (direction: ScaleDirection) => {
-    if (audio.playingId === direction) {
-      audio.stopAll();
+  // Single-string demos build one region, so they're excluded automatically.
+  const canCrossNeck = effectiveScalePlayback && displayRegions.length > 1;
+
+  const traversalActive = audio.playingId?.startsWith('traverse-') ?? false;
+
+  const playScale = () => {
+    const context = { ordering: scaleOrdering, anchorPc: playbackAnchorPc };
+    if (playOptions.reach === 'neck' && canCrossNeck) {
+      const runFor = (direction: ScaleDirection) =>
+        buildTraversalRun(displayRegions, rootNote, direction, scaleOrdering, playbackAnchorPc);
+      const up = runFor('ascending');
+      const down = runFor('descending');
+      const run =
+        playOptions.direction === 'up'
+          ? up
+          : playOptions.direction === 'down'
+            ? down
+            : joinTraversals(up, down);
+      let lastRegion = -1;
+      audio.playSequence(
+        run.positions,
+        tempo,
+        `traverse-${playOptions.direction}`,
+        (noteIndex) => {
+          const regionIndex = run.regionForNote[noteIndex];
+          if (regionIndex !== lastRegion) {
+            lastRegion = regionIndex;
+            setPositionIndex(regionIndex);
+          }
+        },
+        playOptions.loop,
+      );
       return;
     }
     audio.playSequence(
-      orderScalePositions(positions, rootNote, direction, {
-        ordering: scaleOrdering,
-        anchorPc: playbackAnchorPc,
-      }),
+      orderScaleRun(positions, rootNote, playOptions.direction, context),
       tempo,
-      direction,
+      `run-${playOptions.direction}`,
+      undefined,
+      playOptions.loop,
     );
   };
 
-  // Single-string demos build one region, so they're excluded automatically.
-  const canTraverse = effectiveScalePlayback && displayRegions.length > 1;
-
-  const traversalActive =
-    audio.playingId === 'traverse-ascending' ||
-    audio.playingId === 'traverse-descending';
-
-  const handlePlayTraversal = (direction: ScaleDirection) => {
-    const playingId = `traverse-${direction}`;
-    if (audio.playingId === playingId) {
-      audio.stopAll();
-      return;
+  const playChord = () => {
+    if (playOptions.articulation === 'arpeggio') {
+      audio.playSequence(
+        arpeggioNotes(positions, playOptions.direction),
+        tempo,
+        'arpeggio',
+        undefined,
+        playOptions.loop,
+      );
+    } else if (playOptions.loop) {
+      audio.playProgression([positions], tempo, 'chord-loop', undefined, true);
+    } else {
+      audio.strum(positions);
     }
-    const run = buildTraversalRun(
-      displayRegions,
-      rootNote,
-      direction,
-      scaleOrdering,
-      playbackAnchorPc,
-    );
-    let lastRegion = -1;
-    audio.playSequence(run.positions, tempo, playingId, (noteIndex) => {
-      const regionIndex = run.regionForNote[noteIndex];
-      if (regionIndex !== lastRegion) {
-        lastRegion = regionIndex;
-        setPositionIndex(regionIndex);
-      }
-    });
   };
-  const handlePlayProgression = () => {
-    if (audio.playingId === 'progression') {
-      audio.stopAll();
-      return;
-    }
+
+  const playProgression = () => {
+    const ladder = playOptions.ladder;
     audio.stopAll();
-    setLadderAnchor(null);
-    audio.playProgression(
-      savedProgressionChordViews.map((chord) => chord.positions),
-      tempo,
-      'progression',
-      setProgressionStepIndex,
-    );
+    let chords = savedProgressionChordViews.map((chord) => chord.positions);
+    let id = 'progression';
+    if (ladder === 'off') {
+      setLadderAnchor(null);
+    } else {
+      const step0 = resolvedProgressionSteps[0];
+      if (!step0) return;
+      const direction: ProgressionLadderDirection =
+        ladder === 'up' ? 'ascending' : 'descending';
+      const step0Scope = getProgressionStepPositionScope(
+        progressionId,
+        0,
+        step0.quality,
+      );
+      const anchor = positionByScope[step0Scope] ?? 0;
+      chords = buildLadderProgressionChordViews(
+        resolvedProgressionSteps,
+        anchor,
+        direction,
+        notation,
+      ).map((chord) => chord.positions);
+      id = `progression-${direction}`;
+      setLadderAnchor(anchor);
+      setProgressionStepIndex(0);
+    }
+    if (playOptions.articulation === 'arpeggio') {
+      void audio.playPattern(
+        arpeggioProgressionPattern(chords, playOptions.direction),
+        {
+          bpm: tempo,
+          loop: playOptions.loop,
+          onEvent: (event) => setProgressionStepIndex(event.index),
+        },
+        id,
+      );
+    } else {
+      audio.playProgression(chords, tempo, id, setProgressionStepIndex, playOptions.loop);
+    }
   };
 
-  const handlePlayProgressionLadder = (direction: ProgressionLadderDirection) => {
-    const playingId =
-      direction === 'ascending' ? 'progression-ascending' : 'progression-descending';
-    if (audio.playingId === playingId) {
+  /** Play when stopped, Stop while anything plays. */
+  const togglePlay = () => {
+    if (audio.playingId !== null) {
       audio.stopAll();
       return;
     }
-
-    const step0 = resolvedProgressionSteps[0];
-    if (!step0) return;
-
-    audio.stopAll();
-    const step0Scope = getProgressionStepPositionScope(
-      progressionId,
-      0,
-      step0.quality,
-    );
-    const anchor = positionByScope[step0Scope] ?? 0;
-    const ladderViews = buildLadderProgressionChordViews(
-      resolvedProgressionSteps,
-      anchor,
-      direction,
-      notation,
-    );
-
-    setLadderAnchor(anchor);
-    setProgressionStepIndex(0);
-    audio.playProgression(
-      ladderViews.map((chord) => chord.positions),
-      tempo,
-      playingId,
-      setProgressionStepIndex,
-    );
+    if (playMode === 'progressions') playProgression();
+    else if (playMode === 'chords') playChord();
+    else playScale();
   };
 
   const stopPlayback = audio.stopAll;
@@ -209,24 +233,26 @@ export function usePlayback({
     if (studyMode !== 'practice') stopPlayback();
   }, [studyMode, progressionId, rootNote, stopPlayback]);
 
-  const audioProps = {
-    muted: audio.muted,
+  const canPlay =
+    studyMode === 'progressions'
+      ? displayProgressionChordViews.some((chord) => chord.positions.length > 0)
+      : positions.length > 0;
+  const playProps = {
+    mode: playMode,
+    playing: audio.playingId !== null,
     loading: audio.loading,
-    canPlay:
-      studyMode === 'progressions'
-        ? displayProgressionChordViews.some((chord) => chord.positions.length > 0)
-        : positions.length > 0,
-    playbackMode,
-    playingId: audio.playingId,
-    canTraverse,
-    scaleAnchor: effectiveScalePlayback ? scaleAnchor : undefined,
-    onScaleAnchorChange: effectiveScalePlayback ? setScaleAnchor : undefined,
-    onStrum: handleStrum,
-    onPlayScale: handlePlayScale,
-    onPlayTraversal: handlePlayTraversal,
-    onPlayProgression: handlePlayProgression,
-    onPlayProgressionLadder: handlePlayProgressionLadder,
+    disabled: !canPlay || audio.muted,
+    disabledReason: audio.muted
+      ? 'Sound is muted (Settings)'
+      : 'Nothing to play here',
+    tempo,
+    options: playOptions,
+    onOptionsChange: setPlayOptions,
+    scaleAnchor,
+    onScaleAnchorChange: setScaleAnchor,
+    canCrossNeck,
+    onToggle: togglePlay,
   };
 
-  return { audioProps, traversalActive, tempo, setTempo };
+  return { playProps, togglePlay, traversalActive, tempo, setTempo };
 }

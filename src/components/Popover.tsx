@@ -9,12 +9,24 @@ interface PopoverProps {
   button: ReactNode;
   buttonLabel?: string;
   align?: 'start' | 'end';
+  /** Open upward, for a trigger at the bottom of the window (the deck). */
+  above?: boolean;
+  /** Extra class on the trigger button. */
+  buttonClassName?: string;
   /** Render prop so the content can close the popover after a choice. */
   children: (close: () => void) => ReactNode;
 }
 
 /** A pill that opens a small panel below it. Esc or a click outside closes it. */
-export function Popover({ label, button, buttonLabel, align = 'end', children }: PopoverProps) {
+export function Popover({
+  label,
+  button,
+  buttonLabel,
+  align = 'end',
+  above = false,
+  buttonClassName,
+  children,
+}: PopoverProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -44,7 +56,7 @@ export function Popover({ label, button, buttonLabel, align = 'end', children }:
       <button
         ref={buttonRef}
         type="button"
-        className={open ? glass.pillSelected : glass.pill}
+        className={`${open ? glass.pillSelected : glass.pill}${buttonClassName ? ` ${buttonClassName}` : ''}`}
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={buttonLabel}
@@ -54,7 +66,10 @@ export function Popover({ label, button, buttonLabel, align = 'end', children }:
       </button>
       <div
         id={panelId}
-        className={align === 'start' ? styles.panelStart : styles.panel}
+        className={[
+          align === 'start' ? styles.panelStart : styles.panel,
+          above ? styles.above : '',
+        ].join(' ')}
         role="dialog"
         aria-label={label}
         hidden={!open}

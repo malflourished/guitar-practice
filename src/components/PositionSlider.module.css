@@ -100,6 +100,15 @@
   text-overflow: ellipsis;
 }
 
+.arrow {
+  composes: pill from '../styles/glass.module.css';
+  flex: 0 0 auto;
+  min-width: 1.9rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
 .spanButton {
   composes: pill from '../styles/glass.module.css';
   flex: 0 0 auto;

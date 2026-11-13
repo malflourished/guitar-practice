@@ -11,7 +11,7 @@
 import './components/Fretboard';
 import './components/PositionSlider';
 import './components/DisplayToggles';
-import './components/AudioControls';
+import './components/PlayControl';
 import './components/DebugPanel';
 import './components/AmbientBackground';
 import './components/KeySelector';
