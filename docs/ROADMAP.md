@@ -507,7 +507,7 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 - City pop plays five bars; in practice its last two chords share one bar.
 - The Lydian float plays a plain II triad, because slash-chord basses are not voiced yet.
 
-**P2. Jam loop.** A count-in, then a loop of 4 or 8 bars at the Settings tempo, played by strummed guitar or a pad. The metronome is optional. The pad voice is new audio work for the Playback lane.
+**P2. Jam loop.** A count-in, then the progression loops at the Settings tempo, played by strummed guitar or a pad over a bass note, with an optional click. Full spec: [specs/P2-jam-loop.md](specs/P2-jam-loop.md).
 
 **P3. Targets on the neck.**
 - The neck shows the current chord's tones everywhere, with the 3rd and 7th emphasized.
@@ -557,3 +557,4 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 - **2026-11-12.** N (Intervals) and O (Practice) reviewed and merged. J (the split) in progress.
 - **2026-11-12.** J (the split) reviewed and merged. K and L start as one session; P1 starts beside them.
 - **2026-11-12.** K (Settings), L (Play control) and P1 (Progressions library) reviewed and merged. The progression picker no longer sets Roman numerals in capitals. Follow-ups recorded under M and P.
+- **2026-11-12.** P2 (jam loop) spec written in `docs/specs/P2-jam-loop.md`. Polish in progress on its own branch: smooth panel resizing, the flash, faster lava speeds, and a centred position bar.
