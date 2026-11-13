@@ -88,6 +88,11 @@ const STATES = [
   ...['notes', 'chords', 'scales', 'progressions', 'intervals', 'practice', 'theory'].map((m) => ({
     name: `settings-${m}`, store: mode(m), actions: [clickLabel('Settings')],
   })),
+  ...['notes', 'chords', 'scales', 'progressions'].map((m) => ({
+    name: `playmenu-${m}`, store: mode(m), actions: [clickLabel('Play options')],
+  })),
+  { name: 'playmenu-chords-arpeggio', store: { ...mode('chords'), 'vibrato:play-articulation': '"arpeggio"' },
+    actions: [clickLabel('Play options')] },
   { name: 'settings-panel-closed', store: { ...mode('scales'), 'vibrato:side-panel-open': 'false' },
     actions: [clickLabel('Settings')] },
   { name: 'scales-panel-closed', store: { ...mode('scales'), 'vibrato:side-panel-open': 'false' } },

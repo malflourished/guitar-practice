@@ -424,7 +424,6 @@ function App() {
             onTempoChange={setTempo}
             display={display}
             section={frame.settingsSection}
-            onClose={frame.closeSettings}
           />
         }
         settingsOpen={frame.settingsOpen}

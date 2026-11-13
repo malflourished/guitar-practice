@@ -42,7 +42,6 @@ interface SettingsPanelProps {
   display: DisplaySettings;
   /** Scroll to this section when the page opens. */
   section: SettingsSectionId | null;
-  onClose: () => void;
 }
 
 /** The tempo as a number the player can type: kept as text until it is committed. */
@@ -95,7 +94,6 @@ export function SettingsPanel({
   onTempoChange,
   display,
   section,
-  onClose,
 }: SettingsPanelProps) {
   useEffect(() => {
     if (!section) return;
@@ -108,9 +106,6 @@ export function SettingsPanel({
     <SidePanel label="Settings" page="settings">
       <header className={styles.header}>
         <h1 className={styles.title}>Settings</h1>
-        <button type="button" className={glass.pill} onClick={onClose}>
-          Done
-        </button>
       </header>
 
       <SettingsSection title="Sound" id="settings-sound">
