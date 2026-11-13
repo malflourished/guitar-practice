@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { NoteName } from '../../types/music';
 import type { Position } from './positions';
 import { buildScalePositions } from './positions';
+import { noteToSemitone } from './notes';
+import { getScaleIntervals } from './scales';
+import { midiAt } from './tuning';
 
 /** Sorted "string:fret" cells of a position, for set-equality assertions. */
 function cells(position: Position): string[] {
@@ -139,5 +142,36 @@ describe('3NPS is unchanged', () => {
 
   it('modes use 3NPS regardless of system', () => {
     expect(buildScalePositions('D', 'dorian', 'caged')).toHaveLength(7);
+  });
+});
+
+describe('CAGED diatonic boxes have no gaps', () => {
+  const ALL_KEYS: NoteName[] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+  /** Scale notes a box skips between its lowest and highest notes, as "key quality shape: MIDI". */
+  function gaps(root: NoteName, quality: 'major' | 'minor'): string[] {
+    const pcs = new Set(getScaleIntervals(quality).map((i) => (noteToSemitone(root) + i) % 12));
+    const out: string[] = [];
+    for (const box of buildScalePositions(root, quality, 'caged')) {
+      const midis = new Set(box.positions.map((p) => midiAt(p.string, p.fret)));
+      const low = Math.min(...midis);
+      const high = Math.max(...midis);
+      for (let m = low + 1; m < high; m++) {
+        if (pcs.has(m % 12) && !midis.has(m)) out.push(`${root} ${quality} ${box.shapeLabel}: ${m}`);
+      }
+    }
+    return out;
+  }
+
+  it('every box holds every scale note between its lowest and highest, in all 12 keys, major and minor', () => {
+    expect(ALL_KEYS.flatMap((root) => [...gaps(root, 'major'), ...gaps(root, 'minor')])).toEqual([]);
+  });
+
+  it('a passing tone outside the pentatonic frame goes where the standard fingering puts it', () => {
+    const cMajor = buildScalePositions('C', 'major', 'caged');
+    // G shape (frets 4–8): B on the G string at fret 4, under the index finger.
+    expect(cells(cMajor.find((b) => b.shapeLabel === 'G shape')!)).toContain('2:4');
+    // A shape (frets 2–6): F on the B string at fret 6, under the little finger.
+    expect(cells(cMajor.find((b) => b.shapeLabel === 'A shape')!)).toContain('1:6');
   });
 });
