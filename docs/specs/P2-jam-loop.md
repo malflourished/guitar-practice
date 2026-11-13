@@ -1,7 +1,7 @@
 # P2: the jam loop
 
 **Package:** P2 in `docs/ROADMAP.md` (Progressions: the improvising workshop).
-**Status:** spec written 2026-11-12. Built and merged into `vibrato-next` 2026-11-12. Open: the tests listed under "Tests" (missing at merge, being added) and the owner's play-along.
+**Status:** spec written 2026-11-12. Built and merged into `vibrato-next` 2026-11-12. The tests listed under "Tests" were added 2026-11-13. Open: the owner's play-along.
 **Builds on:** P1 (the library) and L (the Play control), both merged.
 **Unlocks:** P3 (targets on the neck, lenses) and P4 (prompts). This spec says what P2 must expose for them.
 

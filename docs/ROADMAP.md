@@ -24,7 +24,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | M | Mode controls: Notes, Chords, Scales | After J, K and L | J, K, L | a capable model; the owner approves screenshots |
 | N | Intervals: clear drills, black and white | Done, merged 2026-11-12 | nothing (K adds the colour switch later) | a capable model |
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
-| P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12. P2 still needs its spec's tests (being added) and the owner's play-along. P3 and P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
+| P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2's tests 2026-11-13. P2's last box is the owner's play-along. P3 and P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
@@ -510,7 +510,7 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 **P2. Jam loop.** A count-in, then the progression loops at the Settings tempo, played by strummed guitar or a pad over a bass note, with an optional click. Full spec: [specs/P2-jam-loop.md](specs/P2-jam-loop.md).
 
 Built and merged 2026-11-12. Notes from the build:
-- The tests listed in the spec were missing at merge. The build session is adding them.
+- The tests listed in the spec were missing at merge: a failed shell step had skipped writing the file, and the session's report missed it. They were added on 2026-11-13, with one more test that pins the swing point, the bass floor and the pad range to the spec's numbers. When reviewing a session's work, check that the spec's tests are in the diff, not only that the suite passes.
 - The levels (pad −20 dB, the strum velocities, bass 0.82) were set without listening. The owner's play-along decides them.
 - If the straight feel sounds mechanical, the first fix is a light up-strum on the "and" of beats 2 and 4.
 
@@ -564,3 +564,4 @@ Built and merged 2026-11-12. Notes from the build:
 - **2026-11-12.** K (Settings), L (Play control) and P1 (Progressions library) reviewed and merged. The progression picker no longer sets Roman numerals in capitals. Follow-ups recorded under M and P.
 - **2026-11-12.** P2 (jam loop) spec written in `docs/specs/P2-jam-loop.md`. Polish in progress on its own branch: smooth panel resizing, the flash, faster lava speeds, and a centred position bar.
 - **2026-11-12.** P2 (jam loop) and the polish reviewed and merged. The side panel and Theory's deck now resize over 250 ms, and the panel surface shrinks with its column, so the lava no longer flashes through. Lava speeds are Flow (the old fast one, now the slowest), Rise and Boil. Still is gone, and saved Calm or Still settings become Flow. The position bar sits halfway down the band above the fret numbers. The merged build plays the 12-bar blues with no console errors. The jam loop's spec tests were never written, so the build session was sent back to add them.
+- **2026-11-13.** P2's tests merged: 12 from the build session and one that pins the spec's numbers (273 tests in all). New build installed for the owner's play-along.
