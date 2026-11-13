@@ -152,3 +152,11 @@ describe('library feel', () => {
     }
   });
 });
+
+describe('the spec’s numbers', () => {
+  it('swing lands 2/3 through the beat; the bass starts at MIDI 40; the pad stays in MIDI 52 to 67', () => {
+    expect(SWING_OFFSET).toBeCloseTo(2 / 3);
+    expect(BASS_LOW).toBe(40);
+    expect([PAD_LOW, PAD_HIGH]).toEqual([52, 67]);
+  });
+});
