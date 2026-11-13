@@ -176,7 +176,7 @@ export class BassSynth {
   render(out: Float32Array, startFrame: number, from = 0, to = out.length): void {
     const events = this.events;
     let position = from;
-    let frame = startFrame;
+    let frame = Math.round(startFrame);
     if (this.stopRequested) {
       this.stopRequested = false;
       for (const voice of this.voices) voice.damp(FAST_DAMP_SECONDS);
