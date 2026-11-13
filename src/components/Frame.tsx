@@ -15,8 +15,11 @@ import styles from './Frame.module.css';
  * `body` instead of `neck` and `deck`. `children` is for overlays.
  */
 
-/** How long the side panel takes to fade in or out. */
-const SIDE_FADE_MS = 200;
+/**
+ * How long the frame's tracks take to move when the side panel or Theory's
+ * deck comes or goes. Keep in step with `--frame-move` in Frame.module.css.
+ */
+const FRAME_MOVE_MS = 250;
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
@@ -59,8 +62,8 @@ export function Frame({
   settingsOpen = false,
   children,
 }: FrameProps) {
-  // On close the panel stays for one fade before the grid gives its column
-  // back; opening and switching are immediate (the panel fades itself in).
+  // On close the panel stays mounted while its column shrinks (the grid
+  // animates the track), then goes; opening and switching are immediate.
   const [shown, setShown] = useState<SideState>(wanted);
   if (wanted !== 'closed' && shown !== wanted) setShown(wanted);
   const closing = wanted === 'closed' && shown !== 'closed';
@@ -68,7 +71,7 @@ export function Frame({
     if (!closing) return undefined;
     const timer = window.setTimeout(
       () => setShown('closed'),
-      prefersReducedMotion() ? 0 : SIDE_FADE_MS,
+      prefersReducedMotion() ? 0 : FRAME_MOVE_MS,
     );
     return () => window.clearTimeout(timer);
   }, [closing]);
@@ -82,7 +85,7 @@ export function Frame({
     <FrameContext.Provider value={{ side, closing, closeSide: onCloseSide }}>
       <div
         className={`app ${styles.frame}`}
-        data-side={side}
+        data-side={wanted}
         data-focus={focus ? 'true' : undefined}
         data-practice={practice ? 'true' : undefined}
         data-deck={noDeck ? 'none' : undefined}
@@ -197,12 +200,14 @@ export function SidePanel({ label, page, className, children }: SidePanelProps) 
       data-page={page}
       aria-label={label}
     >
-      {side === 'drawer' && (
-        <button type="button" className={styles.sideClose} onClick={closeSide}>
-          Close
-        </button>
-      )}
-      {children}
+      <div className={styles.sideInner}>
+        {side === 'drawer' && (
+          <button type="button" className={styles.sideClose} onClick={closeSide}>
+            Close
+          </button>
+        )}
+        {children}
+      </div>
     </aside>
   );
 }
