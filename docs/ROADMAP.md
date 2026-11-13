@@ -16,7 +16,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | E | Practice that adapts | After O. The jam loop moved to P | O | a capable model |
 | F | Look: analog texture | Default look done and reviewed, 2026-11-11. Open: measure its cost on real hardware | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
-| H | Theory figures: one key dial | Done, merged and pushed 2026-11-12 | – | – |
+| H | Theory figures: one key dial | Done, merged and pushed 2026-11-12. H2 (a vertical neck in the dial's place) mocked up 2026-11-13, waiting for the owner | – | the strongest model designs; a capable model builds |
 | I | Quick fixes from the 2026-11-12 walkthrough | Done, merged 2026-11-12 | nothing | a capable model |
 | J | Split `App.tsx` into mode components | Done, merged 2026-11-12 (`App.tsx` 1,529 → 428 lines) | I | a capable model, carefully: no change in behaviour or look |
 | K | Settings page in the side panel | Done, merged 2026-11-12 | J | a capable model |
@@ -24,7 +24,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | M | Mode controls: Notes, Chords, Scales | After J, K and L | J, K, L | a capable model; the owner approves screenshots |
 | N | Intervals: clear drills, black and white | Done, merged 2026-11-12 | nothing (K adds the colour switch later) | a capable model |
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
-| P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2's tests 2026-11-13. P2's last box is the owner's play-along. P3 and P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
+| P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12. The owner's first play-along (2026-11-13) led to P2.1: a real bass voice, chord lengths and measured levels, in progress. P3 and P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
@@ -377,6 +377,14 @@ The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifth
 - [ ] Pass the notation preference (sharps or flats) from `App.tsx` to `KeyDial` (`notation` prop). Until then F♯/G♭ and D♯m/E♭m follow "sharps" unless the user clicks the cell twice.
 - [ ] Clicking a chord plays it, as elsewhere in the app.
 
+**H2. A vertical neck in the dial's place** (mock-up 2026-11-13, waiting for the owner). The owner (2026-11-13) finds the dial "really pretty". But clicking Neck "just takes you to the neck, and everything kind of disappears". The suggestion: "maybe the neck shows vertically in that space", so the information stays where it is.
+- **Neck** draws a vertical fretboard in the dial's square, oriented like a chord chart: low E on the left, the nut at the top, frets 0–12. Every note of the key wears its chord's numeral in the dial's colours: I solid, major filled, minor ringed, diminished dashed. The words, the view pills and the side panel stay where they are. Mock-up: [design/theory-neck/mock-neck.jpg](design/theory-neck/mock-neck.jpg), drawn into the running app by `mock-neck.js` in the same folder.
+- The caption follows the view: "The same seven chords, by root, across the whole neck. Find any I: IV and V are always one string away."
+- Borrowed and Dominants mark their roots the same way. To be specified.
+- **Motion:** the dial turns a little and shrinks away (about 180 ms), then the neck rises into its place (about 220 ms). The two overlap only briefly, never both at full strength, and nothing else on the page moves.
+- The horizontal neck leaves Theory. "Practice this across the neck →" stays as the way to the full neck.
+- Open question: at 960×640 the stage is about 480 px tall, too short for 12 frets at this marker size. Options are frets 0–7 there, or a five-fret window that follows the position.
+
 ---
 
 ## The 2026-11-12 plan: several builders at once
@@ -514,6 +522,8 @@ Built and merged 2026-11-12. Notes from the build:
 - The levels (pad −20 dB, the strum velocities, bass 0.82) were set without listening. The owner's play-along decides them.
 - If the straight feel sounds mechanical, the first fix is a light up-strum on the "and" of beats 2 and 4.
 
+**P2.1** (2026-11-13, in progress). At the first play-along the owner heard no bass and no pad, and strums on every beat sounded like an echo. Spec: [After the first play-along](specs/P2-jam-loop.md#after-the-first-play-along-p21).
+
 **P3. Targets on the neck.**
 - The neck shows the current chord's tones everywhere, with the 3rd and 7th emphasized.
 - On the last beat before a change, it shows the next chord's nearest target notes. The guide-tone logic in `changesTargeting.ts` already finds them.
@@ -565,3 +575,4 @@ Built and merged 2026-11-12. Notes from the build:
 - **2026-11-12.** P2 (jam loop) spec written in `docs/specs/P2-jam-loop.md`. Polish in progress on its own branch: smooth panel resizing, the flash, faster lava speeds, and a centred position bar.
 - **2026-11-12.** P2 (jam loop) and the polish reviewed and merged. The side panel and Theory's deck now resize over 250 ms, and the panel surface shrinks with its column, so the lava no longer flashes through. Lava speeds are Flow (the old fast one, now the slowest), Rise and Boil. Still is gone, and saved Calm or Still settings become Flow. The position bar sits halfway down the band above the fret numbers. The merged build plays the 12-bar blues with no console errors. The jam loop's spec tests were never written, so the build session was sent back to add them.
 - **2026-11-13.** P2's tests merged: 12 from the build session and one that pins the spec's numbers (273 tests in all). New build installed for the owner's play-along.
+- **2026-11-13.** The owner played along. The guitar sounds good, but no bass or pad could be heard, strums on every beat sound like an echo, and the owner wants to choose how long a chord is held. The bass was the spec's mistake: guitar samples in the guitar's own register. P2.1 specified and sent to the jam session. In Theory the owner likes the dial but not the jump to the neck, so H2 is mocked up: a vertical neck in the dial's place.
