@@ -176,7 +176,7 @@ export function designNote(
     amplitude,
     pluckDelay,
     pickupDelay,
-    noiseLevel: params.noise * (0.03 + 0.05 * hardness),
+    noiseLevel: params.noise * (0.15 + 0.3 * hardness),
     noisePole: Math.exp((-2 * Math.PI * (1200 + 5000 * hardness)) / sampleRate),
     bloomSamples: period * (2 ** (params.bloomCents / 1200) - 1),
     energyStart: amplitude * amplitude * energyPerUnit,

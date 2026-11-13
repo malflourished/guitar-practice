@@ -60,8 +60,6 @@ export class BassStringVoice {
   private pickupWhole = 0;
   private pickupFraction = 0;
   private displacementRate = 0;
-  private pulseSamples = 0;
-  private pluckDelay = 0;
 
   // Filter memory.
   private a0 = 0;
@@ -108,8 +106,6 @@ export class BassStringVoice {
     this.pickupWhole = Math.floor(design.pickupDelay);
     this.pickupFraction = design.pickupDelay - this.pickupWhole;
     this.displacementRate = design.displacementRate;
-    this.pulseSamples = design.pulseSamples;
-    this.pluckDelay = design.pluckDelay;
     // The string is at its most stretched as it is let go, so the bloom starts at its peak.
     this.energy1 = design.energyStart;
     this.energy2 = design.energyStart;
@@ -123,17 +119,12 @@ export class BassStringVoice {
 
   /**
    * Put a finger on the string: it stops in about `seconds` (never faster than
-   * a wave takes to reach the finger). `thump` is the strength of the small
-   * pulse the finger makes as it lands.
+   * a wave takes to reach the finger).
    */
-  damp(seconds: number, thump = 0): void {
+  damp(seconds: number): void {
     if (!this.active) return;
     this.damped = true;
     this.dampGain = Math.min(this.dampGain, gainPerRoundTrip(seconds, this.frequency));
-    if (thump !== 0 && this.excitationIndex >= this.excitationLength) {
-      this.excitationLength = this.writePulsePair(thump, this.pulseSamples * 2.5, this.pluckDelay);
-      this.excitationIndex = 0;
-    }
   }
 
   /** Add this string's sound to `out[from..to)`. */

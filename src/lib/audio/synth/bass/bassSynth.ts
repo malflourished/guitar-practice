@@ -35,8 +35,6 @@ const VOICE_COUNT = 4;
 const PREPARE_SECONDS = 0.025;
 /** How fast that finger, or `stop`, silences a string, in seconds. */
 const FAST_DAMP_SECONDS = 0.03;
-/** The strength of the pulse a damping finger makes, relative to a full pluck. */
-const THUMP_LEVEL = 0.012;
 /** The cabinet: little below and little above these, in hertz. */
 const CABINET_LOW_HZ = 35;
 const CABINET_HIGH_HZ = 4000;
@@ -68,7 +66,7 @@ const GRID = 128;
  * RMS in both (-12.9 dBFS before the master volume). Measured in the sound
  * lab on 2026-11-13; see docs/specs/S1-modelled-bass.md.
  */
-export const BASS_OUTPUT_GAIN = 1.3;
+export const BASS_OUTPUT_GAIN = 1.31;
 
 interface SynthEvent {
   frame: number;
@@ -217,13 +215,13 @@ export class BassSynth {
     if (event.kind === 'prepare') {
       // The plucking finger lands on the string it is about to play.
       for (const voice of this.voices) {
-        if (voice.active && voice.string === event.string) voice.damp(FAST_DAMP_SECONDS, this.thump());
+        if (voice.active && voice.string === event.string) voice.damp(FAST_DAMP_SECONDS);
       }
       return;
     }
     if (event.kind === 'off') {
       for (const voice of this.voices) {
-        if (voice.active && voice.noteId === event.id && !voice.damped) voice.damp(params.releaseSeconds, this.thump());
+        if (voice.active && voice.noteId === event.id && !voice.damped) voice.damp(params.releaseSeconds);
       }
       return;
     }
@@ -254,10 +252,6 @@ export class BassSynth {
     }
     quietest.sleep();
     return quietest;
-  }
-
-  private thump(): number {
-    return THUMP_LEVEL * (0.5 + 0.5 * this.random.next()) * (this.random.next() < 0.5 ? -1 : 1);
   }
 
   private applyChainParams(): void {

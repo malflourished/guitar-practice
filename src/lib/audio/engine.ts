@@ -6,6 +6,8 @@ import { loopTempo, type PlaybackOptions, type PracticePattern } from './pattern
 import { PadVoice } from './padVoice';
 import { BassVoice } from './bassVoice';
 import { BEATS_PER_BAR, type JamEvent } from './jamSchedule';
+import { getBassSettings, subscribeBassSettings } from './synth/bass/bassSettings';
+import type { ModelledBassVoice } from './synth/bass/modelledBassVoice';
 export { DEFAULT_INSTRUMENT, GUITAR_INSTRUMENTS, type GuitarInstrumentName };
 
 /**
@@ -61,6 +63,8 @@ export class GuitarAudioEngine {
   private click: Tone.Synth | null = null;
   private pad: PadVoice | null = null;
   private bass: BassVoice | null = null;
+  private modelledBass: ModelledBassVoice | null = null;
+  private modelledBassLoading: Promise<void> | null = null;
   private lastStrum: Tone.ToneBufferSource[] = [];
   private jamRunning = false;
   private graphReady: Promise<void> | null = null;
@@ -283,6 +287,7 @@ export class GuitarAudioEngine {
     const transport = Tone.getTransport();
     transport.bpm.value = options.bpm;
     this.jamRunning = true;
+    if (getBassSettings().jamBass === 'modelled') void this.loadModelledBass(); // ready by the end of the count-in
     let count = 0;
     let bar: JamBar | null = null;
     const draw = (time: number, callback: () => void) => Tone.getDraw().schedule(() => {
@@ -312,8 +317,7 @@ export class GuitarAudioEngine {
       bar?.events.filter(event => Math.floor(event.beat) === beat).forEach(event => {
         const at = time + (event.beat - beat) * beatSeconds;
         if (event.kind === 'bass') {
-          this.bass ??= new BassVoice(this.output ?? Tone.getDestination());
-          this.bass.play(event.midi, at, event.duration * beatSeconds, event.velocity);
+          this.jamBass().play(event.midi, at, event.duration * beatSeconds, event.velocity);
         } else if (event.kind === 'strum') this.jamStrum(bar!.strum, at, event.duration * beatSeconds, event.up, event.velocity);
         else if (event.kind === 'pad') {
           this.pad ??= new PadVoice(this.reverb ?? Tone.getDestination());
@@ -324,11 +328,48 @@ export class GuitarAudioEngine {
     transport.start('+0.06', 0);
     return true;
   }
+  /**
+   * The jam's bass voice: the modelled bass when the sound lab's setting asks
+   * for it and it has loaded, else the synth bass. Both play into the same node.
+   */
+  private jamBass(): Pick<BassVoice, 'play'> {
+    if (getBassSettings().jamBass === 'modelled') {
+      if (this.modelledBass) return this.modelledBass;
+      void this.loadModelledBass();
+    }
+    this.bass ??= new BassVoice(this.output ?? Tone.getDestination());
+    return this.bass;
+  }
+  /**
+   * Load the modelled bass (its code and its audio worklet) the first time it
+   * is wanted. If that fails, the jam stays on the synth bass. Once loaded, it
+   * follows the lab's controls, and a switch of bass silences the one left behind.
+   */
+  private loadModelledBass(): Promise<void> {
+    this.modelledBassLoading ??= import('./synth/bass/modelledBassVoice')
+      .then(async ({ ModelledBassVoice }) => {
+        let settings = getBassSettings();
+        const voice = await ModelledBassVoice.create(this.output ?? Tone.getDestination(), settings);
+        this.modelledBass = voice;
+        subscribeBassSettings(() => {
+          const next = getBassSettings();
+          if (next.params !== settings.params) voice.setParams(next.params);
+          if (next.trimDb !== settings.trimDb) voice.setTrim(next.trimDb);
+          if (next.jamBass !== settings.jamBass) (next.jamBass === 'modelled' ? this.bass : voice)?.stop();
+          settings = next;
+        });
+      })
+      .catch((error: unknown) => {
+        console.warn('The modelled bass could not load, so the jam loop is using the synth bass.', error);
+      });
+    return this.modelledBassLoading;
+  }
   stopAll() {
     this.generation++;
     this.jamRunning = false;
     this.pad?.stop();
     this.bass?.stop();
+    this.modelledBass?.stop();
     this.lastStrum = [];
     this.previewGeneration++;
     Tone.getTransport().stop();
