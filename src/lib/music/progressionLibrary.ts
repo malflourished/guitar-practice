@@ -95,7 +95,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
     aim: 'Over i7 and iv7 stay in the key’s minor pentatonic and lean on the ♭3. Over V7 play the leading tone (in A minor: G♯ over E7) and resolve it up to the tonic.',
     sound:
       'Minor pentatonic and the blues scale from the key note; harmonic minor’s raised 7th on V7.',
-    heard: 'B.B. King, “The Thrill Is Gone”',
+    heard: 'John Coltrane, “Mr. P.C.”',
   },
   {
     id: 'jazz-251',
@@ -559,6 +559,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
     ],
     why: 'III7 is the V of vi. The last two chords are a ii–V that drops you back onto IV (they usually share one bar; here each gets one).',
     aim: 'Major scale. Raise the 5 to ♯5 over III7 (in C: G to G♯), and lower the 7 to ♭7 over the last two chords (B to B♭).',
+    heard: 'Grover Washington Jr. with Bill Withers, “Just the Two of Us”',
   },
 ];
 
