@@ -219,7 +219,7 @@ Notes for whoever builds each one:
 - **Guitar.** Do nothing until asked. The first use for a model would be something recordings do badly: long sustained notes, bends and vibrato for ear training.
 - **Electric piano.** The pickup nonlinearity is the instrument. Get the bark right before anything else, and loudness-match against a reference at three velocities.
 - **Organ.** The best next instrument for a blues or jazz backing. It is cheap, it suits synthesis, and it can replace the pad. The rotating speaker is half the sound. Build it as a reusable effect.
-- **Drums.** Feel matters more than timbre: swing, accents and ghost notes. Start with kick, snare and a ride pattern for the blues. P2.2's cymbal is filtered noise. A set of inharmonic partials under it would be the first upgrade.
+- **Drums.** Researched in full in [drums.md](drums.md) (package S2). Feel matters more than timbre: swing, accents and ghost notes. Start with kick, snare and a ride pattern for the blues. P2.2's cymbal is filtered noise. A set of inharmonic partials under it would be the first upgrade.
 - **Pads.** Today's `PadVoice` is one sawtooth per note into a chorus. Detuned pairs with random phases, a filter that drifts slowly, and true stereo would lift it for little work.
 
 ### What every instrument should reuse
