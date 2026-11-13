@@ -153,7 +153,7 @@ P3 shows the next chord's target notes on the last beat of a bar where `changeCo
 | Pad | −10.8 dBFS (5.8 under the guitar) | −23.3 dBFS |
 | All three | −2.6 dBFS | −15.7 dBFS |
 
-To make room, the guitar's jam strums are scaled to 0.6 of their old gain (`JAM_GUITAR_LEVEL` in `engine.ts`, applied after the sample layer is chosen, so the timbre is unchanged). Before that the guitar alone peaked at −0.7 dBFS, above the limiter's −2 dB, so no bass or pad could have fit. The bass voice sits at −7.5 dB and the pad at −17 dB. The bass is louder than the guitar by RMS (it is sustained, the guitar decays), so if it is too forward by ear, lower `BassVoice`'s default volume.
+To make room, the guitar's jam strums are scaled to 0.6 of their old gain (`JAM_GUITAR_LEVEL` in `engine.ts`, applied after the sample layer is chosen, so the timbre is unchanged). Before that the guitar alone peaked at −0.7 dBFS, above the limiter's −2 dB, so no bass or pad could have fit. The bass voice sits at −7.5 dB and the pad at −17 dB. The bass is louder than the guitar by RMS (it is sustained, the guitar decays), so if it is too forward by ear, lower `BassVoice`'s default volume. At the owner's first listen (2026-11-13) the bass was still a little soft and the pad a little loud, so the defaults moved to −4.5 dB for the bass and −20 dB for the pad, until the faders (P2.2) let the owner set the mix.
 
 **Tests (P2.1):**
 - `buildJamBar` for each guitar rhythm: Whole is one strum at beat 0, Half is strums at 0 and 2, Quarter is 0–3 plus the swung up-strums with Swing. Guitar Off has no strums. Pad On adds one pad event, Pad Off none.

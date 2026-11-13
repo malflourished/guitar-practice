@@ -16,7 +16,7 @@ export class BassVoice {
     this.out = new Tone.Gain(1).connect(destination);
     this.filter = new Tone.Filter(700, 'lowpass').connect(this.out);
     const envelope = { attack: 0.005, decay: 0.25, sustain: 0.5, release: 0.15 };
-    const volume = options.volumeDb ?? -7.5;
+    const volume = options.volumeDb ?? -4.5;
     this.saw = new Tone.MonoSynth({
       oscillator: { type: 'sawtooth' },
       envelope,

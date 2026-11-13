@@ -20,7 +20,7 @@ export class PadVoice {
     this.synth = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'sawtooth' },
       envelope: { attack: 0.3, decay: 0.2, sustain: 0.85, release: 0.8 },
-      volume: options.volumeDb ?? -17,
+      volume: options.volumeDb ?? -20,
     }).connect(this.filter);
     this.synth.maxPolyphony = 16;
   }
