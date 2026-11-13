@@ -9,7 +9,7 @@ import { getNoteAt } from './fretboard';
 import { noteToSemitone } from './notes';
 import { MINOR_PENT_SHAPES } from './scaleBoxTemplates';
 import { MINOR_PENTATONIC, getScaleIntervals, isPentatonic } from './scales';
-import { FRET_COUNT, OPEN_STRING_MIDI, OPEN_STRING_SEMITONES } from './tuning';
+import { FRET_COUNT, OPEN_STRING_MIDI, OPEN_STRING_SEMITONES, midiAt } from './tuning';
 
 export interface Position {
   /** 1-based position number for the slider. */
@@ -233,6 +233,44 @@ function cagedLetterForOrdinal(
 }
 
 /**
+ * A diatonic box must hold every scale note between its lowest and highest
+ * notes, or a run up the box skips a step. In every key one passing tone falls
+ * just outside the pentatonic frame of two boxes: the 7th in the major G shape
+ * (C major's B, on the G string at fret 4) and the 4th in the major A shape
+ * (its F, on the B string at fret 6). The relative minor's E and G shapes are
+ * the same boxes, missing its 2nd and ♭6. Each missing note goes at most one
+ * fret outside the frame, on the string where it sits closest to that string's
+ * own notes, which is where the standard CAGED fingerings put it.
+ */
+function fillScaleGaps(
+  notes: Omit<FretPosition, 'finger'>[],
+  scalePcs: Set<number>,
+  lo: number,
+  hi: number,
+  add: (string: number, fret: number) => void,
+) {
+  const pitches = new Set(notes.map((n) => midiAt(n.string, n.fret)));
+  const low = Math.min(...pitches);
+  const high = Math.max(...pitches);
+  for (let midi = low + 1; midi < high; midi++) {
+    if (!scalePcs.has(midi % 12) || pitches.has(midi)) continue;
+    let best: { string: number; fret: number; stretch: number } | null = null;
+    for (let string = HIGH_E_STRING; string <= LOW_E_STRING; string++) {
+      const fret = midi - OPEN_STRING_MIDI[string];
+      if (fret < Math.max(0, lo - 1) || fret > Math.min(FRET_COUNT, hi + 1)) continue;
+      const own = notes.filter((n) => n.string === string).map((n) => n.fret);
+      if (own.length === 0) continue;
+      const stretch = Math.min(...own.map((f) => Math.abs(f - fret)));
+      if (!best || stretch < best.stretch) best = { string, fret, stretch };
+    }
+    if (best) {
+      add(best.string, best.fret);
+      pitches.add(midi);
+    }
+  }
+}
+
+/**
  * Build the five canonical box shapes for a pentatonic / blues / CAGED scale.
  *
  * The five low-E anchors are the pentatonic tones of the (relative) minor key.
@@ -278,6 +316,10 @@ function buildBoxPositions(root: NoteName, quality: ScaleQuality): Position[] {
         for (let fret = lo; fret <= hi; fret++) {
           if (extras.includes(pitchClassAt(string, fret))) add(string, fret);
         }
+      }
+      if (quality === 'major' || quality === 'minor') {
+        const scalePcs = new Set([...MINOR_PENTATONIC.map((i) => (framePc + i) % 12), ...extras]);
+        fillScaleGaps(notes, scalePcs, lo, hi, add);
       }
     }
 

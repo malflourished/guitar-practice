@@ -109,9 +109,9 @@ describe('CAGED shape labels', () => {
     expect(rootBox?.shapeLabel).toBe('E shape');
   });
 
-  it('C major box across frets 5–8 is the G shape', () => {
+  it('C major box across frets 4–8 is the G shape (B on the G string at fret 4)', () => {
     const boxes = buildScalePositions('C', 'major', 'caged');
-    const box = boxes.find((b) => b.startFret === 5);
+    const box = boxes.find((b) => b.startFret === 4 && b.endFret === 8);
     expect(box?.shapeLabel).toBe('G shape');
   });
 
