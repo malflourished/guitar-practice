@@ -17,14 +17,12 @@
 import { Biquad } from '../dsp/biquad';
 import { ModalBank, plateModeFrequencies, type ModeSpec } from '../dsp/modalBank';
 import type { Random } from '../dsp/random';
-import { VOICE_SLEEP_LEVEL, type DrumVoice, type StrokeVariation } from './membranes';
+import { ENVELOPE_FLOOR, VOICE_SLEEP_LEVEL, noiseGain, type DrumVoice, type StrokeVariation } from './membranes';
 
 /** The longest stretch a voice is asked to render at once: the synth's housekeeping grid. */
 const MAX_CHUNK = 128;
 /** The noisy part of a stroke lasts this long, in seconds: the stick's bounce on the metal. */
 const STRIKE_NOISE_SECONDS = 0.0015;
-/** An envelope below this is treated as finished. */
-const ENVELOPE_FLOOR = 1e-7;
 
 /** One cymbal's fixed facts. */
 export interface PlateDesign {
@@ -81,7 +79,10 @@ export class PlateCymbal implements DrumVoice {
   active = false;
   private readonly sampleRate: number;
   private readonly design: PlateDesign;
-  private readonly random: Random;
+  // one source of chance for each of the three noises, so none depends on how the others were drawn
+  private readonly strikeRandom: Random;
+  private readonly cascadeRandom: Random;
+  private readonly airRandom: Random;
   private readonly bank: ModalBank;
   private readonly frequencies: number[];
   private readonly pingFrequencies: number[];
@@ -109,11 +110,20 @@ export class PlateCymbal implements DrumVoice {
   private airFastStep = 0;
   private tone = 0.5;
   private ringScale = 1;
+  // Which parts are still to be rendered. Each is switched on by a stroke and
+  // off only in `settle`, at fixed points on the clock, so the sound cannot
+  // depend on how the caller slices its blocks.
+  private clickOn = false;
+  private washOn = false;
+  private airOn = false;
+  private readonly airGain: number;
 
   constructor(sampleRate: number, design: PlateDesign, random: Random) {
     this.sampleRate = sampleRate;
     this.design = design;
-    this.random = random;
+    this.strikeRandom = random.fork();
+    this.cascadeRandom = random.fork();
+    this.airRandom = random.fork();
     this.frequencies = plateModeFrequencies(design.modes, design.lowHz, design.highHz, design.seed);
     this.pingFrequencies = design.ping
       ? plateModeFrequencies(design.ping.count, design.ping.lowHz, design.ping.highHz, design.seed * 7 + 3, 0.3)
@@ -121,6 +131,7 @@ export class PlateCymbal implements DrumVoice {
     this.bank = new ModalBank(sampleRate, this.modeSpecs());
     this.clickFilter.setHighpass(2200, 0.707, sampleRate);
     this.airFilter.setHighpass(design.airHz, 0.707, sampleRate);
+    this.airGain = noiseGain(sampleRate);
   }
 
   /** Brightness, 0 to 1, and how long the modes ring as a multiple of the design's. Safe while sounding. */
@@ -142,8 +153,9 @@ export class PlateCymbal implements DrumVoice {
     this.pulseLength = Math.max(2, Math.round(stroke.pulseSeconds * sampleRate));
     this.noiseLength = Math.max(2, Math.round(STRIKE_NOISE_SECONDS * sampleRate));
     this.pulseScale = (stroke.level * (1 - stroke.noise)) / this.pulseLength;
-    // sized so the burst puts as much into a mode, on average, as the pulse it replaces
-    this.noiseScale = stroke.level * stroke.noise * Math.sqrt(2 / this.noiseLength);
+    // Sized so the burst puts as much into a mode, on average, as the pulse it replaces, at any
+    // sample rate: what a mode takes from noise depends on the noise's level per hertz.
+    this.noiseScale = stroke.level * stroke.noise * Math.sqrt(2 / (STRIKE_NOISE_SECONDS * 48000));
     this.clickLevel = stroke.click;
 
     const step = (seconds: number) => Math.exp(-6.907755 / (Math.max(0.002, seconds) * sampleRate));
@@ -153,84 +165,97 @@ export class PlateCymbal implements DrumVoice {
     this.cascadeSlowStep = step(stroke.cascadeSeconds);
     this.cascadeFastStep = rise(stroke.cascadeRise);
     this.cascadeSmooth = stroke.cascadeHz ? 1 - Math.exp((-2 * Math.PI * stroke.cascadeHz) / sampleRate) : 1;
-    this.airSlow += stroke.air;
-    this.airFast += stroke.air;
+    this.airSlow += stroke.air * this.airGain;
+    this.airFast += stroke.air * this.airGain;
     this.airSlowStep = step(stroke.airSeconds);
     this.airFastStep = rise(stroke.airRise);
+    this.clickOn = stroke.click > 0 || this.clickOn;
+    this.washOn = true;
+    this.airOn = true;
     this.active = true;
   }
 
   render(out: Float64Array, count: number): void {
-    const { random, strikeBuffer, cascadeBuffer } = this;
+    const { strikeBuffer, cascadeBuffer } = this;
 
     // The stroke: a smooth pulse, and a burst of noise that makes each one its own.
-    let striking = false;
-    if (this.pulseIndex < Math.max(this.pulseLength, this.noiseLength)) {
-      striking = true;
-      const { pulseLength, noiseLength, pulseScale, noiseScale, clickLevel, clickFilter } = this;
+    const strokeLength = Math.max(this.pulseLength, this.noiseLength);
+    const striking = this.pulseIndex < strokeLength;
+    if (striking) {
+      const { pulseLength, noiseLength, pulseScale, noiseScale, strikeRandom } = this;
       let k = this.pulseIndex;
       for (let i = 0; i < count; i++, k++) {
         let sample = 0;
         if (k < pulseLength) sample += pulseScale * (1 - Math.cos((2 * Math.PI * (k + 0.5)) / pulseLength));
-        if (k < noiseLength) sample += noiseScale * random.bipolar() * (1 - Math.cos((2 * Math.PI * (k + 0.5)) / noiseLength));
+        if (k < noiseLength) sample += noiseScale * strikeRandom.bipolar() * (1 - Math.cos((2 * Math.PI * (k + 0.5)) / noiseLength));
         strikeBuffer[i] = sample;
-        out[i] += clickLevel * clickFilter.process(sample);
       }
       this.pulseIndex = k;
-    } else if (this.clickFilter.magnitude() > VOICE_SLEEP_LEVEL) {
-      // let the tick's filter ring out
-      for (let i = 0; i < count; i++) out[i] += this.clickLevel * this.clickFilter.process(0);
+    }
+    // The stick's own tick: the stroke heard directly, through a high-pass that then rings out.
+    if (this.clickOn) {
+      const { clickLevel, clickFilter } = this;
+      if (striking) for (let i = 0; i < count; i++) out[i] += clickLevel * clickFilter.process(strikeBuffer[i]);
+      else for (let i = 0; i < count; i++) out[i] += clickLevel * clickFilter.process(0);
     }
 
     // The wash: noise into the modes, under an envelope that can bloom.
-    let washing = false;
-    if (this.cascadeSlow > ENVELOPE_FLOOR) {
-      washing = true;
-      const { cascadeSlowStep, cascadeFastStep, cascadeSmooth } = this;
+    if (this.washOn) {
+      const { cascadeSlowStep, cascadeFastStep, cascadeSmooth, cascadeRandom } = this;
       let { cascadeSlow, cascadeFast, cascadeLast } = this;
       for (let i = 0; i < count; i++) {
-        cascadeLast += cascadeSmooth * ((cascadeSlow - cascadeFast) * random.bipolar() - cascadeLast);
+        cascadeLast += cascadeSmooth * ((cascadeSlow - cascadeFast) * cascadeRandom.bipolar() - cascadeLast);
         cascadeBuffer[i] = cascadeLast;
         cascadeSlow *= cascadeSlowStep;
         cascadeFast *= cascadeFastStep;
       }
       this.cascadeSlow = cascadeSlow;
-      this.cascadeFast = cascadeFast < ENVELOPE_FLOOR ? 0 : cascadeFast;
+      this.cascadeFast = cascadeFast;
       this.cascadeLast = cascadeLast;
-    } else {
-      this.cascadeSlow = 0;
-      this.cascadeFast = 0;
-      this.cascadeLast = 0;
     }
 
-    this.bank.process(out, striking ? strikeBuffer : null, washing ? cascadeBuffer : null, count);
+    this.bank.process(out, striking ? strikeBuffer : null, this.washOn ? cascadeBuffer : null, count);
 
     // The air above the modes.
-    if (this.airSlow > ENVELOPE_FLOOR) {
-      const { airFilter, airSlowStep, airFastStep } = this;
+    if (this.airOn) {
+      const { airFilter, airSlowStep, airFastStep, airRandom } = this;
       let { airSlow, airFast } = this;
       for (let i = 0; i < count; i++) {
-        out[i] += airFilter.process((airSlow - airFast) * random.bipolar());
+        out[i] += airFilter.process((airSlow - airFast) * airRandom.bipolar());
         airSlow *= airSlowStep;
         airFast *= airFastStep;
       }
       this.airSlow = airSlow;
-      this.airFast = airFast < ENVELOPE_FLOOR ? 0 : airFast;
-    } else if (this.airSlow !== 0 || this.airFilter.magnitude() > VOICE_SLEEP_LEVEL) {
-      this.airSlow = 0;
-      this.airFast = 0;
-      for (let i = 0; i < count; i++) out[i] += this.airFilter.process(0);
+      this.airFast = airFast;
     }
   }
 
   settle(): void {
     if (!this.active) return;
-    const ringing = this.bank.settle();
     const stroke = this.pulseIndex < Math.max(this.pulseLength, this.noiseLength);
-    const filters = this.clickFilter.magnitude() + this.airFilter.magnitude();
-    if (ringing < VOICE_SLEEP_LEVEL && !stroke && this.cascadeSlow === 0 && this.airSlow === 0 && filters < VOICE_SLEEP_LEVEL) {
-      this.sleep();
+    if (this.clickOn && !stroke && this.clickFilter.magnitude() < VOICE_SLEEP_LEVEL) {
+      this.clickOn = false;
+      this.clickFilter.reset();
     }
+    if (this.washOn) {
+      if (this.cascadeFast < ENVELOPE_FLOOR) this.cascadeFast = 0;
+      if (this.cascadeSlow < ENVELOPE_FLOOR) {
+        this.washOn = false;
+        this.cascadeSlow = this.cascadeFast = this.cascadeLast = 0;
+      }
+    }
+    if (this.airOn) {
+      if (this.airFast < ENVELOPE_FLOOR) this.airFast = 0;
+      if (this.airSlow < ENVELOPE_FLOOR) {
+        this.airSlow = this.airFast = 0;
+        if (this.airFilter.magnitude() < VOICE_SLEEP_LEVEL) {
+          this.airOn = false;
+          this.airFilter.reset();
+        }
+      }
+    }
+    const ringing = this.bank.settle();
+    if (ringing < VOICE_SLEEP_LEVEL && !stroke && !this.clickOn && !this.washOn && !this.airOn) this.sleep();
   }
 
   sleep(): void {
@@ -241,6 +266,7 @@ export class PlateCymbal implements DrumVoice {
     this.pulseLength = 0;
     this.noiseLength = 0;
     this.cascadeSlow = this.cascadeFast = this.cascadeLast = this.airSlow = this.airFast = 0;
+    this.clickOn = this.washOn = this.airOn = false;
     this.strikeBuffer.fill(0);
     this.cascadeBuffer.fill(0);
     this.active = false;
@@ -507,12 +533,13 @@ export class CrashCymbal implements DrumVoice {
       pulseSeconds: 0.0009,
       noise: 0.4 + 0.4 * variationAmount,
       click: level * 0.12,
-      cascade: level * (0.35 + 0.65 * hard),
+      cascade: level * (0.45 + 0.55 * hard),
       // a harder stroke blooms sooner
       cascadeRise: 0.012 - 0.006 * hard,
       cascadeSeconds: this.decay,
       cascadeInstant: 0.15,
-      air: level * (0.35 + 0.65 * hard) * (0.5 + 0.9 * this.tone),
+      // and reaches further up: the top of the spectrum grows faster with force than the rest
+      air: level * (0.15 + 0.85 * hard * hard) * (0.5 + 0.9 * this.tone),
       airRise: 0.016 - 0.008 * hard,
       airSeconds: this.decay * 0.45,
     });

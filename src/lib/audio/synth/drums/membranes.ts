@@ -21,6 +21,8 @@ const CONTROL = 16;
 const GLIDE_FLOOR = 1e-4;
 /** A voice quieter than this, with nothing more to play, goes to sleep. */
 export const VOICE_SLEEP_LEVEL = 1e-6;
+/** A fading level below this is set to zero, at the next housekeeping. */
+export const ENVELOPE_FLOOR = 1e-7;
 
 /** What every drum voice offers the kit. */
 export interface DrumVoice {
@@ -160,25 +162,46 @@ export class MembraneModes {
 }
 
 /**
+ * Broadband noise is spread over half the sample rate, so the part of it
+ * that can be heard is weaker at a higher rate. This factor keeps a noise
+ * source as loud at any rate as it is at 48 kHz.
+ */
+export function noiseGain(sampleRate: number): number {
+  return Math.sqrt(sampleRate / 48000);
+}
+
+/**
  * A short burst of noise with its own fade: the beater's or the stick's
  * click, shaped by a filter the voice sets. The burst restarts on each stroke.
+ *
+ * Like every part of a voice, it decides that it has finished only in
+ * `settle`, which the kit calls at fixed points on the clock, never in the
+ * middle of a render: so the sound cannot depend on how the caller slices
+ * its blocks.
  */
 class NoiseBurst {
-  level = 0;
+  /** Still to be rendered: the burst, or its filter ringing out. */
+  sounding = false;
+  private level = 0;
   private fade = 0;
   readonly filter = new Biquad();
   readonly second = new Biquad();
   private useSecond = false;
   private readonly sampleRate: number;
+  private readonly random: Random;
+  private readonly gain: number;
 
-  constructor(sampleRate: number) {
+  constructor(sampleRate: number, random: Random) {
     this.sampleRate = sampleRate;
+    this.random = random.fork();
+    this.gain = noiseGain(sampleRate);
   }
 
   /** Start a burst at `level` that falls by 60 dB in `seconds`. */
   start(level: number, seconds: number): void {
-    this.level = level;
+    this.level = level * this.gain;
     this.fade = Math.exp(-6.907755 / (Math.max(0.0005, seconds) * this.sampleRate));
+    this.sounding = true;
   }
 
   /** A band-pass at `hz`: the knock of felt on a head. */
@@ -194,12 +217,8 @@ class NoiseBurst {
     this.useSecond = true;
   }
 
-  get sounding(): boolean {
-    return this.level > 0 || this.filter.magnitude() > VOICE_SLEEP_LEVEL || this.second.magnitude() > VOICE_SLEEP_LEVEL;
-  }
-
-  render(out: Float64Array, count: number, random: Random): void {
-    const { filter, second, fade, useSecond } = this;
+  render(out: Float64Array, count: number): void {
+    const { filter, second, fade, useSecond, random } = this;
     let level = this.level;
     for (let i = 0; i < count; i++) {
       let sample = filter.process(level * random.bipolar());
@@ -207,13 +226,20 @@ class NoiseBurst {
       out[i] += sample;
       level *= fade;
     }
-    this.level = level < 1e-7 ? 0 : level;
+    this.level = level;
+  }
+
+  settle(): void {
+    if (!this.sounding) return;
+    if (this.level < ENVELOPE_FLOOR) this.level = 0;
+    if (this.level === 0 && this.filter.magnitude() < VOICE_SLEEP_LEVEL && this.second.magnitude() < VOICE_SLEEP_LEVEL) this.sleep();
   }
 
   sleep(): void {
     this.level = 0;
     this.filter.reset();
     this.second.reset();
+    this.sounding = false;
   }
 
   forEachState(visit: (value: number) => void): void {
@@ -249,8 +275,8 @@ const KICK_MODES = [
   { ratio: 2.13, level: 0.8, decay: 0.55, order: 0.6 },
   { ratio: 3.27, level: 0.45, decay: 0.36, order: 1.2 },
   // the head's slap: higher modes that last a few hundredths of a second, and that small speakers can carry
-  { ratio: 7.4, level: 0.3, decay: 0.16, order: 2 },
-  { ratio: 11.3, level: 0.2, decay: 0.12, order: 2.6 },
+  { ratio: 7.4, level: 0.5, decay: 0.2, order: 2 },
+  { ratio: 11.3, level: 0.35, decay: 0.15, order: 2.6 },
 ];
 
 export interface KickSettings {
@@ -263,13 +289,11 @@ export class AcousticKick implements DrumVoice {
   active = false;
   private readonly modes: MembraneModes;
   private readonly click: NoiseBurst;
-  private readonly random: Random;
   private settings: KickSettings;
 
   constructor(sampleRate: number, settings: KickSettings, random: Random) {
     this.modes = new MembraneModes(sampleRate, KICK_MODES.length);
-    this.click = new NoiseBurst(sampleRate);
-    this.random = random;
+    this.click = new NoiseBurst(sampleRate, random);
     this.settings = settings;
     this.configure(settings);
   }
@@ -293,17 +317,19 @@ export class AcousticKick implements DrumVoice {
     this.modes.stretch((0.1 + 0.55 * punch) * hard * hard, 0.022);
     // The beater's click: a knock of felt, higher and louder for a harder stroke.
     this.click.band(1500 + 2800 * hard * (0.4 + punch), 0.9);
-    this.click.start(level * (0.1 + 0.9 * punch) * 4, 0.012);
+    this.click.start(level * (0.05 + 1.2 * punch * punch) * 2.2 * (0.5 + 0.5 * hard), 0.025);
     this.active = true;
   }
 
   render(out: Float64Array, count: number): void {
     this.modes.render(out, count);
-    if (this.click.sounding) this.click.render(out, count, this.random);
+    if (this.click.sounding) this.click.render(out, count);
   }
 
   settle(): void {
-    if (this.active && this.modes.level() < VOICE_SLEEP_LEVEL && !this.click.sounding) this.sleep();
+    if (!this.active) return;
+    this.click.settle();
+    if (this.modes.level() < VOICE_SLEEP_LEVEL && !this.click.sounding) this.sleep();
   }
 
   sleep(): void {
@@ -350,8 +376,13 @@ export class AcousticSnare implements DrumVoice {
   // the wires: noise that the head's motion switches on and off
   private readonly wireLow = new Biquad();
   private readonly wireHigh = new Biquad();
+  private wiresOn = false;
+  /** The wires' answer to a soft stroke swells over a few milliseconds: 1 once it has arrived. */
+  private wireGate = 1;
+  private wireGateStep = 1;
   private wireLevel = 0;
   private wireFade = 0;
+  private readonly wireGain: number;
   private buzzDepth = 0;
   private buzzFade = 0;
   private buzzCos = 1;
@@ -362,9 +393,10 @@ export class AcousticSnare implements DrumVoice {
   constructor(sampleRate: number, settings: SnareSettings, random: Random) {
     this.sampleRate = sampleRate;
     this.modes = new MembraneModes(sampleRate, SNARE_MODES.length);
-    this.click = new NoiseBurst(sampleRate);
-    this.random = random;
+    this.click = new NoiseBurst(sampleRate, random);
+    this.random = random.fork();
     this.settings = settings;
+    this.wireGain = noiseGain(sampleRate);
     this.wireLow.setHighpass(1100, 0.8, sampleRate);
     this.wireHigh.setLowpass(9000, 0.707, sampleRate);
     this.buzzFade = Math.exp(-1 / (0.045 * sampleRate));
@@ -401,8 +433,13 @@ export class AcousticSnare implements DrumVoice {
       this.click.start(strength(velocity, 1.5) * vary * 0.9, 0.004);
     }
     // The wires: thrown further, and for longer, by a harder stroke, and brighter.
-    const thrown = strength(velocity, 1.15) * vary * wires * 1.5 * (soft ? 0.8 : 1);
+    const thrown = strength(velocity, 1.15) * vary * wires * 1.5 * (soft ? 0.8 : 1) * this.wireGain;
+    if (soft && thrown > this.wireLevel) {
+      this.wireGate = Math.min(this.wireGate, this.wireLevel / thrown);
+      this.wireGateStep = 1 / (0.006 * this.sampleRate);
+    }
     this.wireLevel = Math.max(this.wireLevel, thrown);
+    this.wiresOn = thrown > 0 || this.wiresOn;
     const seconds = decay * (0.45 + 0.55 * hard);
     this.wireFade = Math.exp(-6.907755 / (seconds * this.sampleRate));
     this.wireHigh.setLowpass((soft ? 3200 : 4200) + 6800 * hard, 0.707, this.sampleRate);
@@ -413,34 +450,44 @@ export class AcousticSnare implements DrumVoice {
 
   render(out: Float64Array, count: number): void {
     this.modes.render(out, count);
-    if (this.click.sounding) this.click.render(out, count, this.random);
-    if (this.wireLevel > 0) {
-      const { wireLow, wireHigh, wireFade, buzzFade, buzzStepCos, buzzStepSin, random } = this;
-      let { wireLevel, buzzDepth, buzzCos, buzzSin } = this;
+    if (this.click.sounding) this.click.render(out, count);
+    if (this.wiresOn) {
+      const { wireLow, wireHigh, wireFade, buzzFade, buzzStepCos, buzzStepSin, random, wireGateStep } = this;
+      let { wireLevel, buzzDepth, buzzCos, buzzSin, wireGate } = this;
       for (let i = 0; i < count; i++) {
         const turned = buzzCos * buzzStepCos - buzzSin * buzzStepSin;
         buzzSin = buzzSin * buzzStepCos + buzzCos * buzzStepSin;
         buzzCos = turned;
-        const gate = 1 + buzzDepth * buzzSin;
+        const gate = (1 + buzzDepth * buzzSin) * wireGate;
         out[i] += wireHigh.process(wireLow.process(wireLevel * gate * random.bipolar()));
         wireLevel *= wireFade;
         buzzDepth *= buzzFade;
+        if (wireGate < 1) wireGate = Math.min(1, wireGate + wireGateStep);
       }
-      // keep the turning point on the unit circle
-      const drift = 1.5 - 0.5 * (buzzCos * buzzCos + buzzSin * buzzSin);
-      this.buzzCos = buzzCos * drift;
-      this.buzzSin = buzzSin * drift;
-      this.wireLevel = wireLevel < 1e-7 ? 0 : wireLevel;
+      this.buzzCos = buzzCos;
+      this.buzzSin = buzzSin;
+      this.wireLevel = wireLevel;
       this.buzzDepth = buzzDepth;
+      this.wireGate = wireGate;
     }
   }
 
   settle(): void {
     if (!this.active) return;
-    const filterQuiet = this.wireHigh.magnitude() < VOICE_SLEEP_LEVEL;
-    if (this.modes.level() < VOICE_SLEEP_LEVEL && this.wireLevel < VOICE_SLEEP_LEVEL && filterQuiet && !this.click.sounding) {
-      this.sleep();
+    this.click.settle();
+    if (this.wiresOn) {
+      // keep the buzz's turning point on the unit circle
+      const drift = 1.5 - 0.5 * (this.buzzCos * this.buzzCos + this.buzzSin * this.buzzSin);
+      this.buzzCos *= drift;
+      this.buzzSin *= drift;
+      if (this.wireLevel < ENVELOPE_FLOOR) this.wireLevel = 0;
+      if (this.wireLevel === 0 && this.wireHigh.magnitude() < VOICE_SLEEP_LEVEL) {
+        this.wiresOn = false;
+        this.wireLow.reset();
+        this.wireHigh.reset();
+      }
     }
+    if (this.modes.level() < VOICE_SLEEP_LEVEL && !this.wiresOn && !this.click.sounding) this.sleep();
   }
 
   sleep(): void {
@@ -448,6 +495,8 @@ export class AcousticSnare implements DrumVoice {
     this.click.sleep();
     this.wireLow.reset();
     this.wireHigh.reset();
+    this.wiresOn = false;
+    this.wireGate = 1;
     this.wireLevel = 0;
     this.buzzDepth = 0;
     this.buzzCos = 1;
@@ -460,7 +509,8 @@ export class AcousticSnare implements DrumVoice {
     this.click.forEachState(visit);
     this.wireLow.state().forEach(visit);
     this.wireHigh.state().forEach(visit);
-    [this.wireLevel, this.buzzDepth, this.buzzCos, this.buzzSin].forEach(visit);
+    // (the buzz's turning point stays on the unit circle: it is not something that decays)
+    [this.wireLevel, this.buzzDepth].forEach(visit);
   }
 }
 
@@ -477,13 +527,11 @@ export class AcousticTom implements DrumVoice {
   active = false;
   private readonly modes: MembraneModes;
   private readonly click: NoiseBurst;
-  private readonly random: Random;
 
   /** `hz` is the tom's resting pitch and `seconds` how long it rings. */
   constructor(sampleRate: number, hz: number, seconds: number, random: Random) {
     this.modes = new MembraneModes(sampleRate, TOM_MODES.length);
-    this.click = new NoiseBurst(sampleRate);
-    this.random = random;
+    this.click = new NoiseBurst(sampleRate, random);
     TOM_MODES.forEach((mode, i) => this.modes.tune(i, hz * mode.ratio, seconds * mode.decay));
   }
 
@@ -499,19 +547,22 @@ export class AcousticTom implements DrumVoice {
     // Both heads are free, so a tom has the most audible pitch fall in the kit.
     this.modes.stretch(0.11 * hard * hard, 0.04);
     if (!soft) {
-      this.click.between(1800, 9000);
-      this.click.start(level * 0.5, 0.005);
+      // the stick's tick: brighter and stronger for a harder stroke
+      this.click.between(1800, 4500 + 6500 * hard);
+      this.click.start(level * 0.6 * (0.3 + 0.7 * hard), 0.005);
     }
     this.active = true;
   }
 
   render(out: Float64Array, count: number): void {
     this.modes.render(out, count);
-    if (this.click.sounding) this.click.render(out, count, this.random);
+    if (this.click.sounding) this.click.render(out, count);
   }
 
   settle(): void {
-    if (this.active && this.modes.level() < VOICE_SLEEP_LEVEL && !this.click.sounding) this.sleep();
+    if (!this.active) return;
+    this.click.settle();
+    if (this.modes.level() < VOICE_SLEEP_LEVEL && !this.click.sounding) this.sleep();
   }
 
   sleep(): void {
@@ -545,12 +596,10 @@ export class CrossStick implements DrumVoice {
   active = false;
   private readonly modes: MembraneModes;
   private readonly click: NoiseBurst;
-  private readonly random: Random;
 
   constructor(sampleRate: number, random: Random) {
     this.modes = new MembraneModes(sampleRate, RIM_MODES.length);
-    this.click = new NoiseBurst(sampleRate);
-    this.random = random;
+    this.click = new NoiseBurst(sampleRate, random);
     RIM_MODES.forEach((mode, i) => this.modes.tune(i, mode.hz, mode.seconds));
     this.click.between(2500, 12000);
   }
@@ -568,11 +617,13 @@ export class CrossStick implements DrumVoice {
 
   render(out: Float64Array, count: number): void {
     this.modes.render(out, count);
-    if (this.click.sounding) this.click.render(out, count, this.random);
+    if (this.click.sounding) this.click.render(out, count);
   }
 
   settle(): void {
-    if (this.active && this.modes.level() < VOICE_SLEEP_LEVEL && !this.click.sounding) this.sleep();
+    if (!this.active) return;
+    this.click.settle();
+    if (this.modes.level() < VOICE_SLEEP_LEVEL && !this.click.sounding) this.sleep();
   }
 
   sleep(): void {
@@ -614,13 +665,15 @@ export class BrushSweep implements DrumVoice {
   private target = 0;
   private tick = 0;
   private readonly smoothing: number;
+  private readonly gain: number;
 
   constructor(sampleRate: number, random: Random) {
     this.sampleRate = sampleRate;
-    this.random = random;
+    this.random = random.fork();
     this.band.setBandpass(SWEEP_LOW_HZ, 0.8, sampleRate);
     this.air.setHighpass(5200, 0.707, sampleRate);
     this.smoothing = 1 - Math.exp(-1 / (0.005 * sampleRate));
+    this.gain = noiseGain(sampleRate);
   }
 
   /** Sweep for `seconds`, at a strength set by `velocity`. */
@@ -634,7 +687,7 @@ export class BrushSweep implements DrumVoice {
   }
 
   render(out: Float64Array, count: number): void {
-    const { band, air, random, position, length, level, sampleRate, smoothing } = this;
+    const { band, air, random, position, length, level, sampleRate, smoothing, gain } = this;
     let { speed, target, tick } = this;
     for (let i = 0; i < count; i++) {
       // The hand's speed is worked out every 32 samples and smoothed in between.
@@ -657,7 +710,7 @@ export class BrushSweep implements DrumVoice {
       }
       tick++;
       speed += smoothing * (target - speed);
-      const noise = random.bipolar();
+      const noise = gain * random.bipolar();
       out[i] += speed * (band.process(noise) * 0.9 + air.process(noise) * 0.16 * speed);
     }
     this.speed = speed;

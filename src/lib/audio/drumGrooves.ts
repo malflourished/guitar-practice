@@ -410,7 +410,8 @@ export function buildDrumBar(request: DrumBarRequest): DrumHit[] {
       beat,
       piece,
       velocity: Math.round(Math.min(1, Math.max(0.03, scaled)) * 1000) / 1000,
-      offsetMs: Math.round(Math.min(MAX_OFFSET_MS, Math.max(-MAX_OFFSET_MS, shift)) * 100) / 100,
+      // (adding 0 turns a "minus zero" into plain zero)
+      offsetMs: Math.round(Math.min(MAX_OFFSET_MS, Math.max(-MAX_OFFSET_MS, shift)) * 100) / 100 + 0,
     };
     if (beats !== undefined) hit.beats = beats;
     return hit;

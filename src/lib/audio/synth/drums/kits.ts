@@ -116,7 +116,7 @@ export class AcousticKit implements DrumKit {
       strip(this.tomMid, 0.72, 0.1, 0.45),
       strip(this.tomLow, 0.78, 0.4, 0.45),
       strip(this.hat, 0.3, -0.36, 0.14, true),
-      strip(this.ride, 0.28, 0.4, 0.2, true),
+      strip(this.ride, 0.36, 0.4, 0.2, true),
       strip(this.crash, 0.27, -0.24, 0.25, true),
       strip(this.sweep, 0.55, 0.06, 0.4),
     ];
@@ -303,7 +303,7 @@ export class MachineKit implements DrumKit {
         this.hat.strike(this.hatStroke(level, 0.045 + 0.07 * params.hatDecay, 0.035 + 0.05 * params.hatDecay));
         break;
       case 'hatOpen':
-        this.hat.strike(this.hatStroke(level, 0.28 + 0.6 * params.hatDecay, 0.2 + 0.45 * params.hatDecay));
+        this.hat.strike(this.hatStroke(level, 0.4 + 0.9 * params.hatDecay, 0.3 + 0.7 * params.hatDecay));
         break;
       case 'hatFoot':
         // a machine has no pedal: a soft, very short closed hat, which also chokes an open one
@@ -357,8 +357,8 @@ export class MachineKit implements DrumKit {
   }
 
   forEachState(visit: (value: number) => void): void {
+    // (the six oscillators run free: their phases are not something that decays)
     for (const { voice } of this.strips) voice.forEachState(visit);
-    this.cluster.forEachState(visit);
     this.burst.forEachState(visit);
   }
 

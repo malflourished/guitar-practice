@@ -24,4 +24,14 @@ export class Random {
   bipolar(): number {
     return this.next() * 2 - 1;
   }
+
+  /**
+   * A new source that runs on independently of this one. Give one to each
+   * part of an instrument that draws numbers at its own pace (each noise
+   * generator, say), so that what one part draws never depends on how often
+   * another did, or on how the caller slices its blocks.
+   */
+  fork(): Random {
+    return new Random((this.next() * 4294967296) >>> 0);
+  }
 }

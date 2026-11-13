@@ -11,12 +11,14 @@
  * The signal path:
  *
  *   drums (kick, snare, toms, rim, brush) ─► soft clipper ─┐
- *   metal (hi-hats, ride, crash) ──────────────────────────┼─► 30 Hz high-pass ─► out
+ *   metal (hi-hats, ride, crash) ──────────────────────────┼─► 30 Hz high-pass ─► ceiling ─► out
  *   every voice's send ─► room ────────────────────────────┘
  *
  * The clipper is why the drums fit in the jam's mix: it trims the first
  * millisecond of a kick or a snare, which costs little punch and several
- * decibels of peak. Metal goes round it, so cymbals stay clean.
+ * decibels of peak. Metal goes round it, so cymbals stay clean. The ceiling
+ * at the end does nothing to a groove; it is there so that no pile-up of
+ * strokes, at any setting, can leave the kit above -2 dBFS.
  */
 import { Biquad } from '../dsp/biquad';
 import { Random } from '../dsp/random';
@@ -44,6 +46,12 @@ const GRID = 128;
 const STOP_SECONDS = 0.03;
 /** Nothing below this is of use from a drum kit, and small speakers only suffer from it. */
 const HIGHPASS_HZ = 30;
+/**
+ * The ceiling: the output is untouched up to the knee (-6 dBFS) and bends
+ * smoothly above it, never passing the knee plus this much (-2 dBFS).
+ */
+const CEILING_KNEE = 0.5;
+const CEILING_ROOM = 0.294;
 /** A stroke softer than this is not played. */
 const MIN_VELOCITY = 1e-3;
 /** With nothing sounding, the output filters are switched off after this long below the quiet level. */
@@ -51,11 +59,11 @@ const TAIL_SECONDS = 0.05;
 const QUIET_LEVEL = 1e-7;
 /**
  * A brush lands over several milliseconds, not at once: a tap on the brushes
- * kit is three light strokes, this far apart in seconds, at these shares of
- * its strength.
+ * kit is four light strokes, this far apart in seconds, at these shares of
+ * its strength. The first is not the strongest, so the tap swells.
  */
-const BRUSH_SPREAD_SECONDS = [0, 0.0022, 0.005];
-const BRUSH_SPREAD_SHARES = [0.62, 0.5, 0.38];
+const BRUSH_SPREAD_SECONDS = [0, 0.0016, 0.0036, 0.0062];
+const BRUSH_SPREAD_SHARES = [0.34, 0.46, 0.52, 0.38];
 
 /**
  * Each kit's output gain: set so that, with its default controls, every kit
@@ -65,8 +73,8 @@ const BRUSH_SPREAD_SHARES = [0.62, 0.5, 0.38];
  */
 export const KIT_OUTPUT_GAIN: Readonly<Record<DrumKitId, number>> = {
   acoustic: 0.5,
-  machine: 0.5,
-  brushes: 0.5,
+  machine: 0.456,
+  brushes: 0.456,
 };
 
 interface SynthEvent {
@@ -262,6 +270,7 @@ export class DrumSynth {
     this.room.sleep();
     this.highpassLeft.reset();
     this.highpassRight.reset();
+    this.clearBuffers();
     this.chainAwake = false;
     this.quietSamples = 0;
     this.cellPeak = 0;
@@ -322,8 +331,8 @@ export class DrumSynth {
     let fadeLeft = this.fadeLeft;
     let loudest = this.cellPeak;
     for (let i = 0; i < count; i++) {
-      let l = highpassLeft.process(drumLeft[i] * outputGain);
-      let r = highpassRight.process(drumRight[i] * outputGain);
+      let l = ceiling(highpassLeft.process(drumLeft[i] * outputGain));
+      let r = ceiling(highpassRight.process(drumRight[i] * outputGain));
       if (fadeLeft > 0) {
         const gain = fadeLeft / fadeTotal;
         l *= gain;
@@ -355,9 +364,26 @@ export class DrumSynth {
     if (this.quietSamples >= TAIL_SECONDS * this.sampleRate) {
       this.highpassLeft.reset();
       this.highpassRight.reset();
-      for (const buffer of [this.scratch, this.drumLeft, this.drumRight, this.metalLeft, this.metalRight, this.send]) buffer.fill(0);
+      this.clearBuffers();
       this.chainAwake = false;
       this.quietSamples = 0;
     }
   }
+
+  private clearBuffers(): void {
+    this.scratch.fill(0);
+    this.drumLeft.fill(0);
+    this.drumRight.fill(0);
+    this.metalLeft.fill(0);
+    this.metalRight.fill(0);
+    this.send.fill(0);
+  }
+}
+
+/** Straight through below the knee; above it, a smooth bend that never passes the ceiling. */
+function ceiling(sample: number): number {
+  const magnitude = sample < 0 ? -sample : sample;
+  if (magnitude <= CEILING_KNEE) return sample;
+  const bent = CEILING_KNEE + CEILING_ROOM * Math.tanh((magnitude - CEILING_KNEE) / CEILING_ROOM);
+  return sample < 0 ? -bent : bent;
 }

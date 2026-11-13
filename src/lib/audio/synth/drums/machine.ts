@@ -10,7 +10,7 @@
  */
 import { Biquad } from '../dsp/biquad';
 import type { Random } from '../dsp/random';
-import { VOICE_SLEEP_LEVEL, type DrumVoice, type StrokeVariation } from './membranes';
+import { ENVELOPE_FLOOR, VOICE_SLEEP_LEVEL, noiseGain, type DrumVoice, type StrokeVariation } from './membranes';
 
 const TWO_PI = 2 * Math.PI;
 /** A retriggered voice fades its old sound out over this long, so the restart does not click. */
@@ -41,9 +41,14 @@ function strength(velocity: number, exponent: number): number {
  * One tone whose pitch starts high and falls to rest: the body of every drum
  * in the kit. It restarts from silence on each stroke, as a triggered
  * circuit does, with the old sound faded out underneath.
+ *
+ * Like every part of a voice, it decides that it has finished only in
+ * `settle`, which the kit calls at fixed points on the clock.
  */
 class SweptTone {
-  level = 0;
+  /** Still to be rendered. */
+  sounding = false;
+  private level = 0;
   private phase = 0;
   private fade = 0;
   private sweep = 0;
@@ -78,10 +83,7 @@ class SweptTone {
     this.sag = sag;
     this.sagStep = timeConstant(sagSeconds, sampleRate);
     this.phase = 0;
-  }
-
-  get sounding(): boolean {
-    return this.level > 0 || this.tail !== 0;
+    this.sounding = true;
   }
 
   /** Add the tone to `out`, pushed through a soft clipper by `drive` (1 is clean). */
@@ -108,15 +110,23 @@ class SweptTone {
       sag *= sagStep;
     }
     this.phase = phase;
-    this.level = level < 1e-7 ? 0 : level;
-    this.sweep = sweep < 1e-9 ? 0 : sweep;
-    this.sag = sag < 1e-9 ? 0 : sag;
+    this.level = level;
+    this.sweep = sweep;
+    this.sag = sag;
     this.tail = tail;
-    this.last = this.level === 0 ? 0 : last;
+    this.last = last;
+  }
+
+  settle(): void {
+    if (!this.sounding) return;
+    if (this.sweep < 1e-9) this.sweep = 0;
+    if (this.sag < 1e-9) this.sag = 0;
+    if (this.level < ENVELOPE_FLOOR && this.tail === 0) this.sleep();
   }
 
   sleep(): void {
     this.level = this.sweep = this.sag = this.tail = this.last = this.phase = 0;
+    this.sounding = false;
   }
 
   forEachState(visit: (value: number) => void): void {
@@ -126,14 +136,20 @@ class SweptTone {
 
 /** Noise through a high-pass and a low-pass, under a fade: the snap of a snare, a tom's breath, a click. */
 class ShapedNoise {
-  level = 0;
+  /** Still to be rendered: the noise, or its filters ringing out. */
+  sounding = false;
+  private level = 0;
   private fade = 0;
   private readonly low = new Biquad();
   private readonly high = new Biquad();
   private readonly sampleRate: number;
+  private readonly random: Random;
+  private readonly gain: number;
 
-  constructor(sampleRate: number, lowHz: number, highHz: number) {
+  constructor(sampleRate: number, lowHz: number, highHz: number, random: Random) {
     this.sampleRate = sampleRate;
+    this.random = random.fork();
+    this.gain = noiseGain(sampleRate);
     this.shape(lowHz, highHz);
   }
 
@@ -143,28 +159,32 @@ class ShapedNoise {
   }
 
   start(level: number, seconds: number): void {
-    this.level = Math.max(this.level, level);
+    this.level = Math.max(this.level, level * this.gain);
     this.fade = fadeFor(seconds, this.sampleRate);
+    this.sounding = true;
   }
 
-  get sounding(): boolean {
-    return this.level > 0 || this.high.magnitude() > VOICE_SLEEP_LEVEL;
-  }
-
-  render(out: Float64Array, count: number, random: Random): void {
-    const { low, high, fade } = this;
+  render(out: Float64Array, count: number): void {
+    const { low, high, fade, random } = this;
     let level = this.level;
     for (let i = 0; i < count; i++) {
       out[i] += high.process(low.process(level * random.bipolar()));
       level *= fade;
     }
-    this.level = level < 1e-7 ? 0 : level;
+    this.level = level;
+  }
+
+  settle(): void {
+    if (!this.sounding) return;
+    if (this.level < ENVELOPE_FLOOR) this.level = 0;
+    if (this.level === 0 && this.high.magnitude() < VOICE_SLEEP_LEVEL) this.sleep();
   }
 
   sleep(): void {
     this.level = 0;
     this.low.reset();
     this.high.reset();
+    this.sounding = false;
   }
 
   forEachState(visit: (value: number) => void): void {
@@ -191,14 +211,12 @@ export class MachineKick implements DrumVoice {
   active = false;
   private readonly tone: SweptTone;
   private readonly click: ShapedNoise;
-  private readonly random: Random;
   private settings: MachineKickSettings;
   private drive = 1.4;
 
   constructor(sampleRate: number, settings: MachineKickSettings, random: Random) {
     this.tone = new SweptTone(sampleRate);
-    this.click = new ShapedNoise(sampleRate, 900, 6500);
-    this.random = random;
+    this.click = new ShapedNoise(sampleRate, 900, 6500, random);
     this.settings = settings;
   }
 
@@ -219,11 +237,14 @@ export class MachineKick implements DrumVoice {
 
   render(out: Float64Array, count: number): void {
     if (this.tone.sounding) this.tone.render(out, count, this.drive);
-    if (this.click.sounding) this.click.render(out, count, this.random);
+    if (this.click.sounding) this.click.render(out, count);
   }
 
   settle(): void {
-    if (this.active && !this.tone.sounding && !this.click.sounding) this.sleep();
+    if (!this.active) return;
+    this.tone.settle();
+    this.click.settle();
+    if (!this.tone.sounding && !this.click.sounding) this.sleep();
   }
 
   sleep(): void {
@@ -255,14 +276,12 @@ export class MachineSnare implements DrumVoice {
   private readonly lower: SweptTone;
   private readonly upper: SweptTone;
   private readonly snap: ShapedNoise;
-  private readonly random: Random;
   private settings: MachineSnareSettings;
 
   constructor(sampleRate: number, settings: MachineSnareSettings, random: Random) {
     this.lower = new SweptTone(sampleRate);
     this.upper = new SweptTone(sampleRate);
-    this.snap = new ShapedNoise(sampleRate, 1700, 9000);
-    this.random = random;
+    this.snap = new ShapedNoise(sampleRate, 1700, 9000, random);
     this.settings = settings;
   }
 
@@ -286,11 +305,15 @@ export class MachineSnare implements DrumVoice {
   render(out: Float64Array, count: number): void {
     if (this.lower.sounding) this.lower.render(out, count, 1.3);
     if (this.upper.sounding) this.upper.render(out, count, 1.3);
-    if (this.snap.sounding) this.snap.render(out, count, this.random);
+    if (this.snap.sounding) this.snap.render(out, count);
   }
 
   settle(): void {
-    if (this.active && !this.lower.sounding && !this.upper.sounding && !this.snap.sounding) this.sleep();
+    if (!this.active) return;
+    this.lower.settle();
+    this.upper.settle();
+    this.snap.settle();
+    if (!this.lower.sounding && !this.upper.sounding && !this.snap.sounding) this.sleep();
   }
 
   sleep(): void {
@@ -314,14 +337,12 @@ export class MachineTom implements DrumVoice {
   active = false;
   private readonly tone: SweptTone;
   private readonly breath: ShapedNoise;
-  private readonly random: Random;
   private readonly hz: number;
   private readonly seconds: number;
 
   constructor(sampleRate: number, hz: number, seconds: number, random: Random) {
     this.tone = new SweptTone(sampleRate);
-    this.breath = new ShapedNoise(sampleRate, 500, 4500);
-    this.random = random;
+    this.breath = new ShapedNoise(sampleRate, 500, 4500, random);
     this.hz = hz;
     this.seconds = seconds;
   }
@@ -336,11 +357,14 @@ export class MachineTom implements DrumVoice {
 
   render(out: Float64Array, count: number): void {
     if (this.tone.sounding) this.tone.render(out, count, 1.3);
-    if (this.breath.sounding) this.breath.render(out, count, this.random);
+    if (this.breath.sounding) this.breath.render(out, count);
   }
 
   settle(): void {
-    if (this.active && !this.tone.sounding && !this.breath.sounding) this.sleep();
+    if (!this.active) return;
+    this.tone.settle();
+    this.breath.settle();
+    if (!this.tone.sounding && !this.breath.sounding) this.sleep();
   }
 
   sleep(): void {
@@ -363,13 +387,11 @@ export class MachineRim implements DrumVoice {
   private readonly high: SweptTone;
   private readonly low: SweptTone;
   private readonly tick: ShapedNoise;
-  private readonly random: Random;
 
   constructor(sampleRate: number, random: Random) {
     this.high = new SweptTone(sampleRate);
     this.low = new SweptTone(sampleRate);
-    this.tick = new ShapedNoise(sampleRate, 2500, 11000);
-    this.random = random;
+    this.tick = new ShapedNoise(sampleRate, 2500, 11000, random);
   }
 
   strike(velocity: number, variation: StrokeVariation): void {
@@ -383,11 +405,15 @@ export class MachineRim implements DrumVoice {
   render(out: Float64Array, count: number): void {
     if (this.high.sounding) this.high.render(out, count, 1.6);
     if (this.low.sounding) this.low.render(out, count, 1.6);
-    if (this.tick.sounding) this.tick.render(out, count, this.random);
+    if (this.tick.sounding) this.tick.render(out, count);
   }
 
   settle(): void {
-    if (this.active && !this.high.sounding && !this.low.sounding && !this.tick.sounding) this.sleep();
+    if (!this.active) return;
+    this.high.settle();
+    this.low.settle();
+    this.tick.settle();
+    if (!this.high.sounding && !this.low.sounding && !this.tick.sounding) this.sleep();
   }
 
   sleep(): void {
@@ -465,9 +491,6 @@ export class SquareCluster {
     for (let i = 0; i < count; i++) buffer[i] *= 1 / 6;
   }
 
-  forEachState(visit: (value: number) => void): void {
-    this.phase.forEach(visit);
-  }
 }
 
 /** One stroke on a metal channel: the level and length (60 dB) of each band. */
@@ -529,13 +552,16 @@ export class MetalChannel implements DrumVoice {
       high *= highFade;
       if (rise < 1) rise = Math.min(1, rise + riseStep);
     }
-    this.low = low < 1e-7 ? 0 : low;
-    this.high = high < 1e-7 ? 0 : high;
+    this.low = low;
+    this.high = high;
     this.rise = rise;
   }
 
   settle(): void {
-    if (this.active && this.low === 0 && this.high === 0 && this.highpass.magnitude() < VOICE_SLEEP_LEVEL) this.sleep();
+    if (!this.active) return;
+    if (this.low < ENVELOPE_FLOOR) this.low = 0;
+    if (this.high < ENVELOPE_FLOOR) this.high = 0;
+    if (this.low === 0 && this.high === 0 && this.highpass.magnitude() < VOICE_SLEEP_LEVEL) this.sleep();
   }
 
   sleep(): void {
@@ -576,12 +602,14 @@ export class GatedBurst {
   private readonly attack: number;
   private readonly sag: number;
   private readonly release: number;
+  private readonly gain: number;
 
   constructor(sampleRate: number, random: Random) {
     this.sampleRate = sampleRate;
-    this.random = random;
+    this.random = random.fork();
     for (const filter of [this.left, this.right]) filter.setHighpass(420, 0.707, sampleRate);
     for (const filter of [this.leftTop, this.rightTop]) filter.setLowpass(5200, 0.707, sampleRate);
+    this.gain = noiseGain(sampleRate);
     this.attack = 1 - timeConstant(0.003, sampleRate);
     this.sag = timeConstant(0.22, sampleRate);
     this.release = timeConstant(0.006, sampleRate);
@@ -590,7 +618,7 @@ export class GatedBurst {
   /** Open the gate at `level` for `seconds`. */
   trigger(level: number, seconds: number): void {
     if (level <= 0) return;
-    this.target = Math.max(this.target, level);
+    this.target = Math.max(this.target, level * this.gain);
     this.hold = Math.max(this.hold, Math.round(seconds * this.sampleRate));
     this.active = true;
   }
@@ -611,15 +639,15 @@ export class GatedBurst {
       left[i] += this.leftTop.process(this.left.process(level * random.bipolar()));
       right[i] += this.rightTop.process(this.right.process(level * random.bipolar()));
     }
-    this.level = level < 1e-7 && hold === 0 ? 0 : level;
+    this.level = level;
     this.target = target;
     this.hold = hold;
   }
 
   settle(): void {
-    if (this.active && this.level === 0 && this.hold === 0 && this.leftTop.magnitude() + this.rightTop.magnitude() < VOICE_SLEEP_LEVEL) {
-      this.sleep();
-    }
+    if (!this.active) return;
+    if (this.hold === 0 && this.level < ENVELOPE_FLOOR) this.level = 0;
+    if (this.level === 0 && this.hold === 0 && this.leftTop.magnitude() + this.rightTop.magnitude() < VOICE_SLEEP_LEVEL) this.sleep();
   }
 
   sleep(): void {

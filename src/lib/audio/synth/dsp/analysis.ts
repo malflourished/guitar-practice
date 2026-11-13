@@ -4,6 +4,7 @@
  * its targets (tuning in cents, decay in seconds); nothing here runs while
  * sound is playing.
  */
+import { Biquad } from './biquad';
 
 /**
  * The frequency of the partial nearest `guess`, in hertz.
@@ -150,6 +151,66 @@ export function spectralCentroid(
     total += power;
   }
   return total > 0 ? weighted / total : 0;
+}
+
+/**
+ * The level of the part of a sound between two frequencies, in decibels
+ * (RMS, full scale is 0), over a stretch of time. The band's edges fall at
+ * 24 dB an octave. For checks such as "the wires add noise above 3 kHz".
+ */
+export function bandLevelDb(
+  samples: ArrayLike<number>,
+  sampleRate: number,
+  lowHz: number,
+  highHz: number,
+  fromSeconds = 0,
+  toSeconds = samples.length / sampleRate,
+): number {
+  const filters = [new Biquad(), new Biquad(), new Biquad(), new Biquad()];
+  filters[0].setHighpass(lowHz, 0.54, sampleRate);
+  filters[1].setHighpass(lowHz, 1.31, sampleRate);
+  filters[2].setLowpass(highHz, 0.54, sampleRate);
+  filters[3].setLowpass(highHz, 1.31, sampleRate);
+  const from = Math.max(0, Math.round(fromSeconds * sampleRate));
+  const to = Math.min(samples.length, Math.round(toSeconds * sampleRate));
+  let sum = 0;
+  // run the filters from the start, so the stretch is not coloured by their settling
+  for (let i = 0; i < to; i++) {
+    let value = samples[i];
+    for (const filter of filters) value = filter.process(value);
+    if (i >= from) sum += value * value;
+  }
+  return to > from && sum > 0 ? 10 * Math.log10(sum / (to - from)) : -Infinity;
+}
+
+/**
+ * How long a sound takes to fall `db` decibels below its loudest moment, in
+ * seconds, and when that moment was: both from its level in short windows.
+ */
+export function fallTime(
+  samples: ArrayLike<number>,
+  sampleRate: number,
+  db: number,
+  windowSeconds = 0.005,
+): { peakSeconds: number; seconds: number } {
+  const size = Math.max(1, Math.round(windowSeconds * sampleRate));
+  let loudest = 0;
+  let at = 0;
+  const levels: number[] = [];
+  for (let start = 0; start + size <= samples.length; start += size) {
+    let sum = 0;
+    for (let k = 0; k < size; k++) sum += samples[start + k] * samples[start + k];
+    const level = Math.sqrt(sum / size);
+    if (level > loudest) {
+      loudest = level;
+      at = levels.length;
+    }
+    levels.push(level);
+  }
+  const target = loudest * 10 ** (-db / 20);
+  let last = at;
+  for (let i = at; i < levels.length; i++) if (levels[i] > target) last = i;
+  return { peakSeconds: at * windowSeconds, seconds: (last - at + 1) * windowSeconds };
 }
 
 /** Cents between two frequencies: positive when `frequency` is sharp of `reference`. */
