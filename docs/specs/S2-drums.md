@@ -1,7 +1,7 @@
 # S2: drums for the jam loop
 
 **Package:** S2 (sounds we synthesize ourselves), after S1 (the modelled bass).
-**Status:** built 2026-11-13 on `claude/sound-s2-drums-e3cf00`, not merged. The Drums fader starts at off: nothing changes for anyone until the owner has listened in the sound lab and turned it up.
+**Status:** built 2026-11-13 on `claude/sound-s2-drums-e3cf00`, not merged. The Drums fader starts at off, so the drums change nothing until the owner has listened in the sound lab and turned it up. One thing does change for everyone at merge: the whole jam is 3 dB quieter, to give the mix the headroom it had lost (see "Levels").
 **Research behind it:** [docs/sound/drums.md](../sound/drums.md).
 
 ## Why
@@ -57,13 +57,13 @@ What to listen for:
 
 Files that already existed and were changed:
 
-- `src/lib/audio/engine.ts`: a fourth gain node (`jamDrums`, straight into the output), the kit loaded on demand, drum events played, and the plain cymbal left out while the kit plays.
+- `src/lib/audio/engine.ts`: a fourth gain node (`jamDrums`, straight into the output), the kit loaded on demand, drum events played, and the plain cymbal left out while the kit plays. Also `JAM_HEADROOM`: 3 dB off every jam layer (see "Levels").
 - `src/lib/audio/jamSchedule.ts`: a `drum` event, and `drums` in the bar's options.
 - `src/lib/audio/jamMix.ts`: a `drums` layer. It is optional in a mix and in the gains, so every call written for three layers means what it meant.
 - `src/lib/music/progressionLibrary.ts`: a `groove` on eight entries, and `progressionGroove(entry, feel)`.
 - `src/hooks/usePlayOptions.ts`, `usePlayback.ts`, `src/modes/progressions/useJamLoop.ts`, `MixFaders.tsx`: the fourth fader, its saved level (`vibrato:play-drums-level`, off by default), and the groove for the feel now chosen.
 
-No existing test was edited. All 408 still pass.
+All 408 existing tests still pass. Three expectations in `engine.jam.test.ts` were updated for the 3 dB of headroom (the layer gains it pins, and the cymbal's stroke). No other existing test was edited.
 
 ## The kits
 
@@ -182,7 +182,7 @@ Velocities breathe by up to 10% slowly and 7% by chance.
 - **At off, nothing is scheduled**, as for the other layers.
 - **It follows the lab while it plays**: the kit, its dials and its trim.
 - **Stop** fades the kit out in 30 ms.
-- Guitar, bass and pad are untouched.
+- Guitar, bass and pad play exactly what they played. Their level, with the drums' and the noise cymbal's, is 3 dB lower (see "Levels").
 
 ## Levels
 
@@ -209,39 +209,54 @@ Swing is about 4 LU quieter than the other grooves on the same kit (A: −27.6 a
 
 The app on the dev server in a browser pane, with a worklet meter on its output after the limiter. 90 BPM, 12-bar blues in C, steel acoustic at the default volume (0.75), Quarter rhythm, Swing, the modelled bass (the default since S1), kit A unless said. Peak and RMS in dBFS over the first two bars after the count-in, unless said.
 
+**What was found first.** Before any change to the older layers:
+
 | Faders (guitar / bass / pad / drums) | Peak | RMS |
 |---|---|---|
 | 0 / off / off / off | −5.2 | −21.0 |
 | off / 0 / off / off | −3.0 | −15.9 |
 | off / off / 0 / off | −13.5 | −26.4 |
-| off / off / off / 0, kit A | −9.1 | −29.2 |
-| off / off / off / 0, kit B | −10.9 | −28.7 |
-| off / off / off / 0, kit C | −8.8 | −28.8 |
-| off / off / off / 0, bars 13 and 14 (the crash) | −8.8 | −28.8 |
-| off / off / off / +6 | −3.2 | −23.2 |
-| off / off / off / 0, ii–V–I (Swing) | −11.1 | −37.2 |
-| **0 / 0 / 0 / off (today's default mix)** | **−0.1 to +0.15** (four runs) | −14.7 |
+| off / off / off / 0 | −9.1 | −29.2 |
+| **0 / 0 / 0 / off (the default mix, no drums)** | **−0.1 to +0.15** (four runs) | −14.7 |
+| the same, the whole 12 bars | **+0.6** | −14.3 |
 | **0 / 0 / 0 / 0** | **+0.3** | −14.6 |
-| 0 / 0 / 0 / 0, kit B | +0.5 | −14.4 |
-| 0 / 0 / 0 / 0, kit C | +0.5 | −14.5 |
-| 0 / 0 / 0 / +3 | +0.7 | −14.3 |
+| the same, the whole 12 bars | **+1.1** | −14.2 |
 | 0 / 0 / 0 / +6 | +2.2 | −14.1 |
-| 0 / 0 / 0 / off, the whole 12 bars | **+0.6** | −14.3 |
-| 0 / 0 / 0 / 0, the whole 12 bars | **+1.1** | −14.2 |
+
+- **The mix was already past full scale before the drums.** P2.2 measured −1.7 with the synth bass. The modelled bass, which became the default afterwards, peaks 1.3 dB higher (−3.0 against −4.3), as S1's spec said it would.
+- **The drums added 0.2 to 0.5 dB** to a mix that had no room.
+- **The limiter does not help.** `Tone.Limiter(-2)` is a compressor with a 30 dB soft knee, which is close to a wire at these levels. Anything over full scale is clipped on the way to the speakers.
+
+**What was done.** With the owner's approval (2026-11-13), the whole jam is 3 dB lower: `JAM_HEADROOM` in `engine.ts`, carried by each of the four layer gain nodes on top of its fader, and by the noise cymbal as a softer stroke. The balance between the layers is what it was. Notes and chords outside the jam, and the click, are untouched. 0 dB on a fader still means "the default level".
+
+**Measured after it:**
+
+| Faders (guitar / bass / pad / drums) | Peak | RMS |
+|---|---|---|
+| 0 / off / off / off | −8.2 | −24.0 |
+| off / 0 / off / off | −6.0 | −18.9 |
+| off / off / 0 / off | −16.8 | −29.4 |
+| off / off / off / 0, kit A | −12.1 | −32.2 |
+| 0 / 0 / 0 / off | −3.2 | −17.7 |
+| the same, the whole 12 bars | −1.8 | −17.4 |
+| **0 / 0 / 0 / 0** | **−2.6** | −17.6 |
+| **the same, the whole 12 bars** | **−2.4 and −2.0** (two runs) | −17.2 |
+| 0 / 0 / 0 / +3 | −2.4 | −17.5 |
+| 0 / 0 / 0 / +6 | −1.5 | −17.2 |
+| +3 / +3 / +3 / +3 | +0.1 | −14.4 |
+
+From before the trim, and so 3 dB lower now: kit B alone peaked 1.8 dB under kit A and kit C 0.3 dB over it; the crash at the top of the second pass raised kit A's peak by 0.3 dB; ii–V–I's swing peaked 2 dB under the blues' shuffle, with an RMS 8 dB lower.
 
 What the numbers say:
 
-- **The guitar and pad are where P2.2 left them** (−5.1 and −13.7 then).
-- **The drums at 0 dB peak about 4 dB under the guitar and 6 dB under the bass**, and their average level is far lower, because drums are all peak. They are set to support, not to lead. The fader has 6 dB above that.
-- **The mix was already at full scale before the drums.** Guitar, bass and pad at their defaults, with no drums, peak between −0.1 and +0.15 dBFS over two bars and at +0.6 over a whole pass. P2.2 measured −1.7 with the synth bass. The modelled bass, which became the default afterwards, peaks 1.3 dB higher (−3.0 against −4.3), as S1's spec said it would.
-- **So the brief's condition is not met, and the drums alone cannot meet it.** "With the drums up, all layers together must stay under the limiter": with all four at 0 dB the output peaks at +0.3 dBFS over two bars and +1.1 over a pass. The drums add about 0.2 to 0.5 dB to a mix that had no room. The limiter does not help: it is Tone's compressor with a 30 dB soft knee, which is close to a wire at these levels.
-- **What that sounds like.** The very top of the loudest hits (a bass note, a strum and a kick together) is flattened for a fraction of a millisecond, a few times a pass. Today's mix does this already, 0.5 dB less. It is unlikely to be heard on laptop speakers. It is still wrong, and it gets worse as faders go up.
-
-The fix is a decision about the three older layers, which this package was told not to change. See "Decisions to check", item 1.
+- **With all four faders at 0 dB the mix now stays under full scale, with about 2 dB to spare.** Over a whole pass its loudest hit lands at the limiter's −2 dB mark, give or take half a decibel from run to run (the bass and the guitar vary from note to note). Over most bars it is well under.
+- **The drums at 0 dB peak about 4 dB under the guitar and 6 dB under the bass**, and their average level is far lower, because drums are all peak. They are set to support, not to lead. The fader has 6 dB above that: Drums at +6 with the rest at 0 still stays 1.5 dB under full scale.
+- **The top of the faders can still clip.** All four at +3 reaches full scale. That is P2.2's second point, 3 dB better than it was.
+- **The jam is 3 dB quieter than it was.** The system volume makes that up.
 
 ## Tests
 
-`npm test` runs these with the rest: 527 tests in all, 119 of them new.
+`npm test` runs these with the rest: 528 tests in all, 120 of them new.
 
 - **Every piece of every kit** (`drumSynth.test.ts`): a stroke starts on the exact sample asked for; every piece dies away to exact silence and the kit goes to sleep with only zeros in its memory; harder is louder, and a ghost note sits 15 to 32 dB under a backbeat; a harder stroke has more of its attack in the upper part of its spectrum; the kick and snare are in the middle, the hi-hat left, the ride right.
 - **Each instrument:** the drumhead model rings where it is tuned, for as long as asked, and starts sharp when stretched; the kick rests at Kick tune within 3%; Kick decay, Kick punch, Snares, Hat tone, Hat length, Cymbal tone and Cymbal ring do what they say; a closed hat is a tick and an open one rings; closing the hats chokes the ring, with the stick or the foot; the foot alone is darker; the crash blooms after the stroke and starts brighter than it ends; ride strokes build a wash; no cymbal has a note; the machine's metal sits between 2 and 12 kHz; the gated burst holds, then shuts, and a ghost note does not open it; the room is different in each ear and gone within a second; a sweep swells and dies; a brush tap peaks later than a stick.
@@ -251,7 +266,7 @@ The fix is a decision about the three older layers, which this package was told 
 - **Levels:** the three kits within 0.5 LU on the reference part; every piece at once stays under full scale at any Drive.
 - **Cost:** ten seconds of the busiest groove in under one second of one core, on every kit; nothing at rest.
 - **Grooves** (`drumGrooves.test.ts`): the swung note is the bass's and the guitar's number exactly; swung grooves sit on thirds and straight ones on quarters; each groove's pattern, accents and ghost notes; every pass starts alike; fills take over the end of the bar only, change from pass to pass, and are short; the crash is on beat 1 with the kick in place of the hi-hat or ride; the phrase rule for 12-, 4-, 3-, 2- and 1-bar forms; humanizing is bounded, has not drifted by bar 40,000, leaves beat 1 on the grid, puts the backbeat behind, is correlated from stroke to stroke, and is repeatable; the brushes' mapping; each library entry's groove, and the Feel menu's switch.
-- **The engine** (`engineJamDrums.test.ts`): the fourth gain node; a mix with no drums in it has none; at off nothing is scheduled and the kit is never loaded; with the fader up each stroke plays at its grid time plus its own offset, and offsets do not add up over 50 bars; the kit's crash replaces the plain cymbal, which comes back when the fader goes off or the kit cannot load; following the lab; Stop.
+- **The engine** (`engineJamDrums.test.ts`, and one test added to `engine.jam.test.ts` for the headroom): the fourth gain node; a mix with no drums in it has none; at off nothing is scheduled and the kit is never loaded; with the fader up each stroke plays at its grid time plus its own offset, and offsets do not add up over 50 bars; the kit's crash replaces the plain cymbal, which comes back when the fader goes off or the kit cannot load; following the lab; Stop.
 - **Settings** (`drumSettings.test.ts`) and **the mix** (`jamMixDrums.test.ts`).
 
 Checked in the running app, not by the test suite:
@@ -266,26 +281,26 @@ Measured in Node 22 on the development machine (Apple M4 Max), at 48 kHz, eight 
 
 | | Per sample | Share of one core |
 |---|---|---|
-| Kit A: straight eighths, shuffle | about 150 ns | 0.7% |
-| Kit A: sixteenths | 190 ns | 0.9% |
-| Kit A: swing (the ride never stops ringing) | 250 ns | 1.2% |
-| Kit B, any groove | 100 to 120 ns | 0.5% |
-| Kit C, any groove | 145 to 160 ns | 0.7% |
-| One ringing cymbal on kit A | 130 to 170 ns | 0.6 to 0.8% |
-| The room | 25 ns | 0.1% |
+| Kit A: straight eighths, shuffle | about 125 ns | 0.6% |
+| Kit A: sixteenths | 160 ns | 0.8% |
+| Kit A: swing (the ride never stops ringing) | 220 ns | 1.1% |
+| Kit B, any groove | 80 to 120 ns | 0.4 to 0.6% |
+| Kit C, any groove | 125 to 160 ns | 0.6 to 0.8% |
+| One ringing cymbal on kit A | 100 to 135 ns | 0.5 to 0.65% |
+| The room | about 20 ns | 0.1% |
 | Nothing playing | under 1 ns | none |
 
 For scale, one sounding string of the modelled bass is 40 ns. The cymbals are the cost: a bank of forty modes is two multiplications a mode for every sample. The lab runs all three kits at once, three times the above.
 
-The audio thread allocates nothing for each block it renders. A stroke costs a few small objects when it is scheduled and when it is played, as a note of the modelled bass does.
+(Best of five runs each, on a machine that was busy with other work at the time. An idle machine may do a little better.)
 
-(These figures are from before the last small additions to the cymbals; a later run could not be trusted because another program was using every core. Expect one or two tenths of a percent more while a cymbal rings.)
+The audio thread allocates nothing for each block it renders. A stroke costs a few small objects when it is scheduled and when it is played, as a note of the modelled bass does.
 
 ## Decisions to check
 
 Each of these went beyond the brief, read it loosely, or could not be met. Say if any is wrong.
 
-1. **There is no headroom, and one check fails because of it.** See "In the app" above. The Drums fader starts at off, so merging this changes nothing for anyone. The condition fails once the fader is up, by 0.3 dB over two bars and 1.1 dB over a pass, on a mix that already reaches +0.6 without drums. The honest fix is P2.2's first option, which now has a reason: trim all the jam's layers by 3 dB (multiply the four layer gains in `setup` and `setJamMix` by 0.71, and update the two tests that pin 0.6 and 1). All four at 0 dB would then peak near −2 dBFS, and the owner turns the system volume up a notch. It changes today's level, so it is the owner's call. The alternative, a true limiter at the end of the chain, touches every mode.
+1. **The jam is 3 dB quieter, for everyone, at merge.** The brief said to keep the guitar, bass and pad exactly as they were, and that all layers together must stay under the limiter. Both could not hold: the three older layers alone already passed full scale. The owner approved the trim on 2026-11-13. It is one constant (`JAM_HEADROOM_DB` in `engine.ts`). What is left of the question: over a whole pass the loudest hit lands at about −2 dBFS, which is the limiter's mark and not under it. One more decibel of trim would put it clearly under, if that matters.
 2. **Short forms.** The brief asks for a fill in the last bar of each pass and the crash from the second pass. On the four 2-bar and six 3-bar entries that is a fill and a crash every five to eight seconds. The drums mark those every second pass. P2.2's noise cymbal, with the drums off, still marks every pass as before.
 3. **The swing ratio.** The drums swing at 2:1 because the bass and guitar do. Measured jazz drummers swing harder than that at practice tempos. A tempo-dependent ratio for the whole band is in the research note's "Decisions for the owner".
 4. **A third kit.** The research said brushes can work, so kit C is built. It is the least certain of the three.
@@ -315,8 +330,8 @@ Each of these went beyond the brief, read it loosely, or could not be met. Say i
 - [x] Humanizing inside the grid that cannot drift.
 - [x] A fourth fader with its own gain node, starting at off.
 - [x] Levels measured and written here.
-- [ ] With the drums up, all layers together stay under the limiter. **Not met: the three older layers already reach full scale. See "Decisions to check", item 1.**
-- [x] Guitar, bass and pad as before, and every existing test passing unchanged.
+- [x] With the drums up, all layers together stay under full scale: all four at 0 dB peak between −2.6 and −2.0 dBFS. It took a 3 dB trim of the whole jam, which the owner approved. See "Decisions to check", item 1.
+- [x] Guitar, bass and pad play what they played, 3 dB lower. Every existing test passes; three expectations were updated for the trim.
 - [x] The lab plays each groove on each kit at matched loudness with the dials exposed, and its keys are documented.
 - [x] `npm test`, `npx tsc -b` and `npm run lint` pass. No page scrolls at the three sizes. A CPU budget in tests.
 - [ ] The owner has listened, in the lab and in the jam, on speakers and headphones, and has chosen.

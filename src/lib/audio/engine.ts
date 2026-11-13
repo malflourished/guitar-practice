@@ -18,10 +18,21 @@ export { DEFAULT_INSTRUMENT, GUITAR_INSTRUMENTS, type GuitarInstrumentName };
 /**
  * The guitar's share of the jam mix, under its own full level so that the bass
  * and pad fit beneath it without the limiter squashing all three (see the
- * measured levels in docs/specs/P2-jam-loop.md). This is the Guitar fader's
- * 0 dB: the fader scales it.
+ * measured levels in docs/specs/P2-jam-loop.md). With the jam's headroom
+ * below, this is the Guitar fader's 0 dB: the fader scales it.
  */
 const JAM_GUITAR_LEVEL = 0.6;
+/**
+ * Headroom for the whole jam, in decibels and as a gain. Every layer's gain
+ * node carries it on top of its fader, and the cymbal that marks the form is
+ * played that much softer, so the balance is what it was and the whole band
+ * is 3 dB lower. Without it, guitar, bass and pad at their defaults peaked at
+ * +0.6 dBFS over a 12-bar pass, and at +1.1 with the drums up (measured
+ * 2026-11-13: docs/specs/S2-drums.md). Notes and chords outside the jam, and
+ * the click, are not touched.
+ */
+export const JAM_HEADROOM_DB = -3;
+export const JAM_HEADROOM = 10 ** (JAM_HEADROOM_DB / 20);
 /** A fader move takes this long to land, so it never clicks and never waits for a bar line. */
 const JAM_MIX_RAMP = 0.03;
 
@@ -128,10 +139,10 @@ export class GuitarAudioEngine {
       this.output = new Tone.Gain(this.state.muted ? 0 : this.state.volume).connect(this.limiter);
       this.reverb = new Tone.Reverb({ decay: 0.8, preDelay: 0.012, wet: this.state.room }).connect(this.output);
       this.filter = new Tone.Filter(9500, 'lowpass').connect(this.reverb);
-      this.jamGuitar = new Tone.Gain(JAM_GUITAR_LEVEL * this.jamGains.guitar).connect(this.filter);
-      this.jamBass = new Tone.Gain(this.jamGains.bass).connect(this.output);
-      this.jamPad = new Tone.Gain(this.jamGains.pad).connect(this.reverb);
-      this.jamDrums = new Tone.Gain(this.jamGains.drums ?? 0).connect(this.output);
+      this.jamGuitar = new Tone.Gain(JAM_HEADROOM * JAM_GUITAR_LEVEL * this.jamGains.guitar).connect(this.filter);
+      this.jamBass = new Tone.Gain(JAM_HEADROOM * this.jamGains.bass).connect(this.output);
+      this.jamPad = new Tone.Gain(JAM_HEADROOM * this.jamGains.pad).connect(this.reverb);
+      this.jamDrums = new Tone.Gain(JAM_HEADROOM * (this.jamGains.drums ?? 0)).connect(this.output);
       this.click = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.025, sustain: 0, release: 0.02 }, volume: -15 }).connect(this.output);
       this.graphReady = this.reverb.generate().then(() => undefined);
     }
@@ -300,7 +311,7 @@ export class GuitarAudioEngine {
     const spread = up ? 0.012 : 0.018;
     this.lastStrum = [];
     ordered.forEach((p, index) => {
-      // the jam's guitar gain carries JAM_GUITAR_LEVEL and the Guitar fader
+      // the jam's guitar gain carries JAM_GUITAR_LEVEL, the jam's headroom and the Guitar fader
       const source = this.note(positionToMidi(p), time + index * spread, duration,
         velocity * (0.86 + (index % 3) * 0.05), p.string, 1, this.jamGuitar ?? undefined);
       if (source) this.lastStrum.push(source);
@@ -311,13 +322,14 @@ export class GuitarAudioEngine {
    * off; the drums are off when left out). They land over about 30 ms, with no
    * restart and no wait for a bar line, and are remembered if the sound has
    * not started yet. A layer at 0 schedules nothing from the next beat on.
+   * Each node also carries the jam's headroom (`JAM_HEADROOM`).
    */
   setJamMix(gains: JamGains) {
     this.jamGains = { ...gains };
-    this.jamGuitar?.gain.rampTo(JAM_GUITAR_LEVEL * gains.guitar, JAM_MIX_RAMP);
-    this.jamBass?.gain.rampTo(gains.bass, JAM_MIX_RAMP);
-    this.jamPad?.gain.rampTo(gains.pad, JAM_MIX_RAMP);
-    this.jamDrums?.gain.rampTo(gains.drums ?? 0, JAM_MIX_RAMP);
+    this.jamGuitar?.gain.rampTo(JAM_HEADROOM * JAM_GUITAR_LEVEL * gains.guitar, JAM_MIX_RAMP);
+    this.jamBass?.gain.rampTo(JAM_HEADROOM * gains.bass, JAM_MIX_RAMP);
+    this.jamPad?.gain.rampTo(JAM_HEADROOM * gains.pad, JAM_MIX_RAMP);
+    this.jamDrums?.gain.rampTo(JAM_HEADROOM * (gains.drums ?? 0), JAM_MIX_RAMP);
     // Turned up while the loop plays: fetch the kit now, so it joins within a bar.
     if (this.jamRunning && this.drumsUp()) void this.loadDrums();
   }
@@ -383,7 +395,8 @@ export class GuitarAudioEngine {
           if (this.drumsUp() && this.drums) return;
           // the top of the form: no fader of its own, and Click has no say
           this.cymbal ??= new CymbalVoice(this.output ?? Tone.getDestination());
-          this.cymbal.play(at);
+          // it has no gain node of its own: it takes the jam's headroom as a softer stroke
+          this.cymbal.play(at, JAM_HEADROOM);
         } else if (event.kind === 'drum') {
           if (!this.drumsUp()) return;
           // A stroke's time is its place on the grid plus its own small offset: nothing accumulates.

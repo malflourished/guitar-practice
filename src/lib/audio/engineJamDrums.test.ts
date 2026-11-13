@@ -71,6 +71,7 @@ vi.mock('./synth/drums/drumKitVoice', () => ({
 }));
 
 import type { GuitarAudioEngine } from './engine';
+import { JAM_HEADROOM } from './engine';
 import type { JamEvent } from './jamSchedule';
 import { jamGains } from './jamMix';
 import { DEFAULT_DRUM_PARAMS } from './synth/drums/drumParams';
@@ -147,10 +148,11 @@ describe('the Drums fader', () => {
     engine.setJamMix(jamGains({ guitar: 0, bass: 0, pad: 0, drums: -6 }));
     await startJam(engine);
     const { jamDrums } = inside(engine);
-    expect(fake.gains.find((gain) => gain.node === jamDrums)?.value).toBeCloseTo(0.501, 3);
+    // the fader's gain, under the jam's 3 dB of headroom like every other layer
+    expect(fake.gains.find((gain) => gain.node === jamDrums)?.value).toBeCloseTo(0.501 * JAM_HEADROOM, 3);
     fake.transport.stop.mockClear(); // Play itself stops whatever was playing before
     engine.setJamMix(jamGains({ guitar: 0, bass: 0, pad: 0, drums: 3 }));
-    expect(jamDrums.gain.rampTo).toHaveBeenLastCalledWith(expect.closeTo(1.4125, 3), 0.03);
+    expect(jamDrums.gain.rampTo).toHaveBeenLastCalledWith(expect.closeTo(1.4125 * JAM_HEADROOM, 3), 0.03);
     // no restart: the loop carries on
     expect(fake.transport.stop).not.toHaveBeenCalled();
     expect(fake.transport.start).toHaveBeenCalledTimes(1);
@@ -165,7 +167,7 @@ describe('with the Drums fader at off', () => {
     playBar(102);
     expect(fake.drums.create).not.toHaveBeenCalled();
     expect(fake.drums.hit).not.toHaveBeenCalled();
-    expect(fake.cymbal.play).toHaveBeenCalledWith(102);
+    expect(fake.cymbal.play).toHaveBeenCalledWith(102, JAM_HEADROOM);
   });
 });
 
@@ -228,7 +230,7 @@ describe('with the Drums fader up', () => {
     engine.setJamMix(off);
     playBar(106);
     expect(fake.drums.hit).toHaveBeenCalledTimes(4);
-    expect(fake.cymbal.play).toHaveBeenLastCalledWith(106);
+    expect(fake.cymbal.play).toHaveBeenLastCalledWith(106, JAM_HEADROOM);
   });
 
   it('a mix change does not load the kit while nothing is playing', async () => {

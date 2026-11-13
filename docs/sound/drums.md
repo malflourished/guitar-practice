@@ -237,7 +237,7 @@ Everything is in one AudioWorklet, built on S1's pattern: a pure TypeScript core
 - A short fill ends each pass, and the kit's crash marks the top of the next. On forms shorter than four bars both come every second pass (see below).
 - Humanizing is bounded and computed from the bar and the position, never accumulated.
 
-**The bus.** A small stereo room, soft clipping on the drums, a 30 Hz high-pass, and a ceiling that no pile-up of strokes can pass. The measured levels are in the spec. They show that the jam's mix had no headroom left before the drums arrived, which is a decision for the owner (the spec's first).
+**The bus.** A small stereo room, soft clipping on the drums, a 30 Hz high-pass, and a ceiling that no pile-up of strokes can pass. The measured levels are in the spec. They showed that the jam's mix had no headroom left before the drums arrived, so the whole jam was made 3 dB quieter, with the owner's approval.
 
 **Cost.** Measured: three to six units for a groove (a unit is one sounding bass string, 40 ns a sample), which is 0.5 to 1.2% of one processor core on the development machine. The cymbals are most of it. The table is in the spec.
 
