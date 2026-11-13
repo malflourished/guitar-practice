@@ -2,6 +2,25 @@ import { useEffect, useState } from 'react';
 
 const STORAGE_PREFIX = 'vibrato:';
 
+/** Read one saved value, falling back to the default when it is missing, malformed or rejected. */
+export function readPersistent<T>(
+  key: string,
+  defaultValue: T,
+  validate?: (value: unknown) => value is T,
+  storage: Pick<Storage, 'getItem'> = localStorage,
+): T {
+  try {
+    const raw = storage.getItem(STORAGE_PREFIX + key);
+    if (raw !== null) {
+      const parsed = JSON.parse(raw) as unknown;
+      if (!validate || validate(parsed)) return parsed as T;
+    }
+  } catch {
+    // ignore malformed storage
+  }
+  return defaultValue;
+}
+
 /**
  * `useState` mirrored into localStorage so the app resumes where you left off.
  * Pass `validate` to reject stale/invalid stored values (e.g. a study mode that
@@ -14,18 +33,7 @@ export function usePersistentState<T>(
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
   const storageKey = STORAGE_PREFIX + key;
 
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw !== null) {
-        const parsed = JSON.parse(raw) as unknown;
-        if (!validate || validate(parsed)) return parsed as T;
-      }
-    } catch {
-      // ignore malformed storage
-    }
-    return defaultValue;
-  });
+  const [value, setValue] = useState<T>(() => readPersistent(key, defaultValue, validate));
 
   useEffect(() => {
     try {

@@ -33,7 +33,7 @@ python3 scripts/prepare-samples.py
 
 The script uses pinned upstream revisions in `public/audio/sources.json`. It requires network access only when rebuilding samples. The generated manifest includes source URLs and SHA-256 hashes; tests check every shipped file. The packaged app needs no network access for guitar playback.
 
-Vibrato's background uses a slowly merging WebGL field, airbrushed color bands, and film grain. Each key has a dominant color and related highlights. The footer offers Flow, Calm, and Still motion; the system's reduced-motion preference is honored. Animation stops in hidden tabs and Scholar mode. A CSS fallback remains available without WebGL.
+Vibrato's background uses a slowly merging WebGL field, airbrushed color bands, and film grain. Each key has a dominant color and related highlights. The theme dock offers three speeds: Flow (the slowest), Rise (about 1.6 times Flow) and Boil (about 2.5 times Flow); the lava always moves, except that the system's reduced-motion preference stops it. A saved Calm or Still becomes Flow. Animation stops in hidden tabs and Scholar mode. A CSS fallback remains available without WebGL.
 
 ## Development
 

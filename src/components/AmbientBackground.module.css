@@ -4,12 +4,12 @@
 .shade { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 25%, #03070828 100%), linear-gradient(#0004, transparent 28%, #0002); }
 .root:has(.canvas[data-ready='true']) .fallback { display: none; }
 .fallback { position: absolute; inset: 0; filter: blur(30px); }
-.fallback i { position: absolute; width: 48vw; height: 70vh; background: var(--blob-1); border-radius: 48% 52% 61% 39% / 50% 41% 59% 50%; opacity: 0.55; top: -15%; left: -18%; animation: drift 37s ease-in-out infinite alternate; }
-.fallback i:nth-child(2) { background: var(--blob-2); top: 40%; left: 70%; animation-delay: -18s; animation-duration: 49s; }
-.fallback i:nth-child(3) { background: var(--blob-3); top: 75%; left: 20%; animation-delay: -9s; animation-duration: 43s; }
+.fallback i { position: absolute; width: 48vw; height: 70vh; background: var(--blob-1); border-radius: 48% 52% 61% 39% / 50% 41% 59% 50%; opacity: 0.55; top: -15%; left: -18%; animation: drift calc(37s / var(--lava-speed, 1)) ease-in-out infinite alternate; }
+.fallback i:nth-child(2) { background: var(--blob-2); top: 40%; left: 70%; animation-delay: -18s; animation-duration: calc(49s / var(--lava-speed, 1)); }
+.fallback i:nth-child(3) { background: var(--blob-3); top: 75%; left: 20%; animation-delay: -9s; animation-duration: calc(43s / var(--lava-speed, 1)); }
 @keyframes drift { to { transform: translate(10vw, 22vh) rotate(40deg) scale(1.2, 0.8); border-radius: 60% 40% 33% 67% / 55% 60% 40% 45%; } }
-.root[data-motion='still'] .fallback i { animation-play-state: paused; }
-.root[data-motion='calm'] .fallback i { animation-duration: 110s; }
+.root[data-motion='rise'] { --lava-speed: 1.6; }
+.root[data-motion='boil'] { --lava-speed: 2.5; }
 :global(.themeRoot[data-ui-theme='scholar']) .root { opacity: 0; }
 :global(.themeRoot[data-vibrato-canvas='light']) .shade { background: #ffffff15; }
 @media (prefers-reduced-motion: reduce) { .root, .canvas { transition: none; } .fallback i { animation: none; } }

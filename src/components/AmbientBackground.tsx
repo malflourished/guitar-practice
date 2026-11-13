@@ -1,7 +1,8 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 import styles from './AmbientBackground.module.css';
 
-export type AmbientMotion = 'flow' | 'calm' | 'still';
+import { AMBIENT_SPEED, type AmbientMotion } from '../lib/ambientMotion';
+
 interface Props {
   style: CSSProperties;
   motion: AmbientMotion;
@@ -137,7 +138,7 @@ export function AmbientBackground({ style, motion, light, enabled }: Props) {
         const dt = Math.min((now-previous)/1000, 0.1);
         previous = now; lastDraw = now;
         const { motion: movement, colors: targets, light: lightCanvas } = settings.current;
-        const speed = reduced.matches || movement === 'still' ? 0 : movement === 'calm' ? 0.3 : 1;
+        const speed = reduced.matches ? 0 : AMBIENT_SPEED[movement];
         elapsed += dt*speed;
         const blend = reduced.matches ? 1 : 1-Math.exp(-dt*1.4);
         const targetColors = targets.map(rgb);
