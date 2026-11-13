@@ -26,7 +26,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
 | P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) and P2.2 (mix faders, the form strip) 2026-11-13. P3 and P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
-| S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) in progress, 2026-11-13 | P2.1 | Fable 5.2, at the owner's request |
+| S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) merged 2026-11-13. The owner chooses by ear whether the modelled bass becomes the default. Organ is the research's pick for next | P2.1 | Fable 5.2, at the owner's request |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
 
@@ -558,7 +558,7 @@ Built and merged 2026-11-12. Notes from the build:
 The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little cheap … higher end music sounds would be nice and being able to synthesize them ourselves might be nice as well without having to rely on an external library". The guitar sounds good because it is recorded; the other instruments should come close by modelling the instrument itself.
 
 - **Rule:** our own DSP. No third-party synthesis code and no sample packs. Tone.js stays for scheduling and routing.
-- **S1** (in progress, Fable 5.2, as the owner asked). Three parts:
+- **S1** (merged 2026-11-13, built on Fable 5.2 as the owner asked). Spec: [specs/S1-modelled-bass.md](specs/S1-modelled-bass.md). Research: [sound/research.md](sound/research.md). The lab opens with **\\**; **[** plays today's synth bass and **]** the modelled one, and that choice also sets the jam loop's bass. Open: the owner's listening test; one Tone timing warning per page when the jam starts. Three parts:
   - Research into how professional instrument sounds are made, in `docs/sound/research.md`, with a plan for each later instrument.
   - A physically modelled electric bass in an AudioWorklet, with the same interface as `BassVoice`.
   - A hidden sound lab that A/Bs it against today's bass at matched loudness.
@@ -596,3 +596,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
 - **2026-11-13.** P2.1 merged, with the bass up and the pad down 3 dB after the owner's second listen. P2.2 (faders and the form strip) started on Sonnet, and S1 (research and a modelled bass) on Fable 5.2.
 - **2026-11-13.** The owner found a gap running C major's third CAGED shape: no B between A and C. The diatonic passing tones were only added inside each pentatonic box's frets, so in every key the major G and A shapes (the minor E and G shapes) skipped one note, 48 gaps in all. Fixed: a missing note goes one fret outside the box, on the string nearest its own notes. In C that is B at fret 4 on the G string and F at fret 6 on the B string, as the standard fingerings have it. A test checks every box in all 12 keys.
 - **2026-11-13.** P2.2 reviewed and merged: the faders, the form strip (four bars to a line), the next change ("C7 in 2 bars") and the cymbal at the top of each pass. 351 tests pass. New build installed; the owner's box in the P2.2 spec stays open until they have played with it.
+- **2026-11-13.** S1 reviewed and merged: about 7,000 words of research with sources, a modelled electric bass in our own DSP (tuning within 0.13 cents from E1 to G3, about 0.2% of a core per sounding string), and the sound lab. Its one clash with P2.2 was in `engine.ts`: the Bass fader's gain node and S1's voice picker shared the name `jamBass`. The picker is now `jamBassVoice()`, and both basses play through the Bass fader. 406 tests pass. In a hidden window, the lab played the modelled bass and the jam ran on it with no errors.
