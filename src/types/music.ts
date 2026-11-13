@@ -109,6 +109,14 @@ export interface TheoryContent {
 export interface ProgressionStepDef {
   /** Scale degree 1–7 in the active key. */
   degree: number;
+  /**
+   * Semitones above the key note, for a root the key's scale does not hold
+   * (♭VII in a major key). When set it decides the root and `degree` only
+   * names the nearest scale degree.
+   */
+  offset?: number;
+  /** Semitones above the key note for a slash chord's bass (II/I is 0). Shown in the chord name only. */
+  bass?: number;
   quality: ChordQuality;
   /** Display numeral, e.g. "I", "vi", "ii⁷". */
   numeral: string;

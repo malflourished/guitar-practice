@@ -195,3 +195,28 @@ export function getKeySpellingMap(
   const spelledRoot = spelledRootFromNoteName(keyRoot, preference);
   return buildSpellingMap(getSpelledScaleNotes(spelledRoot, keyMode));
 }
+
+/** Letter steps above the tonic for each chromatic offset: ♭II is a 2nd, ♭VI a 6th, ♭VII a 7th. */
+const OFFSET_LETTER_STEPS = [0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6];
+
+/**
+ * Name the note `offset` semitones above a key's tonic by its scale degree's
+ * letter (♭VII in D is C, ♭II in C is Db), or undefined when that would need a
+ * double accidental and the plain chord spelling reads better.
+ */
+export function spellOffsetFromKey(
+  keyRoot: NoteName,
+  keyMode: KeyMode,
+  offset: number,
+  preference: NotationPreference,
+): string | undefined {
+  const tonic = getSpelledScaleNotes(
+    spelledRootFromNoteName(keyRoot, preference),
+    keyMode,
+  )[0];
+  const steps = ((offset % 12) + 12) % 12;
+  const letter =
+    LETTER_ORDER[(LETTER_ORDER.indexOf(tonic.letter) + OFFSET_LETTER_STEPS[steps]) % 7];
+  const accidental = accidentalFor(letter, (pitchClassOf(tonic) + steps) % 12);
+  return Math.abs(accidental) > 1 ? undefined : formatSpelled({ letter, accidental });
+}

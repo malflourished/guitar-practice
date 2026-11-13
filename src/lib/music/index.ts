@@ -89,6 +89,15 @@ export {
   type ResolvedProgressionStep,
 } from './progressions';
 export {
+  PROGRESSION_LIBRARY,
+  PROGRESSION_LIBRARY_GROUPS,
+  entryToProgressionDef,
+  getProgressionLibraryEntry,
+  getProgressionLibraryGroups,
+  type ProgressionLibraryEntry,
+  type ProgressionLibraryGroup,
+} from './progressionLibrary';
+export {
   buildProgressionChordView,
   buildSavedProgressionChordViews,
   followProgressionRegions,
