@@ -1,7 +1,7 @@
 # P2: the jam loop
 
 **Package:** P2 in `docs/ROADMAP.md` (Progressions: the improvising workshop).
-**Status:** spec written 2026-11-12. Not started.
+**Status:** spec written 2026-11-12. Built 2026-11-12 on branch `claude/jam-loop-p2-0ec7a2`; waiting for the owner to play along.
 **Builds on:** P1 (the library) and L (the Play control), both merged.
 **Unlocks:** P3 (targets on the neck, lenses) and P4 (prompts). This spec says what P2 must expose for them.
 
@@ -109,12 +109,12 @@ P3 shows the next chord's target notes on the last beat of a bar where `changeCo
 
 ## Done when
 
-- [ ] Any library entry plays with one bar of count-in, then loops until stopped, at the Settings tempo.
-- [ ] The current chord shows in the deck and the side panel, and the beat dots and bar counter follow the sound. In a hidden Electron run at 240 BPM, the step index after 16 bars matches the Transport position.
-- [ ] Strum and Pad both work. The bass plays the root, or the slash bass. Swing entries swing by default, and the menu can override the feel.
-- [ ] Stop, Space, choosing another entry, changing key and leaving the mode all stop the loop cleanly. The neck returns to the chord selected before Play.
-- [ ] A tempo change while playing takes effect without a glitch.
-- [ ] Tests, lint and `tsc` pass, and no page scrolls at 1440×900, 1280×720 or 960×640.
+- [x] Any library entry plays with one bar of count-in, then loops until stopped, at the Settings tempo.
+- [x] The current chord shows in the deck and the side panel, and the beat dots and bar counter follow the sound. In a hidden Electron run at 240 BPM, the step index after 16 bars matches the Transport position.
+- [x] Strum and Pad both work. The bass plays the root, or the slash bass. Swing entries swing by default, and the menu can override the feel.
+- [x] Stop, Space, choosing another entry, changing key and leaving the mode all stop the loop cleanly. The neck returns to the chord selected before Play.
+- [x] A tempo change while playing takes effect without a glitch.
+- [x] Tests, lint and `tsc` pass, and no page scrolls at 1440×900, 1280×720 or 960×640.
 - [ ] The owner has played along with at least the 12-bar blues and the Andalusian cadence and says it feels like a band, not a metronome.
 
 ## Out of scope here
