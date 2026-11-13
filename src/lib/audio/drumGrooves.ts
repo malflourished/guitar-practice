@@ -178,9 +178,9 @@ function swing(step: number): Stroke[] {
     [1, 'hatFoot', 0.6],
     [3, 'hatFoot', 0.6],
     [0, 'kick', 0.3],
-    [1, 'kick', 0.2],
-    [2, 'kick', 0.26],
-    [3, 'kick', 0.2],
+    [1, 'kick', 0.22],
+    [2, 'kick', 0.27],
+    [3, 'kick', 0.22],
   ];
   const comp: Stroke[] = [
     [3, 'rim', 0.5],

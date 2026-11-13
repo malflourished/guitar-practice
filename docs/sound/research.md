@@ -41,7 +41,7 @@ The plan, in one table. Details are in "The plan for vibrato~" below.
 | Guitar | Keep the recordings the owner likes. Later: the same string model, six strings, for a clean electric | After the bass is judged |
 | Electric piano | A few decaying partials per note, then a pickup distortion that makes harder notes bark | Next keyboard sound |
 | Organ | 91 always-running sine generators mixed by drawbars, then a rotating-speaker effect | Best fit for a blues backing |
-| Drums | Synthesized kick and snare. Cymbals are the hard case | With song form (P5) |
+| Drums | Modal drums, cymbals as tones plus noise, and a drum-machine kit. Cymbals are the hard case. See [drums.md](drums.md) | Built (S2) |
 | Pads | Several detuned, alias-free sawtooths, slow filter movement, stereo chorus | When the pad is revisited |
 
 ## Why today's bass sounds cheap

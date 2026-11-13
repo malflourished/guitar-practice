@@ -11,6 +11,7 @@ import {
   DEFAULT_DRUM_PARAMS,
   DRUM_KIT_IDS,
   isDrumKitId,
+  sameDrumParams,
   sanitizeDrumParams,
   type DrumKitId,
   type DrumParams,
@@ -83,8 +84,13 @@ export function getDrumSettings(): DrumSettings {
 }
 
 export function setDrumSettings(update: (settings: DrumSettings) => DrumSettings): void {
-  const next = update(getDrumSettings());
-  current = parseDrumSettings(JSON.stringify(next));
+  const previous = getDrumSettings();
+  const next = parseDrumSettings(JSON.stringify(update(previous)));
+  // A kit whose controls did not change keeps the very same object, so a listener can tell which kit moved.
+  for (const kit of DRUM_KIT_IDS) {
+    if (sameDrumParams(previous.params[kit], next.params[kit])) next.params[kit] = previous.params[kit];
+  }
+  current = next;
   try {
     localStorage.setItem(DRUM_SETTINGS_KEY, JSON.stringify(current));
   } catch {

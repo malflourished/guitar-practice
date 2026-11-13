@@ -51,15 +51,22 @@ function isTyping(target: EventTarget | null): boolean {
   return target instanceof HTMLInputElement && (target.type === 'text' || target.type === 'number');
 }
 
+/** A dial has to rest this long before its kit is measured again, in milliseconds. */
+const MEASURE_AFTER_MS = 140;
+
 /**
- * A kit's levels on the reference part, measured a moment after its dials
- * stop moving, off the click that moved them, so the panel stays quick.
+ * A kit's levels on the reference part. Measuring renders ten seconds of
+ * drums, so it waits until the kit's dials have rested a moment; until then
+ * the last trim stands.
  */
 function useKitLevels(kit: DrumKitId, params: DrumParams, sampleRate: number): StereoLevels | null {
   const settled = useDeferredValue(params);
   const [measured, setMeasured] = useState<{ params: DrumParams; levels: StereoLevels } | null>(null);
   useEffect(() => {
-    const timer = window.setTimeout(() => setMeasured({ params: settled, levels: measureKit(kit, settled, sampleRate) }), 0);
+    const timer = window.setTimeout(
+      () => setMeasured((last) => (last && sameDrumParams(last.params, settled) ? last : { params: settled, levels: measureKit(kit, settled, sampleRate) })),
+      MEASURE_AFTER_MS,
+    );
     return () => window.clearTimeout(timer);
   }, [kit, settled, sampleRate]);
   return measured && sameDrumParams(measured.params, params) ? measured.levels : null;

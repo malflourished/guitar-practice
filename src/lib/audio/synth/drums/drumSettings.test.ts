@@ -61,6 +61,17 @@ describe('the settings store', () => {
     expect(heard).toHaveBeenCalledTimes(1);
   });
 
+  it('a kit whose controls did not change keeps the same object, so listeners can tell which kit moved', async () => {
+    const store = await import('./drumSettings');
+    const before = store.getDrumSettings();
+    store.setDrumSettings((settings) => ({ ...settings, params: { ...settings.params, machine: { ...settings.params.machine, kickHz: 44 } } }));
+    const after = store.getDrumSettings();
+    expect(after.params.machine).not.toBe(before.params.machine);
+    expect(after.params.machine.kickHz).toBe(44);
+    expect(after.params.acoustic).toBe(before.params.acoustic);
+    expect(after.params.brushes).toBe(before.params.brushes);
+  });
+
   it('a change is repaired before it is kept', async () => {
     const store = await import('./drumSettings');
     store.setDrumSettings((settings) => ({ ...settings, humanize: -4, trimDb: { ...settings.trimDb, acoustic: 99 } }));

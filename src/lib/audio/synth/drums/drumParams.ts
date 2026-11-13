@@ -121,7 +121,7 @@ export const DRUM_PARAM_SPECS: readonly DrumParamSpec[] = [
   { key: 'hatTone', label: 'Hat tone', min: 0, max: 1, step: 0.01, unit: '', hint: 'Dark and heavy to thin and bright' },
   { key: 'hatDecay', label: 'Hat length', min: 0, max: 1, step: 0.01, unit: '', hint: 'Tight to loose' },
   { key: 'cymbalTone', label: 'Cymbal tone', min: 0, max: 1, step: 0.01, unit: '', hint: 'Ride and crash brightness' },
-  { key: 'cymbalDecay', label: 'Cymbal decay', min: 0.4, max: 5, step: 0.05, unit: 's', hint: 'How long the crash rings' },
+  { key: 'cymbalDecay', label: 'Cymbal ring', min: 0.4, max: 5, step: 0.05, unit: 's', hint: 'How long the crash rings; the ride follows it' },
   { key: 'room', label: 'Room', min: 0, max: 1, step: 0.01, unit: '', hint: 'The room around the kit; on the machine kit, the gated burst' },
   { key: 'drive', label: 'Drive', min: 0, max: 1, step: 0.01, unit: '', hint: 'How hard the drums hit the bus’s soft clipper' },
   { key: 'variation', label: 'Variation', min: 0, max: 1, step: 0.01, unit: '', hint: 'Difference from one stroke to the next' },

@@ -49,7 +49,7 @@ What S2 builds, in one table. Details are in "The plan" below.
 | Toms (fills) | Three modes with a pitch glide | A swept tone and noise |
 | Bus | A small room, soft clipping on the drums | Less room, the gated burst, a harder clip |
 
-A third kit, **brushes**, follows from the research: a brush sweep is shaped noise through the snare drum's own modes, which synthesis can do. It uses the acoustic kit's drums and cymbals.
+A third kit, **brushes**, follows from the research: a brush sweep is shaped noise, which synthesis can do. It uses the acoustic kit's drums and cymbals.
 
 ## How professional drum sounds are made
 
@@ -137,17 +137,20 @@ Three generations matter for the sound we want:
 | A bank of several hundred decaying modes | A struck metal plate. No bloom, since it is linear | High |
 | A few dozen modes for the part the ear resolves, noise for the rest [31] | The nearest to a real cymbal that is cheap | Moderate |
 
-**Our acoustic cymbals** take the last route and add two ideas:
+**Our acoustic cymbals** take the last route and add three ideas:
 
 - **Each cymbal is one object.** A bank of modes that keeps ringing, and every stroke adds energy to it. A ride pattern costs the same as one stroke, strokes build on each other as they do on metal, and the hi-hat's foot is simply the bank's damping: closing it chokes the ring the way a real pair does.
-- **The cascade is fed in as noise.** After a stroke, a decaying noise signal keeps exciting the bank, rising late for a crash. Each mode filters it, so every partial flutters slowly and none is a clean sine. That stands in for the energy arriving from other modes, which a linear bank cannot produce. Above about 6 kHz, where the ear hears only a band's level, plain filtered noise fills in.
+- **The cascade is fed in as noise.** After a stroke, a decaying noise signal keeps exciting the bank, rising late for a crash. Each mode filters it, so every partial flutters and none is a clean sine. That stands in for the energy arriving from other modes, which a linear bank cannot produce. The noise is low-passed, and the low-pass falls as the cymbal dies, so the top of the sound goes first.
+- **Plain noise fills the gaps.** Forty partials where a cymbal has a thousand sound like a cluster of bells. The same noise, unfiltered by the modes, is mixed under them, and above about 6 kHz, where the ear hears only a band's level, it takes over.
+
+One thing found while building, by looking at spectrograms: a plain two-pole resonator passes everything below its own frequency, so a bank of thirty put a thump under every cymbal stroke. Each mode has to be a true band-pass.
 
 ### Brushes
 
 - A brush is a fan of a hundred or so thin wires.
-- **A tap** lands the wires over several milliseconds. The attack is soft and diffuse, with no stick click, and it excites the snare wires more than the head.
+- **A tap** lands the wires over several milliseconds. The attack is soft and diffuse, with no stick click.
 - **A sweep** drags the wires across the coated head: a continuous hiss whose loudness and brightness follow the speed of the hand, coloured by the drum, with the snares answering faintly. In a swing pattern one hand keeps the hiss going in circles, with a push on each beat, while the other taps the ride rhythm on the head.
-- **Synthesis.** A scrape is noise whose level and bandwidth follow the speed of the contact, fed into the object's modes: the standard recipe for contact sounds [32]. An analogue circuit for exactly this sound, amplitude-modulated noise through several filters, was patented in 1980 [33]. A tap is the snare model with a soft excitation spread over a few milliseconds.
+- **Synthesis.** A scrape is noise whose level and bandwidth follow the speed of the contact: the standard recipe for contact sounds [32]. An analogue circuit for exactly this sound, amplitude-modulated noise through several filters, was patented in 1980 [33]. A tap is the snare model struck softly several times over a few milliseconds.
 - **Can it sound good?** The sweep, yes: it is the piece of the kit closest to pure shaped noise. The taps are plausible. What a recording adds is the grain of real wires on a real coating. We build it as a third kit and let the owner judge.
 
 ### The classic designs
@@ -217,7 +220,7 @@ If the owner wants a truly real kit one day, the efficient answer is the one the
 
 Everything is in one AudioWorklet, built on S1's pattern: a pure TypeScript core that renders in Node tests, a thin worklet wrapper, a main-thread voice, and the sound lab for the ears.
 
-**Kits.** `acoustic`, `machine` and `brushes`, as in the table at the top. Each kit has the same dozen dials (kick tune, decay and punch; snare tune, wires and decay; hi-hat tone and decay; cymbal tone and decay; room; drive; variation) with its own defaults.
+**Kits.** `acoustic`, `machine` and `brushes`, as in the table at the top. Each kit has the same thirteen dials (kick tune, decay and punch; snare tune, wires and decay; hi-hat tone and length; cymbal tone and ring; room; drive; variation) with its own defaults.
 
 **Every stroke** has a velocity that changes its tone as well as its level, and a small seeded variation in strike point, hardness and level. Pitch and timing never vary inside the synth: timing belongs to the groove.
 
@@ -234,9 +237,9 @@ Everything is in one AudioWorklet, built on S1's pattern: a pure TypeScript core
 - A short fill ends each pass, and the kit's crash marks the top of the next. On forms shorter than four bars both come every second pass (see below).
 - Humanizing is bounded and computed from the bar and the position, never accumulated.
 
-**The bus.** A small stereo room, soft clipping on the drums, a 30 Hz high-pass. The kit's level is set so that the full mix stays inside the output's limit (the measured numbers are in the spec).
+**The bus.** A small stereo room, soft clipping on the drums, a 30 Hz high-pass, and a ceiling that no pile-up of strokes can pass. The measured levels are in the spec. They show that the jam's mix had no headroom left before the drums arrived, which is a decision for the owner (the spec's first).
 
-**Cost.** Estimated before building at one to two units for the drums and room, and three to five while cymbals ring (a unit is one sounding bass string, 40 ns a sample). The measured figures are in the spec.
+**Cost.** Measured: three to six units for a groove (a unit is one sounding bass string, 40 ns a sample), which is 0.5 to 1.2% of one processor core on the development machine. The cymbals are most of it. The table is in the spec.
 
 ## Decisions for the owner
 

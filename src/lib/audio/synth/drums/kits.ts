@@ -116,7 +116,7 @@ export class AcousticKit implements DrumKit {
       strip(this.tomMid, 0.72, 0.1, 0.45),
       strip(this.tomLow, 0.78, 0.4, 0.45),
       strip(this.hat, 0.3, -0.36, 0.14, true),
-      strip(this.ride, 0.36, 0.4, 0.2, true),
+      strip(this.ride, 0.5, 0.4, 0.2, true),
       strip(this.crash, 0.27, -0.24, 0.25, true),
       strip(this.sweep, 0.55, 0.06, 0.4),
     ];
@@ -252,7 +252,7 @@ export class MachineKit implements DrumKit {
       strip(this.tomMid, 1, 0.1, 0.3),
       strip(this.tomLow, 1.05, 0.45, 0.3),
       strip(this.hat, 4, -0.3, 0.1, true),
-      strip(this.ride, 2.2, 0.35, 0.12, true),
+      strip(this.ride, 3, 0.35, 0.12, true),
       strip(this.crash, 3.4, -0.2, 0.15, true),
     ];
     this.configure(params);
