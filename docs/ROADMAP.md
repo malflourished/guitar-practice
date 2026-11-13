@@ -26,7 +26,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
 | P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) and P2.2 (mix faders, the form strip) 2026-11-13. P3 and P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
-| S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) merged 2026-11-13. The owner liked it ("model bass sounds great"), so it is the jam loop's default. Next: more presets, then the next instrument (organ is the research's pick) | P2.1 | Fable 5.2, at the owner's request |
+| S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) merged 2026-11-13 and is now the jam loop's default. S2 (drums: kits, grooves, fills, a Drums fader) in progress on Fable 5.2. More bass presets and organ later | P2.1 | Fable 5.2, at the owner's request |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
 
@@ -564,7 +564,16 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   - A hidden sound lab that A/Bs it against today's bass at matched loudness.
   
   The owner chooses by ear before it becomes the default. What was built goes in `docs/specs/S1-modelled-bass.md`.
-- **Later, from S1's research:** guitar, electric piano, organ, drums and pads. The owner's earlier wish for "legitimate guitar/bass sounds, and drum kits" lands here.
+- **S2** (in progress, Fable 5.2): drums. The owner chose drums over organ on 2026-11-13, because drums carry the time feel and mark the form. The plan:
+  - research first;
+  - at least two kits: a realistic acoustic kit and an 80s drum-machine kit, with brushes if they can sound good;
+  - grooves for straight 8ths, a blues shuffle and a jazz swing ride, locked to the jam's swing at 2/3 of the beat;
+  - a fill in the last bar of each pass, and the kit's crash at the top of the form;
+  - a Drums fader that starts at off until the owner has listened;
+  - drums in the sound lab.
+  
+  The spec will be `docs/specs/S2-drums.md`.
+- **Later, from the research:** more bass presets, then guitar, electric piano, organ and pads. The owner's earlier wish for "legitimate guitar/bass sounds, and drum kits" lands here.
 
 ---
 
@@ -598,3 +607,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
 - **2026-11-13.** P2.2 reviewed and merged: the faders, the form strip (four bars to a line), the next change ("C7 in 2 bars") and the cymbal at the top of each pass. 351 tests pass. New build installed; the owner's box in the P2.2 spec stays open until they have played with it.
 - **2026-11-13.** S1 reviewed and merged: about 7,000 words of research with sources, a modelled electric bass in our own DSP (tuning within 0.13 cents from E1 to G3, about 0.2% of a core per sounding string), and the sound lab. Its one clash with P2.2 was in `engine.ts`: the Bass fader's gain node and S1's voice picker shared the name `jamBass`. The picker is now `jamBassVoice()`, and both basses play through the Bass fader. 406 tests pass. In a hidden window, the lab played the modelled bass and the jam ran on it with no errors.
 - **2026-11-13.** The owner A/B'd the basses: "the attack does sound like fingers on string … the four presets sound great … model bass sounds great". The modelled bass is now the jam loop's default. A choice saved while comparing gives way to it once. The owner wants more presets and more instruments built the same way.
+- **2026-11-13.** The owner chose drums as the next instrument. Organ was the research's pick, but drums carry the time feel and the form. S2 started on Fable 5.2.
