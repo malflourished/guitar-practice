@@ -1,0 +1,209 @@
+/* The sound lab's panel. See SoundLab.tsx and docs/specs/S1-modelled-bass.md.
+   It keeps the texture lab's look, and sits on the left so both can be open. */
+
+.sound-panel {
+  position: fixed;
+  top: 10px;
+  left: 8px;
+  z-index: 2147483001;
+  width: 264px;
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+  padding: 10px 10px 8px;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 10px;
+  background: rgb(16 16 18 / 0.97);
+  color: #ecebe6;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.sound-panel header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.sound-panel header span {
+  flex: 1;
+  color: rgb(236 235 230 / 0.55);
+}
+
+.sound-panel button {
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  line-height: 1;
+  padding: 5px 7px;
+  cursor: pointer;
+}
+
+.sound-panel button:hover:not(:disabled) {
+  border-color: rgb(255 255 255 / 0.45);
+}
+
+.sound-panel button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sound-panel button[aria-pressed='true'] {
+  background: #ecebe6;
+  border-color: #ecebe6;
+  color: #101012;
+}
+
+.sound-panel header button {
+  border: 0;
+  padding: 0 2px;
+  font-size: 16px;
+}
+
+.sound-ab {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.sound-ab button {
+  padding: 9px 6px;
+  text-align: left;
+}
+
+.sound-ab b {
+  margin-right: 4px;
+  font-weight: 700;
+}
+
+.sound-note {
+  margin: 5px 0 8px;
+  color: rgb(236 235 230 / 0.55);
+}
+
+.sound-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.sound-options {
+  gap: 8px;
+}
+
+.sound-options label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sound-options span,
+.sound-label {
+  color: rgb(236 235 230 / 0.7);
+}
+
+.sound-options input[type='number'],
+.sound-options select {
+  width: 48px;
+  padding: 3px 4px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.06);
+  color: inherit;
+  font: inherit;
+}
+
+.sound-options select option {
+  color: #101012;
+}
+
+.sound-check input {
+  margin: 0;
+  accent-color: #ecebe6;
+}
+
+.sound-levels {
+  margin: 2px 0 8px;
+  padding: 7px 8px 2px;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 8px;
+}
+
+.sound-label {
+  flex: 1;
+}
+
+.sound-levels table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.sound-levels th,
+.sound-levels td {
+  padding: 1px 0;
+  text-align: right;
+  font-weight: 400;
+}
+
+.sound-levels thead th {
+  color: rgb(236 235 230 / 0.55);
+}
+
+.sound-levels tbody th {
+  text-align: left;
+  font-weight: 700;
+}
+
+.sound-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.sound-dial {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) 54px;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+}
+
+.sound-dial input {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  accent-color: #ecebe6;
+}
+
+.sound-dial output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: rgb(236 235 230 / 0.7);
+}
+
+.sound-error {
+  margin: 8px 0 0;
+  color: #ffb4a8;
+}
+
+.sound-panel > .sound-row:last-of-type {
+  margin-top: 8px;
+}
+
+.sound-summary {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.06);
+  color: rgb(236 235 230 / 0.8);
+  font-size: 12px;
+}
