@@ -122,7 +122,7 @@ pluck shape → pluck-position comb → [ delay line → stiffness filters → l
 - **Finger or pick.** The string does not leave a fingertip instantly. It slides off soft flesh over a millisecond or two, which rounds the corner of the triangle and removes treble. A pick lets go in a fraction of a millisecond, so the sound is brighter and starts with a click. Models of the player's touch treat the finger as a damped spring pressed on the string [18].
 - **How hard.** A harder pluck moves the string further and releases it more quickly, so it is brighter as well as louder.
 - **Model.** The pluck is a short smooth pulse fed into the loop. Its width sets the brightness. The position is a comb filter: the pulse, and an inverted copy delayed by the time the wave takes to reach the end of the string and return [2]. A little noise mixed in stands for skin sliding over the windings.
-- **Our bass.** The pulse is 0.25 ms wide for a pick and up to 2.4 ms for a soft fingertip, and it narrows with velocity. The pluck point is set as a distance from the bridge in centimetres, because the hand stays put while the sounding length changes with the fretted note.
+- **Our bass.** The pulse is about 0.25 ms wide for a pick and 2.4 ms for a soft fingertip, narrower for hard plucks and wider for soft ones. The pluck point is set as a distance from the bridge in centimetres, because the hand stays put while the sounding length changes with the fretted note.
 
 ### 2. Losses that depend on frequency, and decay
 
@@ -150,7 +150,7 @@ A linear device gives the same tone at any level. A nonlinear one changes the to
 - **The amplifier.** Valves, transformers and loudspeakers compress and add harmonics as they are driven [37]. A bass is rarely heard entirely clean, and a little saturation helps it on small speakers (see the short version, point 5).
 - **String against fret.** A hard pluck makes the string rattle on the frets. Slap playing is built on this. It needs a collision model [39, 40] and is not in S1.
 - **The digital pitfall.** Distortion makes new high partials. Any that land above half the sample rate fold back as tones that do not belong to the note (aliasing). Heavy distortion needs oversampling or antiderivative anti-aliasing [38]. A light saturation of a signal with little energy above 4 kHz, as on our bass, does not.
-- **Our bass.** The pickup's sensitivity varies a little with the string's position. The amp is an asymmetric soft clipper with a gentle default drive.
+- **Our bass.** The pickup's sensitivity varies a little with the string's position. The amp is an asymmetric soft clipper with a gentle default drive. It lifts the upper partials before clipping and lowers them after, so the drive works on more than the fundamental.
 
 ### 5. The body, pickup or cabinet response
 
@@ -168,7 +168,7 @@ A linear device gives the same tone at any level. A nonlinear one changes the to
 - **Sampling's answer.** Round robins: several takes of each note, played in rotation. Without them, repeated notes give the "machine-gun" effect.
 - **Model.** Vary the pluck point, hardness and strength by a few percent on each note, and alternate two "fingers" with slightly different settings. The noise in the pluck is new every time.
 - **What must not vary.** Timing and pitch. This is a practice tool, and the band has to be dependable.
-- **Our bass.** Position, hardness and level vary by a few percent under one Variation control. A seeded random generator keeps the tests repeatable.
+- **Our bass.** Position, hardness and level vary by a few percent under one Variation control, and two "fingers" alternate. A seeded random generator keeps the tests repeatable.
 
 ### 7. Velocity that changes the timbre, not only the level
 
@@ -181,9 +181,9 @@ A linear device gives the same tone at any level. A nonlinear one changes the to
 
 - **Real.** A bass note ends when something touches the string: the fretting finger relaxes, or the plucking finger comes to rest on the string ready for the next note. The string stops within a few cycles, treble first, sometimes with a faint thump. Before a repeated note on the same string, the finger lands and silences the string for a few hundredths of a second, then plucks. That small gap is what makes a line sound articulated and not smeared.
 - **Sampling's answer.** Release samples, and recorded fret and finger noises mixed in at low level.
-- **Model.** Raise the loop's loss sharply when the note ends, so the string stops the way a damped string does. Feed in a small soft pulse for the finger landing.
+- **Model.** Raise the loop's loss sharply when the note ends, so the string stops the way a damped string does.
 - **Our bass.** A note-off damps the string in about 80 ms. A new note on a string that is still ringing damps it 25 ms before the pluck. A new note on another string lets the old one overlap as it is muted.
-- **Not in S1.** Slides, hammer-ons and finger squeaks. They belong to phrases, not single notes, and need the bass line to ask for them.
+- **Not in S1.** Slides, hammer-ons and finger squeaks. They belong to phrases, not single notes, and need the bass line to ask for them. A soft thump for the damping finger was tried and dropped: the dying note covered it.
 
 ### 9. Stereo and space
 
@@ -202,7 +202,7 @@ A linear device gives the same tone at any level. A nonlinear one changes the to
 
 ## The plan for vibrato~
 
-Cost is given in units of one sounding bass string. The measured figure for that unit is in the S1 spec. Costs for instruments not yet built are estimates from counting the arithmetic per sample.
+Cost is given in units of one sounding bass string. Measured, that unit is about 40 nanoseconds per sample, or 0.2% of one processor core at 48 kHz on the development machine (the S1 spec has the table). Costs for instruments not yet built are estimates from counting the arithmetic per sample.
 
 | Instrument | Technique | Key parameters | Cost in an AudioWorklet | Where recordings would still win |
 |---|---|---|---|---|
@@ -227,10 +227,10 @@ Notes for whoever builds each one:
 The bass was written so the next instruments start from parts, not from nothing. In `src/lib/audio/synth/dsp/`:
 
 - a delay line with smooth fractional reads (strings, chorus, rotating speaker);
-- biquad filters, and the design of loss and stiffness filters from physical targets;
-- a soft clipper;
+- biquad and shelf filters, and the design of loss and stiffness filters from physical targets;
 - a seeded random source, for variation that tests can repeat;
-- loudness meters: peak, RMS and K-weighted.
+- loudness meters: peak, RMS and K-weighted;
+- measurement helpers for tests: a partial's exact frequency, its level and its decay time.
 
 The pattern is also meant to be reused: a pure TypeScript core that renders in Node tests, a thin AudioWorklet wrapper, a main-thread voice with `play`, `stop` and `dispose`, and the sound lab for judging by ear.
 
@@ -241,6 +241,8 @@ The pattern is also meant to be reused: a pure TypeScript core that renders in N
 - Send notes ahead of time with their start times and place them to the sample inside the worklet. Messages to a worklet arrive late and unevenly.
 - Put silent voices to sleep and zero their memory. A filter left to decay for ever reaches numbers so small that some processors slow down badly on them (denormals).
 - Work in hertz and seconds, never in samples, so the sound is the same at 44.1, 48 and 96 kHz.
+- Ship each processor as one self-contained script, with `import code from './processor.ts?worklet'` (`vite.worklet.ts`). Tone's audio layer rewrites worklet source text before loading it, and a module with imports does not survive that.
+- Do not call `Tone.Offline` in the running app. It swaps Tone's global audio context and can leave the app on a dead one. The sound lab's `measureSynthBass` shows the safe way.
 
 ## How we check a sound
 
