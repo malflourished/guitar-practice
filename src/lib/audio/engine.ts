@@ -10,6 +10,7 @@ import { BEATS_PER_BAR, type JamEvent } from './jamSchedule';
 import type { JamGains } from './jamMix';
 import { getBassSettings, subscribeBassSettings } from './synth/bass/bassSettings';
 import type { ModelledBassVoice } from './synth/bass/modelledBassVoice';
+import { sameDrumParams } from './synth/drums/drumParams';
 import { getDrumSettings, subscribeDrumSettings } from './synth/drums/drumSettings';
 import type { DrumKitVoice } from './synth/drums/drumKitVoice';
 export { DEFAULT_INSTRUMENT, GUITAR_INSTRUMENTS, type GuitarInstrumentName };
@@ -456,7 +457,7 @@ export class GuitarAudioEngine {
           const next = getDrumSettings();
           const kit = next.kit;
           if (kit !== settings.kit) voice.setKit(kit, next.params[kit]);
-          else if (next.params[kit] !== settings.params[kit]) voice.setParams(next.params[kit]);
+          else if (!sameDrumParams(next.params[kit], settings.params[kit])) voice.setParams(next.params[kit]);
           if (kit !== settings.kit || next.trimDb[kit] !== settings.trimDb[kit]) voice.setTrim(next.trimDb[kit]);
           settings = next;
         });

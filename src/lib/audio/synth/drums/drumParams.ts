@@ -175,6 +175,11 @@ export const DEFAULT_DRUM_PARAMS: Readonly<Record<DrumKitId, DrumParams>> = {
   },
 };
 
+/** Whether two sets of controls are the same, dial for dial. */
+export function sameDrumParams(a: DrumParams, b: DrumParams): boolean {
+  return DRUM_PARAM_SPECS.every((spec) => a[spec.key] === b[spec.key]);
+}
+
 /** Complete, in-range parameters from anything: saved settings, a message, a partial change. */
 export function sanitizeDrumParams(input: unknown, base: DrumParams): DrumParams {
   const source = (typeof input === 'object' && input !== null ? input : {}) as Partial<Record<DrumParamKey, unknown>>;
