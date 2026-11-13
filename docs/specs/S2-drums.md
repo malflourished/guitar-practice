@@ -277,6 +277,8 @@ Measured in Node 22 on the development machine (Apple M4 Max), at 48 kHz, eight 
 
 For scale, one sounding string of the modelled bass is 40 ns. The cymbals are the cost: a bank of forty modes is two multiplications a mode for every sample. The lab runs all three kits at once, three times the above.
 
+The audio thread allocates nothing for each block it renders. A stroke costs a few small objects when it is scheduled and when it is played, as a note of the modelled bass does.
+
 (These figures are from before the last small additions to the cymbals; a later run could not be trusted because another program was using every core. Expect one or two tenths of a percent more while a cymbal rings.)
 
 ## Decisions to check
