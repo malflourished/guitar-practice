@@ -1,4 +1,4 @@
-import type { AmbientMotion } from './AmbientBackground';
+import { AMBIENT_MOTIONS, AMBIENT_MOTION_LABELS, type AmbientMotion } from '../lib/ambientMotion';
 import type { UiTheme, VibratoCanvas } from '../types/ui';
 import { setTexture, useTexture } from '../lab/analogStore';
 import { Popover } from './Popover';
@@ -104,9 +104,11 @@ export function UiThemeSelector({
                   value={motion}
                   onChange={(event) => onMotionChange(event.target.value as AmbientMotion)}
                 >
-                  <option value="flow">Flow</option>
-                  <option value="calm">Calm</option>
-                  <option value="still">Still</option>
+                  {AMBIENT_MOTIONS.map((id) => (
+                    <option key={id} value={id}>
+                      {AMBIENT_MOTION_LABELS[id]}
+                    </option>
+                  ))}
                 </select>
               </div>
             </>

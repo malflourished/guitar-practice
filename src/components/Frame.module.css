@@ -8,6 +8,8 @@
   --neck-bar-h: 46px;
   --side-w: clamp(280px, 22vw, 340px);
   --region-radius: 14px;
+  /* How the tracks move when the side panel or the deck comes or goes. */
+  --frame-move: 250ms;
 
   position: relative;
   z-index: 1;
@@ -15,32 +17,37 @@
   height: 100vh;
   height: 100dvh;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  /* The track lists keep the same length in every state, so the browser can
+     animate between them: the side column is 0 wide while the panel is away,
+     and a mode with no deck gives its row a height of 0. */
+  grid-template-columns: minmax(0, 1fr) 0px;
   grid-template-rows: var(--strip-h) minmax(0, 1fr) var(--deck-h);
-  grid-template-areas:
-    'strip'
-    'neck'
-    'deck';
-  column-gap: var(--frame-gap);
-  row-gap: var(--frame-gap);
-  padding: var(--frame-pad);
-  overflow: hidden;
-}
-
-.frame[data-side='docked'] {
-  grid-template-columns: minmax(0, 1fr) var(--side-w);
   grid-template-areas:
     'strip strip'
     'neck side'
     'deck side';
+  column-gap: 0px;
+  row-gap: var(--frame-gap);
+  padding: var(--frame-pad);
+  overflow: hidden;
+  transition:
+    grid-template-columns var(--frame-move) ease-out,
+    grid-template-rows var(--frame-move) ease-out,
+    column-gap var(--frame-move) ease-out;
 }
 
-/* Focus: the strip and side panel step aside; neck and deck stay. */
+.frame[data-side='docked'] {
+  grid-template-columns: minmax(0, 1fr) var(--side-w);
+  column-gap: var(--frame-gap);
+}
+
+/* Focus: the strip and side panel step aside; neck and deck stay. The track
+   count changes here, so Focus switches at once rather than animating. */
 .frame[data-focus='true'] {
   grid-template-rows: minmax(0, 1fr) var(--deck-h);
   grid-template-areas:
-    'neck'
-    'deck';
+    'neck side'
+    'deck side';
 }
 
 .frame[data-focus='true'] .strip {
@@ -50,25 +57,32 @@
 /* A mode with no deck (Theory with the dial): the neck takes the deck's height.
    The neck's top edge stays where it is in every other mode. */
 .frame[data-deck='none'] {
-  grid-template-rows: var(--strip-h) minmax(0, 1fr);
-  grid-template-areas:
-    'strip'
-    'neck';
-}
-
-.frame[data-deck='none'][data-side='docked'] {
+  grid-template-rows: var(--strip-h) minmax(0, 1fr) 0px;
   grid-template-areas:
     'strip strip'
+    'neck side'
     'neck side';
 }
 
 .frame[data-deck='none'][data-focus='true'] {
   grid-template-rows: minmax(0, 1fr);
-  grid-template-areas: 'neck';
+  grid-template-areas: 'neck side';
 }
 
 .frame[data-deck='none'] .surface {
   grid-row: neck-start / neck-end;
+}
+
+/* The drawer floats over the neck: the side column stays shut. */
+.frame[data-side='drawer'] {
+  grid-template-columns: minmax(0, 1fr) 0px;
+  column-gap: 0px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame {
+    transition: none;
+  }
 }
 
 /* Settings is open: Practice and Intervals draw their own side panel inside
@@ -160,6 +174,16 @@
   box-sizing: border-box;
 }
 
+/* The bar keeps its row (so the board stays put) but is drawn halfway down
+   the band above the fret numbers: the neck's top edge to the fret numbers,
+   split in two. */
+.neckBar[data-centered='true'] {
+  position: relative;
+  z-index: 2;
+  padding-top: 0;
+  transform: translateY(calc(var(--neck-band, 0px) / 2));
+}
+
 .neckBarMain {
   flex: 1 1 auto;
   min-width: 0;
@@ -225,6 +249,10 @@
 
 /* ---- Side panel: the only region that scrolls ---- */
 
+/* The panel's surface is the aside itself and shrinks with its column; the
+   content sits in a wrapper that keeps its full width, so nothing reflows
+   while the column moves. Only the content fades, never the surface (a fading
+   surface lets the lava show through an empty column). */
 .side {
   grid-area: side;
   position: relative;
@@ -233,13 +261,18 @@
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 1rem 1.1rem 1.2rem;
   box-sizing: border-box;
   border-radius: var(--region-radius);
   /* Scrolls, but shows no bar. */
   scrollbar-width: none;
   -ms-overflow-style: none;
-  animation: sideIn 200ms ease-out both;
+}
+
+.sideInner {
+  box-sizing: border-box;
+  width: calc(var(--side-w) - 2px);
+  padding: 1rem 1.1rem 1.2rem;
+  animation: sideIn calc(var(--frame-move) - 50ms) ease-out 50ms both;
 }
 
 .side::-webkit-scrollbar {
@@ -249,32 +282,34 @@
 }
 
 .side[data-closing='true'] {
-  animation: sideOut 200ms ease-in both;
   pointer-events: none;
+}
+
+.side[data-closing='true'] .sideInner {
+  animation: sideOut 110ms ease-in both;
 }
 
 @keyframes sideIn {
   from {
     opacity: 0;
-    transform: translateX(10px);
   }
 }
 
 @keyframes sideOut {
   to {
     opacity: 0;
-    transform: translateX(10px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .side,
-  .side[data-closing='true'] {
+  .sideInner,
+  .side[data-closing='true'] .sideInner {
     animation: none;
   }
 }
 
 .side[data-side='drawer'] {
+  grid-area: auto;
   position: absolute;
   z-index: 6;
   top: calc(var(--frame-pad) + var(--strip-h) + var(--frame-gap));
@@ -282,6 +317,27 @@
   bottom: var(--frame-pad);
   width: min(360px, calc(100% - 2 * var(--frame-pad)));
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.side[data-side='drawer'] .sideInner {
+  width: auto;
+  animation: none;
+}
+
+/* The drawer has no column to move: the whole panel fades. */
+.side[data-side='drawer'] {
+  animation: sideIn 200ms ease-out both;
+}
+
+.side[data-side='drawer'][data-closing='true'] {
+  animation: sideOut 200ms ease-in both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side[data-side='drawer'],
+  .side[data-side='drawer'][data-closing='true'] {
+    animation: none;
+  }
 }
 
 .backdrop {

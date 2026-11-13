@@ -1,9 +1,9 @@
 import { useMemo, type CSSProperties } from 'react';
-import type { AmbientMotion } from '../components/AmbientBackground';
+import { AMBIENT_MOTION_KEY, isAmbientMotion, type AmbientMotion } from '../lib/ambientMotion';
 import { getBackgroundKeyForMode, getKeyBackgroundStyle } from '../lib/keyPalette';
 import type { KeyMode, NoteName, StudyMode } from '../types/music';
 import { useDebugSettings } from './useDebugSettings';
-import { oneOf, usePersistentState } from './usePersistentState';
+import { usePersistentState } from './usePersistentState';
 import { useUiTheme } from './useUiTheme';
 
 interface AppThemeInput {
@@ -23,9 +23,9 @@ export function useAppTheme({
   noteColors,
 }: AppThemeInput) {
   const [ambientMotion, setAmbientMotion] = usePersistentState<AmbientMotion>(
-    'ambient-motion',
+    AMBIENT_MOTION_KEY,
     'flow',
-    oneOf(['flow', 'calm', 'still'] as const),
+    isAmbientMotion,
   );
   const debug = useDebugSettings();
   const { uiTheme, vibratoCanvas, selectUiTheme, selectCanvas } = useUiTheme();

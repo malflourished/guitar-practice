@@ -235,6 +235,7 @@ function App() {
 
   const neckRegion = (
     <Neck
+      centerBar
       bar={
         showPositionSlider ? (
           <PositionSlider
