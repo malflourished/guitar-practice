@@ -1,7 +1,7 @@
 # S1: a modelled electric bass
 
 **Package:** S1 (sounds we synthesize ourselves), beside P2.2.
-**Status:** built 2026-11-13 on `claude/sound-s1-bass-cf895c`. Not the default: the jam loop still plays the synth bass until the owner has listened and chosen.
+**Status:** built and merged 2026-11-13. The owner listened in the lab ("the attack does sound like fingers on string", "the four presets sound great", "model bass sounds great"), so it is now the jam loop's default. The synth bass stays as the lab's A and as the fall-back when the worklet cannot load.
 **Research behind it:** [docs/sound/research.md](../sound/research.md).
 
 ## Why
@@ -173,7 +173,7 @@ Each of these went beyond the brief or read it loosely. Say if any is wrong.
 
 1. **Pitch bloom and the 2-cent rule.** The string is in tune to 0.13 cents. On top of that, the default sound starts a hard pluck up to 6 cents sharp, as a real string does. The tuning tests therefore run with the bloom off. If the backing should be strictly in tune from the first millisecond, set Pitch bloom to 0 and make that the default.
 2. **Matching by RMS.** The brief asked for the same RMS, and that is the default. The lab adds a K-weighted match because equal RMS leaves the modelled bass sounding slightly louder (see "Levels").
-3. **One switch for the lab and the jam, saved.** The A/B switch sets the jam's bass and survives a restart, so the owner can practise with B for a few days before deciding. The default for everyone else stays A.
+3. **One switch for the lab and the jam, saved.** The A/B switch sets the jam's bass and survives a restart, so the owner can practise with B for a few days before deciding. Since the owner's verdict the default is B. A choice saved while comparing (settings without `v: 2`) gives way to B once; sound settings are kept.
 4. **Shared files.** `main.tsx`, `vite.config.ts` and `tsconfig.node.json` were touched as well as `engine.ts`. The lab needs mounting, and the worklet cannot load without the bundling step.
 5. **No release noise.** A soft thump as the damping finger lands was built and then removed: at any believable level the dying note covered it completely.
 

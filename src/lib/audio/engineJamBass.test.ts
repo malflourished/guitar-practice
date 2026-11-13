@@ -96,8 +96,16 @@ beforeEach(() => {
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe('the jam loop\'s bass voice', () => {
-  it('is the synth bass unless the lab\'s setting says otherwise, and never loads the modelled bass', async () => {
+  it('is the modelled bass by default, the owner\'s choice', async () => {
     const { engine } = await setup();
+    await startJam(engine);
+    downbeat(102);
+    expect(fake.modelled.play).toHaveBeenCalled();
+    expect(fake.synth.play).not.toHaveBeenCalled();
+  });
+
+  it('is the synth bass when the lab\'s setting says so, and then never loads the modelled bass', async () => {
+    const { engine } = await setup((settings) => ({ ...settings, jamBass: 'synth' }));
     await startJam(engine);
     downbeat(102);
     expect(fake.synth.play).toHaveBeenCalledWith(33, 102, 1, 0.9); // two beats at 120 BPM is one second
@@ -155,7 +163,7 @@ describe('the jam loop\'s bass voice', () => {
   });
 
   it('loads the modelled bass when it is chosen in the middle of a loop', async () => {
-    const { engine, setBassSettings } = await setup();
+    const { engine, setBassSettings } = await setup((settings) => ({ ...settings, jamBass: 'synth' }));
     await startJam(engine);
     downbeat(102);
     setBassSettings((settings) => ({ ...settings, jamBass: 'modelled' }));

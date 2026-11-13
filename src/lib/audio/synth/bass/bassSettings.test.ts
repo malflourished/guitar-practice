@@ -8,16 +8,23 @@ describe('bass settings', () => {
     vi.resetModules();
   });
 
-  it('starts on the synth bass: the modelled bass is opt-in', () => {
-    expect(DEFAULT_BASS_SETTINGS.jamBass).toBe('synth');
+  it('starts on the modelled bass, the owner’s choice', () => {
+    expect(DEFAULT_BASS_SETTINGS.jamBass).toBe('modelled');
     expect(parseBassSettings(null)).toEqual(DEFAULT_BASS_SETTINGS);
     expect(parseBassSettings('not json')).toEqual(DEFAULT_BASS_SETTINGS);
-    expect(parseBassSettings('[1, 2]').jamBass).toBe('synth');
-    expect(parseBassSettings(JSON.stringify({ jamBass: 'something else' })).jamBass).toBe('synth');
+    expect(parseBassSettings('[1, 2]').jamBass).toBe('modelled');
+    expect(parseBassSettings(JSON.stringify({ v: 2, jamBass: 'something else' })).jamBass).toBe('modelled');
+  });
+
+  it('a choice saved while comparing gives way to the new default once; sound settings stay', () => {
+    const old = parseBassSettings(JSON.stringify({ jamBass: 'synth', params: { toneHz: 900 } }));
+    expect(old.jamBass).toBe('modelled');
+    expect(old.params.toneHz).toBe(900);
+    expect(parseBassSettings(JSON.stringify({ v: 2, jamBass: 'synth' })).jamBass).toBe('synth');
   });
 
   it('keeps a saved choice and puts bad values right', () => {
-    const saved = parseBassSettings(JSON.stringify({ jamBass: 'modelled', trimDb: 99, params: { toneHz: 900, drive: 7, pluckCm: 'x' } }));
+    const saved = parseBassSettings(JSON.stringify({ v: 2, jamBass: 'modelled', trimDb: 99, params: { toneHz: 900, drive: 7, pluckCm: 'x' } }));
     expect(saved.jamBass).toBe('modelled');
     expect(saved.trimDb).toBe(24);
     expect(saved.params).toEqual({ ...DEFAULT_BASS_PARAMS, toneHz: 900, drive: 1 });
