@@ -15,7 +15,7 @@
 }
 
 .slider {
-  width: 9rem;
+  width: 5.5rem;
 }
 
 .number {
@@ -48,7 +48,7 @@
 }
 
 .fieldLabel {
-  flex: 0 0 6.2rem;
+  flex: 0 0 5.2rem;
   font-family: var(--font-sans);
   font-size: 0.875rem;
   color: var(--text-secondary);
