@@ -24,8 +24,9 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | M | Mode controls: Notes, Chords, Scales | After J, K and L | J, K, L | a capable model; the owner approves screenshots |
 | N | Intervals: clear drills, black and white | Done, merged 2026-11-12 | nothing (K adds the colour switch later) | a capable model |
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
-| P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12. The owner's first play-along (2026-11-13) led to P2.1: a real bass voice, chord lengths and measured levels, in progress. P3 and P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
+| P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) 2026-11-13. P2.2 (mix faders, the form strip) in progress. P3 and P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
+| S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) in progress, 2026-11-13 | P2.1 | Fable 5.2, at the owner's request |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
 
@@ -401,6 +402,7 @@ The owner walked through every mode of the new layout on 2026-11-12 and agreed t
 | Intervals | N | `IntervalTrainer` and its CSS, interval colours | everything else |
 | Practice | O, then E | `PracticeSession`, `src/lib/practice/` | everything else |
 | Progressions | P1, P3, P4 | the progression library and Progressions components | the audio engine (ask the Playback lane) |
+| Sound | S | new instrument files under `src/lib/audio/instruments/`, the sound lab in `src/lab/`, `docs/sound/` | `engine.ts`, beyond loading the worklet and choosing the bass voice |
 
 **Change of plan (2026-11-12).** K and L run as one session, K first, because both rewrite the same deck controls, `AudioControls` and the display settings. P1 runs beside them and stays out of the decks.
 
@@ -522,7 +524,9 @@ Built and merged 2026-11-12. Notes from the build:
 - The levels (pad −20 dB, the strum velocities, bass 0.82) were set without listening. The owner's play-along decides them.
 - If the straight feel sounds mechanical, the first fix is a light up-strum on the "and" of beats 2 and 4.
 
-**P2.1** (2026-11-13, in progress). At the first play-along the owner heard no bass and no pad, and strums on every beat sounded like an echo. Spec: [After the first play-along](specs/P2-jam-loop.md#after-the-first-play-along-p21).
+**P2.1** (merged 2026-11-13). At the first play-along the owner heard no bass and no pad, and strums on every beat sounded like an echo. Spec: [After the first play-along](specs/P2-jam-loop.md#after-the-first-play-along-p21). At the second listen everything could be heard, but the bass was still a little soft and the pad a little loud, so the defaults moved 3 dB each way.
+
+**P2.2** (in progress). Three faders (Guitar, Bass, Pad), a lead-sheet strip of the form, a countdown to the next change, and a soft cymbal at the top of each pass. At slow tempos the owner thought the loop was stuck during the blues' four bars of I7; the answer is to show the form, not to shorten it. Spec: [specs/P2.2-mix-and-form.md](specs/P2.2-mix-and-form.md).
 
 **P3. Targets on the neck.**
 - The neck shows the current chord's tones everywhere, with the 3rd and 7th emphasized.
@@ -548,6 +552,19 @@ Built and merged 2026-11-12. Notes from the build:
 - The side panel can be resized by dragging its edge, within limits, and remembers its width.
 
 **Done when:** Home is reachable from the wordmark, each choice lands in the right mode, and the panel width is remembered.
+
+## S. Sound: instruments we model ourselves
+
+The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little cheap … higher end music sounds would be nice and being able to synthesize them ourselves might be nice as well without having to rely on an external library". The guitar sounds good because it is recorded; the other instruments should come close by modelling the instrument itself.
+
+- **Rule:** our own DSP. No third-party synthesis code and no sample packs. Tone.js stays for scheduling and routing.
+- **S1** (in progress, Fable 5.2, as the owner asked). Three parts:
+  - Research into how professional instrument sounds are made, in `docs/sound/research.md`, with a plan for each later instrument.
+  - A physically modelled electric bass in an AudioWorklet, with the same interface as `BassVoice`.
+  - A hidden sound lab that A/Bs it against today's bass at matched loudness.
+  
+  The owner chooses by ear before it becomes the default. What was built goes in `docs/specs/S1-modelled-bass.md`.
+- **Later, from S1's research:** guitar, electric piano, organ, drums and pads. The owner's earlier wish for "legitimate guitar/bass sounds, and drum kits" lands here.
 
 ---
 
@@ -576,3 +593,5 @@ Built and merged 2026-11-12. Notes from the build:
 - **2026-11-12.** P2 (jam loop) and the polish reviewed and merged. The side panel and Theory's deck now resize over 250 ms, and the panel surface shrinks with its column, so the lava no longer flashes through. Lava speeds are Flow (the old fast one, now the slowest), Rise and Boil. Still is gone, and saved Calm or Still settings become Flow. The position bar sits halfway down the band above the fret numbers. The merged build plays the 12-bar blues with no console errors. The jam loop's spec tests were never written, so the build session was sent back to add them.
 - **2026-11-13.** P2's tests merged: 12 from the build session and one that pins the spec's numbers (273 tests in all). New build installed for the owner's play-along.
 - **2026-11-13.** The owner played along. The guitar sounds good, but no bass or pad could be heard, strums on every beat sound like an echo, and the owner wants to choose how long a chord is held. The bass was the spec's mistake: guitar samples in the guitar's own register. P2.1 specified and sent to the jam session. In Theory the owner likes the dial but not the jump to the neck, so H2 is mocked up: a vertical neck in the dial's place.
+- **2026-11-13.** P2.1 merged, with the bass up and the pad down 3 dB after the owner's second listen. P2.2 (faders and the form strip) started on Sonnet, and S1 (research and a modelled bass) on Fable 5.2.
+- **2026-11-13.** The owner found a gap running C major's third CAGED shape: no B between A and C. The diatonic passing tones were only added inside each pentatonic box's frets, so in every key the major G and A shapes (the minor E and G shapes) skipped one note, 48 gaps in all. Fixed: a missing note goes one fret outside the box, on the string nearest its own notes. In C that is B at fret 4 on the G string and F at fret 6 on the B string, as the standard fingerings have it. A test checks every box in all 12 keys.
