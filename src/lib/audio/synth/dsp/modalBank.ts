@@ -7,9 +7,15 @@
  * (a hand on a cymbal, the foot closing a hi-hat) chokes what is already
  * sounding. See docs/sound/drums.md.
  *
+ * A two-pole resonator alone also passes everything below its own frequency,
+ * so thirty of them would add a thump under every stroke that no cymbal has.
+ * The inputs are therefore differenced first (each sample minus the one two
+ * before it), which makes every mode a true band-pass: nothing at 0 Hz.
+ *
  * It has two inputs, each with its own gain per mode:
  * - `strike`, a short pulse or burst. A mode with strike gain g rings at
- *   amplitude g after a pulse whose samples sum to 1.
+ *   amplitude g after a pulse whose samples sum to 1 (a pulse short against
+ *   the mode's period; a longer one excites it less, as a soft stick does).
  * - `cascade`, a longer noise signal. A mode with cascade gain g settles at
  *   an RMS level of g times the noise's RMS, whatever its decay time and
  *   whatever the sample rate. It stands for the energy that the other modes
@@ -48,6 +54,13 @@ export class ModalBank {
   private readonly y2: Float64Array;
   private damping = 1;
   private floor = 0;
+  // The last two samples of each input, for the differencing, and somewhere to put its result.
+  private strikeBefore = 0;
+  private strikeBeforeThat = 0;
+  private cascadeBefore = 0;
+  private cascadeBeforeThat = 0;
+  private strikeWork = new Float64Array(128);
+  private cascadeWork = new Float64Array(128);
 
   constructor(sampleRate: number, modes: readonly ModeSpec[]) {
     this.sampleRate = sampleRate;
@@ -70,9 +83,9 @@ export class ModalBank {
       this.cosine[i] = Math.cos(w);
       this.sine[i] = Math.sin(w);
       this.t60[i] = mode.t60;
-      // The resonator's response to a unit sample is r^n sin((n+1)w) / sin(w).
-      this.strikeGain[i] = mode.strike * this.sine[i];
-      this.cascadeBase[i] = mode.cascade * this.sine[i];
+      // With its input differenced, the resonator answers a unit sample with 2 r^n cos(n w).
+      this.strikeGain[i] = mode.strike / 2;
+      this.cascadeBase[i] = mode.cascade * Math.SQRT1_2;
     });
     this.setDamping(1);
   }
@@ -87,8 +100,8 @@ export class ModalBank {
     if (usable.length !== this.count) return;
     usable.forEach((mode, i) => {
       this.t60[i] = mode.t60;
-      this.strikeGain[i] = mode.strike * this.sine[i];
-      this.cascadeBase[i] = mode.cascade * this.sine[i];
+      this.strikeGain[i] = mode.strike / 2;
+      this.cascadeBase[i] = mode.cascade * Math.SQRT1_2;
     });
     this.setDamping(this.damping, this.floor);
   }
@@ -107,8 +120,8 @@ export class ModalBank {
       const r = Math.exp(-6.907755 / (seconds * sampleRate));
       a1[i] = 2 * r * cosine[i];
       a2[i] = r * r;
-      // Under steady noise a mode's power is gain² · σ² / (2 · sin²(w) · (1 - r²)): take that out.
-      cascadeGain[i] = cascadeBase[i] * Math.sqrt(2 * (1 - r * r));
+      // Under steady noise a mode's power is 2 · gain² · σ² / (1 - r²): take that out.
+      cascadeGain[i] = cascadeBase[i] * Math.sqrt(1 - r * r);
     }
   }
 
@@ -121,8 +134,41 @@ export class ModalBank {
    * Add the bank's sound to `out[0..count)`. `strike` and `cascade` are the
    * two inputs over the same stretch, or null when that input is silent.
    */
-  process(out: Float64Array, strike: Float64Array | null, cascade: Float64Array | null, count: number): void {
-    if (!strike && !cascade && !this.active) return;
+  process(out: Float64Array, strikeInput: Float64Array | null, cascadeInput: Float64Array | null, count: number): void {
+    if (!strikeInput && !cascadeInput && !this.active) return;
+    if (count > this.strikeWork.length) {
+      this.strikeWork = new Float64Array(count);
+      this.cascadeWork = new Float64Array(count);
+    }
+    // Difference each input: x[n] - x[n-2]. An input that has just stopped still has two samples to hand over.
+    let strike: Float64Array | null = null;
+    if (strikeInput || this.strikeBefore !== 0 || this.strikeBeforeThat !== 0) {
+      strike = this.strikeWork;
+      let before = this.strikeBefore;
+      let beforeThat = this.strikeBeforeThat;
+      for (let i = 0; i < count; i++) {
+        const x = strikeInput ? strikeInput[i] : 0;
+        strike[i] = x - beforeThat;
+        beforeThat = before;
+        before = x;
+      }
+      this.strikeBefore = before;
+      this.strikeBeforeThat = beforeThat;
+    }
+    let cascade: Float64Array | null = null;
+    if (cascadeInput || this.cascadeBefore !== 0 || this.cascadeBeforeThat !== 0) {
+      cascade = this.cascadeWork;
+      let before = this.cascadeBefore;
+      let beforeThat = this.cascadeBeforeThat;
+      for (let i = 0; i < count; i++) {
+        const x = cascadeInput ? cascadeInput[i] : 0;
+        cascade[i] = x - beforeThat;
+        beforeThat = before;
+        before = x;
+      }
+      this.cascadeBefore = before;
+      this.cascadeBeforeThat = beforeThat;
+    }
     const { a1, a2, y1, y2, strikeGain, cascadeGain } = this;
     const modes = this.count;
     for (let m = 0; m < modes; m++) {
@@ -149,6 +195,8 @@ export class ModalBank {
           out[i] += y;
         }
       } else {
+        // a mode that has stopped has nothing to add
+        if (s1 === 0 && s2 === 0) continue;
         for (let i = 0; i < count; i++) {
           const y = c1 * s1 - c2 * s2;
           s2 = s1;
@@ -187,6 +235,9 @@ export class ModalBank {
   sleep(): void {
     this.y1.fill(0);
     this.y2.fill(0);
+    this.strikeBefore = this.strikeBeforeThat = this.cascadeBefore = this.cascadeBeforeThat = 0;
+    this.strikeWork.fill(0);
+    this.cascadeWork.fill(0);
     this.active = false;
   }
 
@@ -194,6 +245,7 @@ export class ModalBank {
   forEachState(visit: (value: number) => void): void {
     this.y1.forEach(visit);
     this.y2.forEach(visit);
+    [this.strikeBefore, this.strikeBeforeThat, this.cascadeBefore, this.cascadeBeforeThat].forEach(visit);
   }
 }
 

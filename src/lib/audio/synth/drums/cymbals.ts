@@ -23,6 +23,10 @@ import { ENVELOPE_FLOOR, VOICE_SLEEP_LEVEL, noiseGain, type DrumVoice, type Stro
 const MAX_CHUNK = 128;
 /** The noisy part of a stroke lasts this long, in seconds: the stick's bounce on the metal. */
 const STRIKE_NOISE_SECONDS = 0.0015;
+/** A wash with no low-pass asked for is this bright, in hertz. */
+const WASH_OPEN_HZ = 20000;
+/** The wash's low-pass is moved every this many samples (a power of two). */
+const WASH_CONTROL = 64;
 
 /** One cymbal's fixed facts. */
 export interface PlateDesign {
@@ -45,6 +49,13 @@ export interface PlateDesign {
   tilt: number;
   /** Where the noise above the modes starts, in hertz. */
   airHz: number;
+  /**
+   * Plain noise under the modes, following the wash: it fills the gaps
+   * between the few dozen partials, where a real cymbal has hundreds. `hz` is
+   * the centre of its wide band and `level` its strength against the modes:
+   * more makes the cymbal washier and less like a cluster of bells.
+   */
+  body: { hz: number; level: number };
 }
 
 /** One stroke, as the cymbal sees it. */
@@ -64,6 +75,12 @@ export interface PlateStroke {
   cascadeInstant: number;
   /** Darken the wash: a low-pass on the noise that feeds the modes, in hertz. Left out, it is as bright as the cymbal. */
   cascadeHz?: number;
+  /**
+   * Let the wash darken as it dies, as a cymbal's top goes first: the
+   * low-pass falls from `cascadeHz` towards `hz` with a time constant of
+   * `seconds`.
+   */
+  cascadeDark?: { hz: number; seconds: number };
   /** The noise above the modes, with its own rise and length. */
   air: number;
   airRise: number;
@@ -87,7 +104,12 @@ export class PlateCymbal implements DrumVoice {
   private readonly frequencies: number[];
   private readonly pingFrequencies: number[];
   private readonly strikeBuffer = new Float64Array(MAX_CHUNK);
+  private readonly clickBuffer = new Float64Array(MAX_CHUNK);
   private readonly cascadeBuffer = new Float64Array(MAX_CHUNK);
+  private readonly airBuffer = new Float64Array(MAX_CHUNK);
+  private readonly bodyBuffer = new Float64Array(MAX_CHUNK);
+  private readonly bodyFilter = new Biquad();
+  private readonly bodyLevel: number;
   private readonly clickFilter = new Biquad();
   private readonly airFilter = new Biquad();
   // the stroke being delivered
@@ -104,6 +126,12 @@ export class PlateCymbal implements DrumVoice {
   private cascadeFastStep = 0;
   private cascadeSmooth = 1;
   private cascadeLast = 0;
+  /** The wash's low-pass now, where it is falling to, and how fast, in hertz and per 64 samples. */
+  private washHz = WASH_OPEN_HZ;
+  private washDarkHz = WASH_OPEN_HZ;
+  private washDarkStep = 1;
+  private washAge = 0;
+  private clickNoiseGain = 1;
   private airSlow = 0;
   private airFast = 0;
   private airSlowStep = 0;
@@ -132,6 +160,9 @@ export class PlateCymbal implements DrumVoice {
     this.clickFilter.setHighpass(2200, 0.707, sampleRate);
     this.airFilter.setHighpass(design.airHz, 0.707, sampleRate);
     this.airGain = noiseGain(sampleRate);
+    this.clickNoiseGain = noiseGain(sampleRate);
+    this.bodyFilter.setBandpass(design.body.hz, 0.6, sampleRate);
+    this.bodyLevel = design.body.level * noiseGain(sampleRate);
   }
 
   /** Brightness, 0 to 1, and how long the modes ring as a multiple of the design's. Safe while sounding. */
@@ -153,9 +184,8 @@ export class PlateCymbal implements DrumVoice {
     this.pulseLength = Math.max(2, Math.round(stroke.pulseSeconds * sampleRate));
     this.noiseLength = Math.max(2, Math.round(STRIKE_NOISE_SECONDS * sampleRate));
     this.pulseScale = (stroke.level * (1 - stroke.noise)) / this.pulseLength;
-    // Sized so the burst puts as much into a mode, on average, as the pulse it replaces, at any
-    // sample rate: what a mode takes from noise depends on the noise's level per hertz.
-    this.noiseScale = stroke.level * stroke.noise * Math.sqrt(2 / (STRIKE_NOISE_SECONDS * 48000));
+    // sized so the burst puts as much into a mode, on average, as the pulse it replaces
+    this.noiseScale = stroke.level * stroke.noise * Math.sqrt(2 / this.noiseLength);
     this.clickLevel = stroke.click;
 
     const step = (seconds: number) => Math.exp(-6.907755 / (Math.max(0.002, seconds) * sampleRate));
@@ -164,7 +194,11 @@ export class PlateCymbal implements DrumVoice {
     this.cascadeFast += stroke.cascade * (1 - stroke.cascadeInstant);
     this.cascadeSlowStep = step(stroke.cascadeSeconds);
     this.cascadeFastStep = rise(stroke.cascadeRise);
-    this.cascadeSmooth = stroke.cascadeHz ? 1 - Math.exp((-2 * Math.PI * stroke.cascadeHz) / sampleRate) : 1;
+    // New energy arrives bright, and the wash darkens again from there.
+    this.washHz = stroke.cascadeHz ?? WASH_OPEN_HZ;
+    this.washDarkHz = stroke.cascadeDark ? Math.min(this.washHz, stroke.cascadeDark.hz) : this.washHz;
+    this.washDarkStep = stroke.cascadeDark ? Math.exp(-WASH_CONTROL / (Math.max(0.01, stroke.cascadeDark.seconds) * sampleRate)) : 1;
+    this.washAge = 0;
     this.airSlow += stroke.air * this.airGain;
     this.airFast += stroke.air * this.airGain;
     this.airSlowStep = step(stroke.airSeconds);
@@ -182,29 +216,36 @@ export class PlateCymbal implements DrumVoice {
     const strokeLength = Math.max(this.pulseLength, this.noiseLength);
     const striking = this.pulseIndex < strokeLength;
     if (striking) {
-      const { pulseLength, noiseLength, pulseScale, noiseScale, strikeRandom } = this;
+      const { pulseLength, noiseLength, pulseScale, noiseScale, strikeRandom, clickBuffer, clickNoiseGain } = this;
       let k = this.pulseIndex;
       for (let i = 0; i < count; i++, k++) {
-        let sample = 0;
-        if (k < pulseLength) sample += pulseScale * (1 - Math.cos((2 * Math.PI * (k + 0.5)) / pulseLength));
-        if (k < noiseLength) sample += noiseScale * strikeRandom.bipolar() * (1 - Math.cos((2 * Math.PI * (k + 0.5)) / noiseLength));
-        strikeBuffer[i] = sample;
+        const pulse = k < pulseLength ? pulseScale * (1 - Math.cos((2 * Math.PI * (k + 0.5)) / pulseLength)) : 0;
+        const noise = k < noiseLength ? noiseScale * strikeRandom.bipolar() * (1 - Math.cos((2 * Math.PI * (k + 0.5)) / noiseLength)) : 0;
+        strikeBuffer[i] = pulse + noise;
+        // Heard directly, the burst's noise is spread over half the sample rate: keep its audible part the same at any rate.
+        clickBuffer[i] = pulse + noise * clickNoiseGain;
       }
       this.pulseIndex = k;
     }
     // The stick's own tick: the stroke heard directly, through a high-pass that then rings out.
     if (this.clickOn) {
-      const { clickLevel, clickFilter } = this;
-      if (striking) for (let i = 0; i < count; i++) out[i] += clickLevel * clickFilter.process(strikeBuffer[i]);
+      const { clickLevel, clickFilter, clickBuffer } = this;
+      if (striking) for (let i = 0; i < count; i++) out[i] += clickLevel * clickFilter.process(clickBuffer[i]);
       else for (let i = 0; i < count; i++) out[i] += clickLevel * clickFilter.process(0);
     }
 
     // The wash: noise into the modes, under an envelope that can bloom.
     if (this.washOn) {
-      const { cascadeSlowStep, cascadeFastStep, cascadeSmooth, cascadeRandom } = this;
-      let { cascadeSlow, cascadeFast, cascadeLast } = this;
+      const { cascadeSlowStep, cascadeFastStep, washDarkHz, washDarkStep, sampleRate } = this;
+      let { cascadeSlow, cascadeFast, cascadeLast, cascadeSmooth, washHz, washAge } = this;
+      this.cascadeRandom.fillBipolar(cascadeBuffer, count);
       for (let i = 0; i < count; i++) {
-        cascadeLast += cascadeSmooth * ((cascadeSlow - cascadeFast) * cascadeRandom.bipolar() - cascadeLast);
+        // The wash's low-pass is moved at fixed points in the stroke's own time, not the caller's blocks.
+        if ((washAge++ & (WASH_CONTROL - 1)) === 0) {
+          cascadeSmooth = 1 - Math.exp((-2 * Math.PI * washHz) / sampleRate);
+          washHz = washDarkHz + (washHz - washDarkHz) * washDarkStep;
+        }
+        cascadeLast += cascadeSmooth * ((cascadeSlow - cascadeFast) * cascadeBuffer[i] - cascadeLast);
         cascadeBuffer[i] = cascadeLast;
         cascadeSlow *= cascadeSlowStep;
         cascadeFast *= cascadeFastStep;
@@ -212,19 +253,30 @@ export class PlateCymbal implements DrumVoice {
       this.cascadeSlow = cascadeSlow;
       this.cascadeFast = cascadeFast;
       this.cascadeLast = cascadeLast;
+      this.cascadeSmooth = cascadeSmooth;
+      this.washHz = washHz;
+      this.washAge = washAge;
+      // the same wash as plain noise, to fill between the modes
+      const { bodyBuffer, bodyLevel } = this;
+      bodyBuffer.set(cascadeBuffer.subarray(0, count));
+      this.bodyFilter.processBlock(bodyBuffer, 0, count);
+      for (let i = 0; i < count; i++) out[i] += bodyLevel * bodyBuffer[i];
     }
 
     this.bank.process(out, striking ? strikeBuffer : null, this.washOn ? cascadeBuffer : null, count);
 
     // The air above the modes.
     if (this.airOn) {
-      const { airFilter, airSlowStep, airFastStep, airRandom } = this;
+      const { airBuffer, airSlowStep, airFastStep } = this;
       let { airSlow, airFast } = this;
+      this.airRandom.fillBipolar(airBuffer, count);
       for (let i = 0; i < count; i++) {
-        out[i] += airFilter.process((airSlow - airFast) * airRandom.bipolar());
+        airBuffer[i] *= airSlow - airFast;
         airSlow *= airSlowStep;
         airFast *= airFastStep;
       }
+      this.airFilter.processBlock(airBuffer, 0, count);
+      for (let i = 0; i < count; i++) out[i] += airBuffer[i];
       this.airSlow = airSlow;
       this.airFast = airFast;
     }
@@ -242,6 +294,7 @@ export class PlateCymbal implements DrumVoice {
       if (this.cascadeSlow < ENVELOPE_FLOOR) {
         this.washOn = false;
         this.cascadeSlow = this.cascadeFast = this.cascadeLast = 0;
+        this.bodyFilter.reset();
       }
     }
     if (this.airOn) {
@@ -262,13 +315,19 @@ export class PlateCymbal implements DrumVoice {
     this.bank.sleep();
     this.clickFilter.reset();
     this.airFilter.reset();
+    this.bodyFilter.reset();
+    this.bodyBuffer.fill(0);
     this.pulseIndex = 0;
     this.pulseLength = 0;
     this.noiseLength = 0;
     this.cascadeSlow = this.cascadeFast = this.cascadeLast = this.airSlow = this.airFast = 0;
     this.clickOn = this.washOn = this.airOn = false;
+    this.washHz = this.washDarkHz = WASH_OPEN_HZ;
+    this.washAge = 0;
     this.strikeBuffer.fill(0);
+    this.clickBuffer.fill(0);
     this.cascadeBuffer.fill(0);
+    this.airBuffer.fill(0);
     this.active = false;
   }
 
@@ -276,6 +335,7 @@ export class PlateCymbal implements DrumVoice {
     this.bank.forEachState(visit);
     this.clickFilter.state().forEach(visit);
     this.airFilter.state().forEach(visit);
+    this.bodyFilter.state().forEach(visit);
     [this.cascadeSlow, this.cascadeFast, this.cascadeLast, this.airSlow, this.airFast].forEach(visit);
   }
 
@@ -316,31 +376,34 @@ export const HAT_DESIGN: PlateDesign = {
   ringSlope: 0.4,
   tilt: 0.9,
   airHz: 7000,
+  body: { hz: 6000, level: 0.5 },
 };
 
 /** A 20-inch ride: a clear ping over a long, quiet wash. */
 export const RIDE_DESIGN: PlateDesign = {
   seed: 0x7a11ce,
   modes: 38,
-  lowHz: 330,
+  lowHz: 380,
   highHz: 7600,
-  ringSeconds: 0.9,
-  ringSlope: 0.6,
+  ringSeconds: 0.8,
+  ringSlope: 0.5,
   ping: { count: 7, lowHz: 2700, highHz: 7400, seconds: 0.4, level: 1 },
-  tilt: 0.4,
+  tilt: 0.6,
   airHz: 6000,
+  body: { hz: 3200, level: 0.3 },
 };
 
-/** A 16-inch crash: all wash and bloom. */
+/** A 16-inch crash: all wash and bloom. Its modes ring briefly, so each is a band of noise more than a tone. */
 export const CRASH_DESIGN: PlateDesign = {
   seed: 0xc4a54,
   modes: 42,
-  lowHz: 240,
+  lowHz: 300,
   highHz: 8200,
-  ringSeconds: 0.55,
-  ringSlope: 0.6,
-  tilt: 0.5,
+  ringSeconds: 0.32,
+  ringSlope: 0.35,
+  tilt: 0.8,
   airHz: 5200,
+  body: { hz: 3600, level: 0.8 },
 };
 
 /** How loud a stroke on metal is for its velocity. */
@@ -388,7 +451,9 @@ export class HiHat implements DrumVoice {
       cascadeRise: 0.0006,
       cascadeSeconds: 0.05 * tight * (0.8 + 0.5 * hard),
       cascadeInstant: 0.6,
-      air: level * (0.25 + 0.5 * this.tone) * hard,
+      // the tip, played softly, wakes less of the top of the metal
+      cascadeHz: 3500 + 16500 * hard * hard,
+      air: level * (0.25 + 0.5 * this.tone) * hard * hard,
       airRise: 0.0004,
       airSeconds: 0.04 * tight,
     });
@@ -409,6 +474,8 @@ export class HiHat implements DrumVoice {
       cascadeRise: 0.004,
       cascadeSeconds: 0.9 * loose,
       cascadeInstant: 0.45,
+      cascadeHz: 5000 + 15000 * hard,
+      cascadeDark: { hz: 4500, seconds: 0.3 * loose },
       air: level * (0.3 + 0.5 * this.tone) * (0.5 + 0.5 * hard),
       airRise: 0.002,
       airSeconds: 0.55 * loose,
@@ -485,6 +552,8 @@ export class RideCymbal implements DrumVoice {
       cascadeRise: 0.035,
       cascadeSeconds: this.decay * 1.4,
       cascadeInstant: 0.1,
+      cascadeHz: 16000,
+      cascadeDark: { hz: 3000, seconds: this.decay * 0.3 },
       air: level * hard * (0.05 + 0.1 * this.tone),
       airRise: 0.004,
       airSeconds: this.decay * 0.35,
@@ -538,6 +607,10 @@ export class CrashCymbal implements DrumVoice {
       cascadeRise: 0.012 - 0.006 * hard,
       cascadeSeconds: this.decay,
       cascadeInstant: 0.15,
+      // a soft crash never wakes the top of the metal
+      cascadeHz: 6000 + 14000 * hard,
+      // and the top goes first: by the time a crash is half gone it is a darker sound
+      cascadeDark: { hz: 2400, seconds: this.decay * 0.18 },
       // and reaches further up: the top of the spectrum grows faster with force than the rest
       air: level * (0.15 + 0.85 * hard * hard) * (0.5 + 0.9 * this.tone),
       airRise: 0.016 - 0.008 * hard,
