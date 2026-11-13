@@ -37,14 +37,31 @@
 .numeralSelect.numeralSelect {
   text-transform: none;
   letter-spacing: 0.02em;
+  /* The deck's left column is narrow in a small window: the select shrinks to
+     it (its text is cut short) instead of running under the form strip. */
+  width: 100%;
+  min-width: 0;
+  max-width: 24rem;
+  text-overflow: ellipsis;
 }
+
+/* A label in the Progressions deck's left column (a grid: labels, then controls). */
+.deckLabel {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
 
 .stepNav {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 0.4rem;
+  min-width: 0;
 }
 
 .stepButton {
@@ -65,22 +82,58 @@
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-primary);
-  min-width: 5rem;
+  min-width: 4.5rem;
   text-align: center;
+  white-space: nowrap;
 }
 
-.stepCounter {
+/* The jam loop's next change, beside the current chord: "F7 in 3 bars". It
+   brightens on the last beat before the change. */
+.nextChange {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  transition: color var(--duration-key) var(--ease-calm);
+}
+
+.nextChangeArriving {
+  composes: nextChange;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* The beat dots and the pass: one dot's height in every state, so nothing in
+   the deck moves when the loop starts. */
+.beatRow {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.6rem;
+  min-height: 1.15rem;
   font-family: var(--font-sans);
   font-size: 0.75rem;
   color: var(--text-muted);
   letter-spacing: var(--label-tracking);
-  width: 100%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
   font-variant-numeric: tabular-nums;
+}
+
+/* The deck's narrow left column (see `.controlsBox` in ProgressionsDeck.module.css)
+   drops its labels and its second grid column. After the rules above, so it wins. */
+@container (max-width: 23rem) {
+  .deckLabel {
+    display: none;
+  }
+
+  .beatRow {
+    grid-column: 1;
+  }
 }
 
 /* The jam loop's four beats: the one sounding now is lit. */

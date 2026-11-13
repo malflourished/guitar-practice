@@ -45,7 +45,8 @@ interface PlaybackInput {
  * Tempo and every way the neck plays: strum or arpeggiate a chord, run a
  * scale (in a box or across the neck), play a progression or climb it up the
  * neck. One `togglePlay` starts what the Play menu says and stops anything
- * playing. Returns the props `PlayControl` takes, and the tempo Settings edits.
+ * playing. Returns the props `PlayControl` takes, the tempo Settings edits, the
+ * jam loop's state, and the jam's mix (the three faders) with its setter.
  */
 export function usePlayback({
   studyMode,
@@ -88,7 +89,12 @@ export function usePlayback({
         : effectiveScalePlayback
           ? 'scales'
           : 'notes';
-  const { options: playOptions, setOptions: setPlayOptions } = usePlayOptions({
+  const {
+    options: playOptions,
+    setOptions: setPlayOptions,
+    mix,
+    setMixLevel,
+  } = usePlayOptions({
     id: progressionId,
     feel: progressionFeel(getProgressionLibraryEntry(progressionId)),
   });
@@ -97,7 +103,7 @@ export function usePlayback({
     steps: resolvedProgressionSteps,
     chordPositions: displayProgressionChordViews.map((chord) => chord.positions),
     guitar: playOptions.guitar,
-    pad: playOptions.pad,
+    mix,
     feel: playOptions.feel,
     click: playOptions.click,
     loop: playOptions.jamLoop,
@@ -251,5 +257,5 @@ export function usePlayback({
     onToggle: togglePlay,
   };
 
-  return { playProps, togglePlay, traversalActive, tempo, setTempo, jam: jam.state };
+  return { playProps, togglePlay, traversalActive, tempo, setTempo, jam: jam.state, mix, setMixLevel };
 }

@@ -1,0 +1,141 @@
+/* A small vertical fader: a thin track, a small cap, a label in the small-caps
+   label style. It takes its colours from the same tokens as the position
+   slider, so it reads in Vibrato (dark and light) and in Scholar. */
+.fader {
+  --cap-w: 18px;
+  --cap-h: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 3.25rem;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  /* A drag across the deck must not select the text it passes over. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* What the level is. It is always there, so nothing moves, but it only shows
+   while the pointer is over the fader, while it is dragged, and on focus. */
+.value {
+  flex: 0 0 auto;
+  height: 0.95rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 0.95rem;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-primary);
+  opacity: 0;
+  transition: opacity var(--duration-key) var(--ease-calm);
+}
+
+.fader:hover .value,
+.fader:focus-within .value,
+.fader[data-dragging='true'] .value {
+  opacity: 1;
+}
+
+.slider {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 2.25rem;
+  cursor: ns-resize;
+  touch-action: none;
+  outline: none;
+}
+
+/* The cap's centre runs along this box, so the cap never leaves the slider. */
+.travel {
+  position: absolute;
+  inset: calc(var(--cap-h) / 2) 0;
+}
+
+.rail,
+.fill {
+  position: absolute;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+}
+
+.rail {
+  top: 0;
+  bottom: 0;
+  background: var(--fretboard-control-track);
+}
+
+.fill {
+  bottom: 0;
+  background: var(--fretboard-control-accent);
+  opacity: 0.7;
+}
+
+/* 0 dB: today's level, and where a double-click comes back to. */
+.zero {
+  position: absolute;
+  left: 50%;
+  width: 14px;
+  height: 1px;
+  transform: translate(-50%, 50%);
+  background: var(--fretboard-control-text);
+  opacity: 0.8;
+}
+
+.cap {
+  position: absolute;
+  left: 50%;
+  width: var(--cap-w);
+  height: var(--cap-h);
+  box-sizing: border-box;
+  transform: translate(-50%, 50%);
+  border-radius: 3px;
+  border: 1.5px solid var(--fretboard-control-thumb-border);
+  background: var(--fretboard-control-thumb-bg);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.28);
+  transition: opacity var(--duration-key) var(--ease-calm);
+}
+
+.slider:focus-visible .cap {
+  outline: 2px solid var(--fretboard-focus-outline);
+  outline-offset: 2px;
+}
+
+.fader[data-dragging='true'] .slider {
+  cursor: grabbing;
+}
+
+.label {
+  flex: 0 0 auto;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  transition: opacity var(--duration-key) var(--ease-calm);
+}
+
+/* Off: the cap rests at the bottom and the name steps back. */
+.fader[data-off='true'] .cap {
+  opacity: 0.6;
+}
+
+.fader[data-off='true'] .label {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .value,
+  .cap,
+  .label {
+    transition: none;
+  }
+}

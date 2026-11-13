@@ -1,0 +1,66 @@
+/* The Progressions deck: pickers and Play on the left, the form strip in the
+   middle, the mix faders at the right end. The deck's height is fixed (232 px,
+   216 below 760 px tall), so the three columns share it and nothing grows. */
+.layout {
+  display: grid;
+  /* The strip never gets narrower than four readable cells; the left column
+     and the strip share what the faders leave. */
+  grid-template-columns: minmax(0, 1.15fr) minmax(15.5rem, 1fr) auto;
+  align-items: center;
+  column-gap: 1.1rem;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+/* The left column asks its own width (a container query) how much to show. */
+.controlsBox {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.controls {
+  display: grid;
+  /* Labels in the first column, controls in the second, so the select, the
+     stepper and the beat dots line up. */
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.75rem;
+  row-gap: 0.4rem;
+  min-width: 0;
+}
+
+.playRow {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  margin-top: 0.25rem;
+}
+
+/* A narrow left column (a small window with the side panel docked) drops the two
+   text labels: the picker and the stepper say what they are. */
+@container (max-width: 23rem) {
+  .controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The faders take the deck's whole height; each one's track gets what is left
+   after its label and value. */
+.mix {
+  display: flex;
+  align-self: stretch;
+  align-items: stretch;
+  gap: 0.15rem;
+  min-height: 0;
+  padding-left: 0.85rem;
+  border-left: 1px solid var(--glass-divider);
+}
+
+@media (max-height: 760px) {
+  .controls {
+    row-gap: 0.3rem;
+  }
+}

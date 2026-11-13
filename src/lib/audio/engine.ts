@@ -5,15 +5,30 @@ import { DEFAULT_INSTRUMENT, GUITAR_INSTRUMENTS, INSTRUMENT_SAMPLES, chooseSampl
 import { loopTempo, type PlaybackOptions, type PracticePattern } from './pattern';
 import { PadVoice } from './padVoice';
 import { BassVoice } from './bassVoice';
+import { CymbalVoice } from './cymbalVoice';
 import { BEATS_PER_BAR, type JamEvent } from './jamSchedule';
+import type { JamGains } from './jamMix';
 export { DEFAULT_INSTRUMENT, GUITAR_INSTRUMENTS, type GuitarInstrumentName };
 
 /**
  * The guitar's share of the jam mix, under its own full level so that the bass
  * and pad fit beneath it without the limiter squashing all three (see the
- * measured levels in docs/specs/P2-jam-loop.md).
+ * measured levels in docs/specs/P2-jam-loop.md). This is the Guitar fader's
+ * 0 dB: the fader scales it.
  */
 const JAM_GUITAR_LEVEL = 0.6;
+/** A fader move takes this long to land, so it never clicks and never waits for a bar line. */
+const JAM_MIX_RAMP = 0.03;
+
+/**
+ * What the jam needs from its bass: play a MIDI note, and stop. The bass is
+ * built in `createJamBass` and nowhere else, so a different voice can take over
+ * by changing that one function.
+ */
+type JamBass = Pick<BassVoice, 'play' | 'stop'>;
+function createJamBass(destination: Tone.InputNode): JamBass {
+  return new BassVoice(destination);
+}
 
 /** One bar of the jam loop, ready to sound: its events, and the shape the guitar strums. */
 export interface JamBar {
@@ -59,8 +74,16 @@ export class GuitarAudioEngine {
   private filter: Tone.Filter | null = null;
   private limiter: Tone.Limiter | null = null;
   private click: Tone.Synth | null = null;
+  // The jam's three layers each sound through their own gain node, which the
+  // faders move live. They feed the chain the single guitar does: the guitar's
+  // into the tone filter, the pad's into the reverb, the bass's straight out.
+  private jamGuitar: Tone.Gain | null = null;
+  private jamBass: Tone.Gain | null = null;
+  private jamPad: Tone.Gain | null = null;
+  private jamGains: JamGains = { guitar: 1, bass: 1, pad: 1 };
   private pad: PadVoice | null = null;
-  private bass: BassVoice | null = null;
+  private bass: JamBass | null = null;
+  private cymbal: CymbalVoice | null = null;
   private lastStrum: Tone.ToneBufferSource[] = [];
   private jamRunning = false;
   private graphReady: Promise<void> | null = null;
@@ -94,6 +117,9 @@ export class GuitarAudioEngine {
       this.output = new Tone.Gain(this.state.muted ? 0 : this.state.volume).connect(this.limiter);
       this.reverb = new Tone.Reverb({ decay: 0.8, preDelay: 0.012, wet: this.state.room }).connect(this.output);
       this.filter = new Tone.Filter(9500, 'lowpass').connect(this.reverb);
+      this.jamGuitar = new Tone.Gain(JAM_GUITAR_LEVEL * this.jamGains.guitar).connect(this.filter);
+      this.jamBass = new Tone.Gain(this.jamGains.bass).connect(this.output);
+      this.jamPad = new Tone.Gain(this.jamGains.pad).connect(this.reverb);
       this.click = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.025, sustain: 0, release: 0.02 }, volume: -15 }).connect(this.output);
       this.graphReady = this.reverb.generate().then(() => undefined);
     }
@@ -146,7 +172,8 @@ export class GuitarAudioEngine {
     this.reverb?.wet.rampTo(this.state.room, 0.1);
   }
 
-  private note(midi: number, time: number, duration: number, velocity = 0.76, string?: number, level = 1) {
+  /** `into` is where the note sounds: the tone filter, unless the jam's guitar gain takes it. */
+  private note(midi: number, time: number, duration: number, velocity = 0.76, string?: number, level = 1, into?: Tone.InputNode) {
     const bank = this.banks.get(this.state.instrument);
     if (!bank?.loaded || !this.filter) return;
     const config = INSTRUMENT_SAMPLES[this.state.instrument];
@@ -161,7 +188,7 @@ export class GuitarAudioEngine {
         if (string !== undefined && this.strings.get(string) === source) this.strings.delete(string);
         // Tone disposes one-shot sources after their ended callback.
       },
-    }).connect(this.filter);
+    }).connect(into ?? this.filter);
     this.sources.add(source);
     if (string !== undefined) this.strings.set(string, source);
     // Small, deterministic attack variation; beat timing and pitch stay exact.
@@ -261,10 +288,23 @@ export class GuitarAudioEngine {
     const spread = up ? 0.012 : 0.018;
     this.lastStrum = [];
     ordered.forEach((p, index) => {
+      // the jam's guitar gain carries JAM_GUITAR_LEVEL and the Guitar fader
       const source = this.note(positionToMidi(p), time + index * spread, duration,
-        velocity * (0.86 + (index % 3) * 0.05), p.string, JAM_GUITAR_LEVEL);
+        velocity * (0.86 + (index % 3) * 0.05), p.string, 1, this.jamGuitar ?? undefined);
       if (source) this.lastStrum.push(source);
     });
+  }
+  /**
+   * Set the jam's three layer gains (see `jamMix.ts`: 1 is the default level, 0
+   * is off). They land over about 30 ms, with no restart and no wait for a bar
+   * line, and are remembered if the sound has not started yet. A layer at 0
+   * schedules nothing from the next beat on.
+   */
+  setJamMix(gains: JamGains) {
+    this.jamGains = { ...gains };
+    this.jamGuitar?.gain.rampTo(JAM_GUITAR_LEVEL * gains.guitar, JAM_MIX_RAMP);
+    this.jamBass?.gain.rampTo(gains.bass, JAM_MIX_RAMP);
+    this.jamPad?.gain.rampTo(gains.pad, JAM_MIX_RAMP);
   }
   /** Change the tempo of a running jam: the Transport keeps its place, so nothing skips. */
   setJamTempo(bpm: number) {
@@ -311,13 +351,21 @@ export class GuitarAudioEngine {
       draw(time, () => options.onBeat(barNumber, beat));
       bar?.events.filter(event => Math.floor(event.beat) === beat).forEach(event => {
         const at = time + (event.beat - beat) * beatSeconds;
+        // A layer whose fader is off schedules nothing: no events, not just silence.
         if (event.kind === 'bass') {
-          this.bass ??= new BassVoice(this.output ?? Tone.getDestination());
+          if (this.jamGains.bass <= 0) return;
+          this.bass ??= createJamBass(this.jamBass ?? this.output ?? Tone.getDestination());
           this.bass.play(event.midi, at, event.duration * beatSeconds, event.velocity);
-        } else if (event.kind === 'strum') this.jamStrum(bar!.strum, at, event.duration * beatSeconds, event.up, event.velocity);
-        else if (event.kind === 'pad') {
-          this.pad ??= new PadVoice(this.reverb ?? Tone.getDestination());
+        } else if (event.kind === 'strum') {
+          if (this.jamGains.guitar > 0) this.jamStrum(bar!.strum, at, event.duration * beatSeconds, event.up, event.velocity);
+        } else if (event.kind === 'pad') {
+          if (this.jamGains.pad <= 0) return;
+          this.pad ??= new PadVoice(this.jamPad ?? this.reverb ?? Tone.getDestination());
           this.pad.play(event.midis, at, event.duration * beatSeconds);
+        } else if (event.kind === 'cymbal') {
+          // the top of the form: no fader of its own, and Click has no say
+          this.cymbal ??= new CymbalVoice(this.output ?? Tone.getDestination());
+          this.cymbal.play(at);
         } else this.click?.triggerAttackRelease(event.accent ? 1400 : 1000, 0.025, at, event.accent ? 0.7 : 0.45);
       });
     }, '4n', 0);
@@ -329,6 +377,7 @@ export class GuitarAudioEngine {
     this.jamRunning = false;
     this.pad?.stop();
     this.bass?.stop();
+    this.cymbal?.stop();
     this.lastStrum = [];
     this.previewGeneration++;
     Tone.getTransport().stop();

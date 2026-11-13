@@ -5,7 +5,7 @@ import {
   type ScalePlaybackContext,
 } from './pitch';
 import type { PatternEvent, PracticePattern } from './pattern';
-import type { GuitarRhythm, JamFeel } from './jamSchedule';
+import type { GuitarHold, JamFeel } from './jamSchedule';
 
 /** Which way a run goes. Up and down plays the way up, then back down. */
 export type PlayDirection = 'up' | 'down' | 'updown';
@@ -22,10 +22,11 @@ export interface PlayOptions {
   loop: boolean;
   reach: PlayReach;
   ladder: PlayLadder;
-  /** Progressions: how long the guitar holds each chord. */
-  guitar: GuitarRhythm;
-  /** Progressions: the pad holds each chord for the bar. */
-  pad: boolean;
+  /**
+   * Progressions: how long the guitar holds each chord. Whether the guitar,
+   * bass and pad sound at all is the mix faders' job, not the menu's.
+   */
+  guitar: GuitarHold;
   /** Progressions: straight, or swung. Starts at the entry's own feel. */
   feel: JamFeel;
   /** Progressions: a click on every beat (the count-in always clicks). */
@@ -41,7 +42,6 @@ export const DEFAULT_PLAY_OPTIONS: PlayOptions = {
   reach: 'position',
   ladder: 'off',
   guitar: 'half',
-  pad: true,
   feel: 'straight',
   click: false,
   jamLoop: true,
@@ -58,7 +58,6 @@ export type PlayOptionId =
   | 'ladder'
   | 'loop'
   | 'guitar'
-  | 'pad'
   | 'feel'
   | 'click'
   | 'jamLoop';
@@ -95,7 +94,7 @@ export function playMenuOptions(
         'loop',
       ];
     case 'progressions':
-      return ['guitar', 'pad', 'feel', 'click', 'jamLoop', 'ladder'];
+      return ['guitar', 'feel', 'click', 'jamLoop', 'ladder'];
   }
 }
 

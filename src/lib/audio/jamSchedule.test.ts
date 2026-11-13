@@ -17,6 +17,8 @@ import {
   jamBarStep,
   jamPosition,
   bassMidi,
+  isTopOfForm,
+  nextChange,
   type GuitarRhythm,
   type JamChord,
   type JamEvent,
@@ -86,6 +88,15 @@ describe('buildJamBar: the guitar', () => {
     const clicks = buildJamBar({ rootPc: 0 }, { ...bar, click: true }).filter((e) => e.kind === 'click');
     expect(clicks.map((e) => e.kind === 'click' && e.accent)).toEqual([true, false, false, false]);
     expect(buildJamBar({ rootPc: 0 }, bar).some((e) => e.kind === 'click')).toBe(false);
+  });
+
+  it('the top of the form adds one cymbal on beat 0, whether or not the click is on', () => {
+    const cymbals = (options: { click: boolean; cymbal?: boolean }) =>
+      buildJamBar({ rootPc: 0 }, { ...bar, ...options }).filter((e) => e.kind === 'cymbal');
+    expect(cymbals({ click: false, cymbal: true })).toEqual([{ kind: 'cymbal', beat: 0 }]);
+    expect(cymbals({ click: true, cymbal: true })).toEqual([{ kind: 'cymbal', beat: 0 }]);
+    expect(cymbals({ click: false })).toHaveLength(0);
+    expect(cymbals({ click: false, cymbal: false })).toHaveLength(0);
   });
 });
 
@@ -202,6 +213,115 @@ describe('jamPosition', () => {
   it('a slash bass counts as a change; a one-chord loop never changes', () => {
     expect(jamPosition(0, [chord(0, 'major'), chord(0, 'major', 7)]).changeComing).toBe(true);
     expect(jamPosition(0, [chord(0, 'major')]).changeComing).toBe(false);
+  });
+});
+
+describe('nextChange', () => {
+  const chord = (rootPc: number, quality = 'dom7', bassPc?: number): JamChord => ({ rootPc, quality, bassPc });
+  // C blues: I I I I IV IV I I V IV I V
+  const blues = [0, 0, 0, 0, 5, 5, 0, 0, 7, 5, 0, 7].map((pc) => chord(pc));
+
+  it('12-bar blues: from bar 1 the next change is F7 in 4 bars, counting down to 1 on bar 4', () => {
+    expect(nextChange(0, blues)).toEqual({ stepIndex: 4, bars: 4 });
+    expect([0, 1, 2, 3].map((step) => nextChange(step, blues)!.bars)).toEqual([4, 3, 2, 1]);
+    expect(nextChange(1, blues)).toEqual({ stepIndex: 4, bars: 3 });
+  });
+
+  it('12-bar blues: from bar 12 the next change is C7 next bar, wrapping round the top', () => {
+    expect(nextChange(11, blues)).toEqual({ stepIndex: 0, bars: 1 });
+  });
+
+  it('12-bar blues, every bar: the step it names really is a different chord, `bars` away', () => {
+    blues.forEach((here, step) => {
+      const next = nextChange(step, blues)!;
+      expect(next.stepIndex).toBe((step + next.bars) % blues.length);
+      expect(blues[next.stepIndex].rootPc).not.toBe(here.rootPc);
+      for (let skipped = 1; skipped < next.bars; skipped++) {
+        expect(blues[(step + skipped) % blues.length].rootPc).toBe(here.rootPc);
+      }
+    });
+    // after the V in bar 9 comes the IV; the I in bars 7 and 8 holds two bars
+    expect(nextChange(8, blues)).toEqual({ stepIndex: 9, bars: 1 });
+    expect(nextChange(6, blues)).toEqual({ stepIndex: 8, bars: 2 });
+  });
+
+  it('a four-bar loop: every bar leads straight to the next, and bar 4 wraps to bar 1', () => {
+    const turnaround = [chord(0, 'maj7'), chord(9, 'min7'), chord(2, 'min7'), chord(7)];
+    expect([0, 1, 2, 3].map((step) => nextChange(step, turnaround))).toEqual([
+      { stepIndex: 1, bars: 1 },
+      { stepIndex: 2, bars: 1 },
+      { stepIndex: 3, bars: 1 },
+      { stepIndex: 0, bars: 1 },
+    ]);
+  });
+
+  it('ii–V–I: the I held two bars is two bars from the ii at the top', () => {
+    const chords = [chord(2, 'min7'), chord(7), chord(0, 'maj7'), chord(0, 'maj7')];
+    expect(nextChange(2, chords)).toEqual({ stepIndex: 0, bars: 2 });
+    expect(nextChange(3, chords)).toEqual({ stepIndex: 0, bars: 1 });
+  });
+
+  it('a change of quality or of slash bass counts, as it does for changeComing', () => {
+    expect(nextChange(0, [chord(0, 'major'), chord(0, 'dom7')])).toEqual({ stepIndex: 1, bars: 1 });
+    expect(nextChange(0, [chord(0, 'major'), chord(0, 'major', 7)])).toEqual({ stepIndex: 1, bars: 1 });
+  });
+
+  it('a one-chord loop has no change to wait for, nor does an empty one', () => {
+    expect(nextChange(0, [chord(0)])).toBeNull();
+    expect(nextChange(1, [chord(0), chord(0), chord(0)])).toBeNull();
+    expect(nextChange(0, [])).toBeNull();
+  });
+
+  it('a step past the end counts round the loop, as jamPosition does', () => {
+    expect(nextChange(12, blues)).toEqual(nextChange(0, blues));
+    expect(nextChange(23, blues)).toEqual(nextChange(11, blues));
+  });
+
+  it('agrees with jamPosition: a change is coming exactly when the next change is one bar away', () => {
+    const library = ['blues-12', 'blues-minor', 'jazz-251', 'turnaround-1625'].map(
+      (id) =>
+        resolveProgression('C', entryToProgressionDef(getProgressionLibraryEntry(id)!), 'sharps').map(
+          (step): JamChord => ({
+            rootPc: noteToSemitone(step.root),
+            quality: step.quality,
+            bassPc: step.bass ? noteToSemitone(step.bass) : undefined,
+          }),
+        ),
+    );
+    for (const chords of library) {
+      chords.forEach((_, step) => {
+        expect(jamPosition(step, chords).changeComing).toBe(nextChange(step, chords)?.bars === 1);
+      });
+    }
+  });
+});
+
+describe('isTopOfForm: where the cymbal goes', () => {
+  const chord = (rootPc: number, quality = 'dom7'): JamChord => ({ rootPc, quality });
+  const blues = [0, 0, 0, 0, 5, 5, 0, 0, 7, 5, 0, 7].map((pc) => chord(pc));
+  const barsWithCymbal = (chords: JamChord[], bars: number) =>
+    Array.from({ length: bars }, (_, bar) => bar).filter((bar) => isTopOfForm(jamPosition(bar, chords)));
+
+  it('12-bar blues: nothing in the first pass, then bar 1 of every pass: bars 13, 25, 37 (counting from 1)', () => {
+    expect(barsWithCymbal(blues, 48).map((bar) => bar + 1)).toEqual([13, 25, 37]);
+  });
+
+  it('never in the first pass, not even on its first bar', () => {
+    expect(isTopOfForm(jamPosition(0, blues))).toBe(false);
+    for (let bar = 0; bar < 12; bar++) expect(isTopOfForm(jamPosition(bar, blues))).toBe(false);
+  });
+
+  it('only on the first bar of a pass, never the other eleven', () => {
+    for (let bar = 12; bar < 24; bar++) {
+      expect(isTopOfForm(jamPosition(bar, blues)), `bar ${bar + 1}`).toBe(bar === 12);
+    }
+  });
+
+  it('a four-bar loop crashes on every fifth bar from the fifth, a two-bar vamp every other bar', () => {
+    const turnaround = [chord(0, 'maj7'), chord(9, 'min7'), chord(2, 'min7'), chord(7)];
+    expect(barsWithCymbal(turnaround, 13).map((bar) => bar + 1)).toEqual([5, 9, 13]);
+    const vamp = [chord(0), chord(5)];
+    expect(barsWithCymbal(vamp, 8).map((bar) => bar + 1)).toEqual([3, 5, 7]);
   });
 });
 

@@ -1,5 +1,5 @@
 import { Popover } from './Popover';
-import type { GuitarRhythm, JamFeel } from '../lib/audio/jamSchedule';
+import type { GuitarHold, JamFeel } from '../lib/audio/jamSchedule';
 import type { ScaleAnchor } from '../lib/audio/pitch';
 import {
   playMenuOptions,
@@ -63,8 +63,7 @@ const LADDERS: Choice<PlayLadder>[] = [
   { id: 'down', label: 'Down the neck', title: 'Each chord a position lower' },
 ];
 
-const GUITARS: Choice<GuitarRhythm>[] = [
-  { id: 'off', label: 'Off', title: 'No guitar chords' },
+const GUITARS: Choice<GuitarHold>[] = [
   { id: 'whole', label: 'Whole', title: 'One strum, left to ring through the bar' },
   { id: 'half', label: 'Half', title: 'A strum on beats 1 and 3' },
   { id: 'quarter', label: 'Quarter', title: 'A strum on every beat' },
@@ -77,7 +76,6 @@ const FEELS: Choice<JamFeel>[] = [
 
 const TITLES: Record<PlayOptionId, string> = {
   guitar: 'Guitar',
-  pad: 'Pad',
   feel: 'Feel',
   click: 'Click',
   jamLoop: 'Loop',
@@ -236,16 +234,6 @@ export function PlayMenu({
                 choices={GUITARS}
                 value={options.guitar}
                 onChange={(guitar) => onOptionsChange({ guitar })}
-              />
-            );
-          case 'pad':
-            return (
-              <Toggle
-                key={id}
-                title={TITLES[id]}
-                hint="A soft pad holds each chord for the bar, under the guitar or alone."
-                on={options.pad}
-                onChange={(pad) => onOptionsChange({ pad })}
               />
             );
           case 'feel':

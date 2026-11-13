@@ -33,7 +33,7 @@ import { IntervalsPanel } from './modes/intervals/IntervalsPanel';
 import { KeyContextSection } from './modes/KeyContextSection';
 import { ModeDeck } from './modes/ModeDeck';
 import { NotesControls } from './modes/notes/NotesControls';
-import { ProgressionsControls } from './modes/progressions/ProgressionsControls';
+import { ProgressionsDeck } from './modes/progressions/ProgressionsDeck';
 import { ProgressionsPanel } from './modes/progressions/ProgressionsPanel';
 import { useProgressionViews } from './modes/progressions/useProgressionViews';
 import { useProgressionsState } from './modes/progressions/useProgressionsState';
@@ -120,7 +120,7 @@ function App() {
     neck,
     progressionViews,
   });
-  const { playProps, togglePlay, traversalActive, tempo, setTempo, jam } = usePlayback({
+  const { playProps, togglePlay, traversalActive, tempo, setTempo, jam, mix, setMixLevel } = usePlayback({
     studyMode,
     audio,
     keyState,
@@ -308,28 +308,33 @@ function App() {
         onScaleQualityChange={scales.setScaleQuality}
         onScaleSystemChange={scales.setScaleSystem}
       />
-    ) : studyMode === 'progressions' ? (
-      <ProgressionsControls
-        progressionId={progressions.progressionId}
-        progressionStepIndex={progressions.progressionStepIndex}
-        resolvedSteps={progressions.resolvedProgressionSteps}
-        onProgressionChange={progressions.handleProgressionChange}
-        onProgressionStepChange={progressions.setProgressionStepIndex}
-        jam={jam}
-      />
     ) : null;
 
-  const deck = (
-    <ModeDeck
-      controls={controls}
-      showFretboard={showFretboard}
-      showDisplayToggles={showPositionSlider}
-      play={{ ...playProps, onOpenTempo: () => frame.openSettings('tempo') }}
-      display={display}
-      studyMode={studyMode}
-      supportsChordTones={board.supportsChordTones}
-    />
-  );
+  const playControl = { ...playProps, onOpenTempo: () => frame.openSettings('tempo') };
+  // Progressions lays out its own deck: the form strip and the mix faders need its whole height.
+  const deck =
+    studyMode === 'progressions' ? (
+      <ProgressionsDeck
+        progressions={progressions}
+        jam={jam}
+        tempo={tempo}
+        play={playControl}
+        display={display}
+        supportsChordTones={board.supportsChordTones}
+        mix={mix}
+        onMixChange={setMixLevel}
+      />
+    ) : (
+      <ModeDeck
+        controls={controls}
+        showFretboard={showFretboard}
+        showDisplayToggles={showPositionSlider}
+        play={playControl}
+        display={display}
+        studyMode={studyMode}
+        supportsChordTones={board.supportsChordTones}
+      />
+    );
 
   const panelContent =
     studyMode === 'chords' ? (

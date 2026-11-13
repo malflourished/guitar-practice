@@ -1,0 +1,180 @@
+/* The form strip: a lead sheet, one cell a bar, four bars to a line. Thin
+   bar lines between the cells, the current bar lit like a selected pill, and
+   a hairline playhead that crosses it with the beat. */
+.strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Three lines fit the deck at its shortest; more would squeeze, not spill. */
+  flex: 0 1 2.9rem;
+  min-height: 1.9rem;
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  min-width: 0;
+  padding: 0.15rem 0.25rem;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--duration-key) var(--ease-calm);
+}
+
+/* The bar line on a cell's left, and a closing one after the line's last cell.
+   They stop short of the cell's top and bottom, as a printed chart's do. */
+.cell::before,
+.cell:last-child::after {
+  content: '';
+  position: absolute;
+  top: 18%;
+  bottom: 18%;
+  width: 1px;
+  background: var(--glass-divider);
+  pointer-events: none;
+}
+
+.cell::before {
+  left: 0;
+}
+
+.cell:last-child::after {
+  right: 0;
+}
+
+.cell:hover:not(:disabled) {
+  background: var(--glass-bg);
+}
+
+.cell:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.cell:focus-visible {
+  outline: 2px solid var(--fretboard-focus-outline);
+  outline-offset: -2px;
+}
+
+.chord {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.numeral {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text-muted);
+}
+
+/* A chord that only repeats: written again, in a dimmer tone, so the
+   changes stand out. */
+.cell[data-repeat='true'] .chord {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.cell[data-repeat='true'] .numeral {
+  opacity: 0.65;
+}
+
+/* The current bar: the selected pill's fill and outline. The bar lines beside
+   it step aside so they do not double the outline. */
+.cell[data-lit='true'] {
+  background: var(--glass-bg-hover);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+}
+
+.cell[data-lit='true']::before,
+.cell[data-lit='true'] + .cell::before,
+.cell[data-lit='true']:last-child::after {
+  opacity: 0;
+}
+
+.cell[data-lit='true'] .chord {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.cell[data-lit='true'] .numeral {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+:global(.themeRoot[data-ui-theme='scholar']) .chord {
+  font-weight: 600;
+}
+
+:global(.themeRoot[data-ui-theme='scholar']) .cell[data-repeat='true'] .chord {
+  font-weight: 400;
+}
+
+/* After the repeat rule, so the lit bar stays bold even when it only repeats. */
+:global(.themeRoot[data-ui-theme='scholar']) .cell[data-lit='true'] .chord {
+  font-weight: 600;
+}
+
+/* The playhead: from where the beat starts to where it ends, over one beat.
+   It runs behind the chord, so the symbol stays crisp. */
+.playhead {
+  position: absolute;
+  z-index: 0;
+  top: 5px;
+  bottom: 5px;
+  left: var(--from);
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text-primary);
+  opacity: 0.85;
+  pointer-events: none;
+  animation: playheadSweep var(--beat) linear forwards;
+}
+
+@keyframes playheadSweep {
+  from {
+    left: var(--from);
+  }
+  to {
+    left: var(--to);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell {
+    transition: none;
+  }
+
+  .playhead {
+    animation: none;
+  }
+}
