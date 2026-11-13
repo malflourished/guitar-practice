@@ -1,5 +1,6 @@
-import { useContext, useEffect, useState, type ReactNode } from 'react';
+import { useContext, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { FrameContext, type SideState } from './frameContext';
+import { NeckBandContext } from './neckContext';
 import styles from './Frame.module.css';
 
 /**
@@ -125,23 +126,33 @@ interface NeckProps {
   bar?: ReactNode;
   /** Right end of the bar (the Focus button). */
   barEnd?: ReactNode;
+  /**
+   * Sit the bar (and its end) halfway between the neck's top edge and the
+   * board's fret numbers, in the empty band the board leaves above itself.
+   * The bar's own row, and the board, stay where they are.
+   */
+  centerBar?: boolean;
   className?: string;
   children: ReactNode;
 }
 
-export function Neck({ bar, barEnd, className, children }: NeckProps) {
+export function Neck({ bar, barEnd, centerBar, className, children }: NeckProps) {
+  const [band, setBand] = useState(0);
   return (
     // `fretboardStage` keeps the roadmap's no-scroll check snippet working.
     <section
       className={join('fretboardStage', styles.neck, className)}
       data-region="neck"
       aria-label="Neck"
+      style={centerBar ? ({ '--neck-band': `${band}px` } as CSSProperties) : undefined}
     >
-      <div className={styles.neckBar}>
+      <div className={styles.neckBar} data-centered={centerBar ? 'true' : undefined}>
         <div className={styles.neckBarMain}>{bar}</div>
         {barEnd ? <div className={styles.neckBarEnd}>{barEnd}</div> : null}
       </div>
-      <div className={styles.neckBody}>{children}</div>
+      <NeckBandContext.Provider value={centerBar ? setBand : null}>
+        <div className={styles.neckBody}>{children}</div>
+      </NeckBandContext.Provider>
     </section>
   );
 }

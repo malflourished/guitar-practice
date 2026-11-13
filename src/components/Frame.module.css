@@ -174,6 +174,16 @@
   box-sizing: border-box;
 }
 
+/* The bar keeps its row (so the board stays put) but is drawn halfway down
+   the band above the fret numbers: the neck's top edge to the fret numbers,
+   split in two. */
+.neckBar[data-centered='true'] {
+  position: relative;
+  z-index: 2;
+  padding-top: 0;
+  transform: translateY(calc(var(--neck-band, 0px) / 2));
+}
+
 .neckBarMain {
   flex: 1 1 auto;
   min-width: 0;

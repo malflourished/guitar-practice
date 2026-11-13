@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { NeckBandContext } from './neckContext';
 import type { ChordQuality, FretPosition, NoteName } from '../types/music';
 import {
   BADGE_ROW_HEIGHT,
@@ -152,6 +153,17 @@ export function Fretboard({
     stringsBottomY +
     (FRETBOARD_LAYOUT.bottomPadding + 8) * scale +
     (fill || hasBadges ? BADGE_ROW_HEIGHT * scale : 0);
+
+  // Tell the neck how much empty band sits above the fret numbers (the board
+  // is centred in its container), so it can centre its bar in that space.
+  const reportBand = useContext(NeckBandContext);
+  const fretNumberTop = topPadding - 18 * scale - 9 * textScale;
+  const bandAbove = fill
+    ? Math.max(0, Math.round(((containerSize.height - boardHeight) / 2 + fretNumberTop) * 2) / 2)
+    : 0;
+  useLayoutEffect(() => {
+    reportBand?.(bandAbove);
+  }, [reportBand, bandAbove]);
 
   const fretWireX = (fret: number) =>
     boardOriginX + (fretRange ? (fret - firstFret + 1) * windowFretWidth : fretDistanceFromNut(fret, scaleLength));
