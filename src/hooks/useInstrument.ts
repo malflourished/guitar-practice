@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FretPosition } from '../types/music';
 import { positionToMidi } from '../lib/audio/pitch';
 import { readSoundSettings, writeSoundSettings } from './soundSettings';
-import { GuitarAudioEngine, type EngineState, type GuitarInstrumentName } from '../lib/audio/engine';
+import { GuitarAudioEngine, type EngineState, type GuitarInstrumentName, type JamPlayOptions } from '../lib/audio/engine';
 import { chordPattern, sequencePattern, type PlaybackOptions, type PracticePattern } from '../lib/audio/pattern';
 
 export interface UseInstrument extends EngineState {
@@ -19,6 +19,9 @@ export interface UseInstrument extends EngineState {
   strum: (positions: FretPosition[]) => void;
   playProgression: (chords: FretPosition[][], bpm: number, id: string, onStep?: (index: number) => void, loop?: boolean) => void;
   playPattern: (pattern: PracticePattern, options: PlaybackOptions, id?: string) => Promise<boolean>;
+  /** The jam loop (see the engine): resolves false when nothing started. */
+  playJam: (options: JamPlayOptions, id?: string) => Promise<boolean>;
+  setJamTempo: (bpm: number) => void;
   stopAll: () => void;
 }
 
@@ -68,6 +71,14 @@ export function useInstrument(): UseInstrument {
     if (success) setPlayingId(id);
     return success;
   }, [engine]);
+  const playJam = useCallback(async (options: JamPlayOptions, id = 'jam') => {
+    const success = await engine.playJam({ ...options,
+      onEnd: () => { setPlayingId(null); options.onEnd?.(); },
+    });
+    if (success) setPlayingId(id);
+    return success;
+  }, [engine]);
+  const setJamTempo = useCallback((bpm: number) => engine.setJamTempo(bpm), [engine]);
   const playSequence = useCallback((positions: FretPosition[], bpm: number, id: string, onNote?: (index: number) => void, loop = false) => {
     void playPattern(sequencePattern(positions), { bpm, loop, onEvent: e => onNote?.(e.index) }, id);
   }, [playPattern]);
@@ -75,5 +86,5 @@ export function useInstrument(): UseInstrument {
     void playPattern(chordPattern(chords), { bpm, loop, onEvent: e => onStep?.(e.index) }, id);
   }, [playPattern]);
   return { ...state, playingPosition, playingId, setInstrument, setVolume, setMuted, setRoom,
-    playNote, hearInterval, playPosition, strum, playPattern, playSequence, playProgression, stopAll };
+    playNote, hearInterval, playPosition, strum, playPattern, playSequence, playProgression, playJam, setJamTempo, stopAll };
 }

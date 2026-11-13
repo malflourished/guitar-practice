@@ -76,4 +76,42 @@
   letter-spacing: var(--label-tracking);
   width: 100%;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The jam loop's four beats: the one sounding now is lit. */
+.beatDots {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
+.beatDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border-subtle);
+  font-size: 0.62rem;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.beatDotOn {
+  composes: beatDot;
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--canvas-bg);
+}
+
+/* The count-in's beats are outlined, not filled: the music has not begun. */
+.beatDotCount {
+  composes: beatDot;
+  border-color: var(--text-primary);
+  color: var(--text-primary);
 }

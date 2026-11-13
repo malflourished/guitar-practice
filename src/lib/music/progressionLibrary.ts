@@ -30,6 +30,8 @@ export const PROGRESSION_LIBRARY_GROUPS = [
 export type ProgressionLibraryGroup =
   (typeof PROGRESSION_LIBRARY_GROUPS)[number];
 
+export type ProgressionFeel = 'straight' | 'swing';
+
 export interface ProgressionLibraryEntry {
   id: string;
   /** What it is called. */
@@ -47,6 +49,8 @@ export interface ProgressionLibraryEntry {
   sound?: string;
   /** A well-known song or recording that uses it. */
   heard?: string;
+  /** How the jam loop strums it by default; straight when left out. */
+  feel?: ProgressionFeel;
   /** Longer reading, for entries that had it before the library existed. */
   theory?: TheoryContent;
 }
@@ -69,6 +73,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   // ---- Hear the changes -------------------------------------------------
   {
     id: 'blues-12',
+    feel: 'swing',
     title: '12-bar blues',
     name: 'I7 – IV7 – V7',
     group: 'Hear the changes',
@@ -82,6 +87,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   },
   {
     id: 'blues-minor',
+    feel: 'swing',
     title: 'Minor blues',
     name: 'i7 – iv7 – ♭VI7 – V7',
     group: 'Hear the changes',
@@ -99,6 +105,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   },
   {
     id: 'jazz-251',
+    feel: 'swing',
     title: 'ii–V–I',
     name: 'ii7 – V7 – Imaj7',
     group: 'Hear the changes',
@@ -127,6 +134,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   },
   {
     id: 'turnaround-1625',
+    feel: 'swing',
     title: 'The turnaround',
     name: 'Imaj7 – vi7 – ii7 – V7',
     group: 'Hear the changes',
@@ -342,7 +350,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
     group: 'One scale, changing colour',
     keyMode: 'major',
     steps: [Imaj7, step('II/I', 2, 'major', { bass: 0 })],
-    why: 'A major triad a whole step up, over the same bass note, puts the ♯4 on top (in C: D/C holds C, D, F♯, A). Plays as a plain II triad for now; keep the bass on the key note yourself.',
+    why: 'A major triad a whole step up, over the same bass note, puts the ♯4 on top (in C: D/C holds C, D, F♯, A). The jam loop keeps the bass on the key note under the II triad.',
     aim: 'Hang on the ♯4 (in C: F♯) and do not let it fall to the 4.',
     sound: 'Lydian from the key note (in C: C D E F♯ G A B).',
   },
@@ -512,6 +520,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   },
   {
     id: 'backdoor',
+    feel: 'swing',
     title: 'Backdoor',
     name: 'Imaj7 – iv7 – ♭VII7 – Imaj7',
     group: 'Further out',
@@ -529,6 +538,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   },
   {
     id: 'tritone-sub',
+    feel: 'swing',
     title: 'Tritone sub',
     name: 'ii7 – ♭II7 – Imaj7',
     group: 'Further out',
@@ -562,6 +572,11 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
     heard: 'Grover Washington Jr. with Bill Withers, “Just the Two of Us”',
   },
 ];
+
+/** How an entry swings: straight unless it says otherwise. */
+export function progressionFeel(entry: ProgressionLibraryEntry | undefined): ProgressionFeel {
+  return entry?.feel ?? 'straight';
+}
 
 export function getProgressionLibraryEntry(
   id: string,

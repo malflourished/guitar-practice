@@ -50,6 +50,13 @@
   order: -1;
   box-sizing: border-box;
   align-self: stretch;
+  /* Room for the jam loop's mark, so nothing shifts when it plays. */
+  border-bottom: 2px solid transparent;
+  padding-bottom: 0.15rem;
+}
+
+.itemPlaying .label {
+  border-bottom-color: var(--string-line);
 }
 
 .diagram {
@@ -97,6 +104,11 @@
 
 .itemActive {
   composes: item;
+}
+
+/* The chord the jam loop is playing now. */
+.itemPlaying {
+  composes: itemActive;
 }
 
 /* Side panel: a two-column grid that the panel scrolls. */

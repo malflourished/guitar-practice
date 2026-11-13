@@ -3,7 +3,28 @@ import type { FretPosition } from '../../types/music';
 import { positionToMidi } from './pitch';
 import { DEFAULT_INSTRUMENT, GUITAR_INSTRUMENTS, INSTRUMENT_SAMPLES, chooseSample, type GuitarInstrumentName } from './instruments';
 import { loopTempo, type PlaybackOptions, type PracticePattern } from './pattern';
+import { PadVoice } from './padVoice';
+import { BEATS_PER_BAR, type JamEvent } from './jamSchedule';
 export { DEFAULT_INSTRUMENT, GUITAR_INSTRUMENTS, type GuitarInstrumentName };
+
+/** One bar of the jam loop, ready to sound: its events, and the shape the guitar strums. */
+export interface JamBar {
+  events: JamEvent[];
+  strum: FretPosition[];
+}
+
+export interface JamPlayOptions {
+  bpm: number;
+  /** Steps in the loop: one bar each. */
+  steps: number;
+  /** Asked at each bar line, so a change applies from the next bar. */
+  getBar: (bar: number) => JamBar;
+  /** Asked at the end of each pass; false stops after it. */
+  loop: () => boolean;
+  /** At the sound's time: `bar` is -1 during the count-in. */
+  onBeat: (bar: number, beat: number) => void;
+  onEnd?: () => void;
+}
 
 export interface EngineState {
   instrument: GuitarInstrumentName;
@@ -30,6 +51,8 @@ export class GuitarAudioEngine {
   private filter: Tone.Filter | null = null;
   private limiter: Tone.Limiter | null = null;
   private click: Tone.Synth | null = null;
+  private pad: PadVoice | null = null;
+  private jamRunning = false;
   private graphReady: Promise<void> | null = null;
   private generation = 0;
   private take = 0;
@@ -212,8 +235,73 @@ export class GuitarAudioEngine {
     transport.start('+0.06', 0);
     return true;
   }
+  /** One strum of a jam bar: `velocity` is 1 for the accent, lower for the rest. */
+  private jamStrum(positions: FretPosition[], time: number, duration: number, up: boolean, velocity: number) {
+    const ordered = [...positions].sort((a, b) => up ? a.string - b.string : b.string - a.string);
+    const spread = up ? 0.012 : 0.018;
+    ordered.forEach((p, index) => this.note(positionToMidi(p), time + index * spread, duration,
+      velocity * (0.86 + (index % 3) * 0.05), p.string));
+  }
+  /** Change the tempo of a running jam: the Transport keeps its place, so nothing skips. */
+  setJamTempo(bpm: number) {
+    if (this.jamRunning) Tone.getTransport().bpm.value = bpm;
+  }
+  /**
+   * The jam loop: a count-in bar, then the bars of `getBar` round and round.
+   * The Transport ticks once a beat; each downbeat asks for the next bar, so a
+   * new backing, feel or click lands on a bar line. The screen follows through
+   * `Tone.Draw` at each beat's audio time.
+   */
+  async playJam(options: JamPlayOptions): Promise<boolean> {
+    this.stopAll();
+    const generation = this.generation;
+    if (!(await this.ensureLoaded()) || generation !== this.generation || options.steps <= 0) return false;
+    const transport = Tone.getTransport();
+    transport.bpm.value = options.bpm;
+    this.jamRunning = true;
+    let count = 0;
+    let bar: JamBar | null = null;
+    const draw = (time: number, callback: () => void) => Tone.getDraw().schedule(() => {
+      if (generation === this.generation) callback();
+    }, time);
+    transport.scheduleRepeat(time => {
+      if (generation !== this.generation) return;
+      const n = count++;
+      const beat = n % BEATS_PER_BAR;
+      const barNumber = Math.floor(n / BEATS_PER_BAR) - 1; // -1 is the count-in
+      const beatSeconds = 60 / transport.bpm.value;
+      if (barNumber < 0) {
+        this.click?.triggerAttackRelease(beat === 0 ? 1400 : 1000, 0.03, time, 0.8);
+        draw(time, () => options.onBeat(-1, beat));
+        return;
+      }
+      if (beat === 0) {
+        if (barNumber > 0 && barNumber % options.steps === 0 && !options.loop()) {
+          transport.stop(time);
+          this.jamRunning = false;
+          draw(time, () => options.onEnd?.());
+          return;
+        }
+        bar = options.getBar(barNumber);
+      }
+      draw(time, () => options.onBeat(barNumber, beat));
+      bar?.events.filter(event => Math.floor(event.beat) === beat).forEach(event => {
+        const at = time + (event.beat - beat) * beatSeconds;
+        if (event.kind === 'bass') this.note(event.midi, at, event.duration * beatSeconds, 0.82);
+        else if (event.kind === 'strum') this.jamStrum(bar!.strum, at, beatSeconds * 2, event.up, event.velocity);
+        else if (event.kind === 'pad') {
+          this.pad ??= new PadVoice(this.reverb ?? Tone.getDestination());
+          this.pad.play(event.midis, at, event.duration * beatSeconds);
+        } else this.click?.triggerAttackRelease(event.accent ? 1400 : 1000, 0.025, at, event.accent ? 0.7 : 0.45);
+      });
+    }, '4n', 0);
+    transport.start('+0.06', 0);
+    return true;
+  }
   stopAll() {
     this.generation++;
+    this.jamRunning = false;
+    this.pad?.stop();
     this.previewGeneration++;
     Tone.getTransport().stop();
     Tone.getTransport().cancel();

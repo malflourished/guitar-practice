@@ -53,9 +53,9 @@ export function useProgressionViews({
   ]);
 
   const ladderDirection: ProgressionLadderDirection | null =
-    playingId === 'progression-ascending'
+    playingId === 'jam-ascending'
       ? 'ascending'
-      : playingId === 'progression-descending'
+      : playingId === 'jam-descending'
         ? 'descending'
         : null;
 

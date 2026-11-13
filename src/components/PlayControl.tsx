@@ -1,4 +1,5 @@
 import { Popover } from './Popover';
+import type { JamBacking, JamFeel } from '../lib/audio/jamSchedule';
 import type { ScaleAnchor } from '../lib/audio/pitch';
 import {
   playMenuOptions,
@@ -62,7 +63,20 @@ const LADDERS: Choice<PlayLadder>[] = [
   { id: 'down', label: 'Down the neck', title: 'Each chord a position lower' },
 ];
 
+const BACKINGS: Choice<JamBacking>[] = [
+  { id: 'strum', label: 'Strum', title: 'The guitar strums each chord, on every beat' },
+  { id: 'pad', label: 'Pad', title: 'A soft organ-like pad holds each chord for the bar' },
+];
+const FEELS: Choice<JamFeel>[] = [
+  { id: 'straight', label: 'Straight', title: 'Even beats' },
+  { id: 'swing', label: 'Swing', title: 'A light up-strum swung between the beats' },
+];
+
 const TITLES: Record<PlayOptionId, string> = {
+  backing: 'Backing',
+  feel: 'Feel',
+  click: 'Click',
+  jamLoop: 'Loop',
   direction: 'Direction',
   anchor: 'Start on',
   articulation: 'Play chords as',
@@ -100,6 +114,33 @@ function Choices<T extends string>({
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+function Toggle({
+  title,
+  hint,
+  on,
+  onChange,
+}: {
+  title: string;
+  hint?: string;
+  on: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  return (
+    <div className={styles.group}>
+      <span className={styles.groupTitle}>{title}</span>
+      <button
+        type="button"
+        className={on ? glass.pillSelected : glass.pill}
+        aria-pressed={on}
+        title={hint}
+        onClick={() => onChange(!on)}
+      >
+        {on ? 'On' : 'Off'}
+      </button>
     </div>
   );
 }
@@ -181,19 +222,54 @@ export function PlayMenu({
                 onChange={(ladder) => onOptionsChange({ ladder })}
               />
             );
+          case 'backing':
+            return (
+              <Choices
+                key={id}
+                title={TITLES[id]}
+                choices={BACKINGS}
+                value={options.backing}
+                onChange={(backing) => onOptionsChange({ backing })}
+              />
+            );
+          case 'feel':
+            return (
+              <Choices
+                key={id}
+                title={TITLES[id]}
+                choices={FEELS}
+                value={options.feel}
+                onChange={(feel) => onOptionsChange({ feel })}
+              />
+            );
+          case 'click':
+            return (
+              <Toggle
+                key={id}
+                title={TITLES[id]}
+                hint="A click on every beat. The count-in always clicks."
+                on={options.click}
+                onChange={(click) => onOptionsChange({ click })}
+              />
+            );
+          case 'jamLoop':
+            return (
+              <Toggle
+                key={id}
+                title={TITLES[id]}
+                hint="Off plays the progression once and stops."
+                on={options.jamLoop}
+                onChange={(jamLoop) => onOptionsChange({ jamLoop })}
+              />
+            );
           case 'loop':
             return (
-              <div key={id} className={styles.group}>
-                <span className={styles.groupTitle}>{TITLES[id]}</span>
-                <button
-                  type="button"
-                  className={options.loop ? glass.pillSelected : glass.pill}
-                  aria-pressed={options.loop}
-                  onClick={() => onOptionsChange({ loop: !options.loop })}
-                >
-                  {options.loop ? 'On' : 'Off'}
-                </button>
-              </div>
+              <Toggle
+                key={id}
+                title={TITLES[id]}
+                on={options.loop}
+                onChange={(loop) => onOptionsChange({ loop })}
+              />
             );
         }
       })}

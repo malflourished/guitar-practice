@@ -3,20 +3,21 @@ import { DEFAULT_TEMPO } from '../lib/audio/tempo';
 import type { ScaleDirection, ScaleOrdering } from '../lib/audio/pitch';
 import {
   arpeggioNotes,
-  arpeggioProgressionPattern,
   orderScaleRun,
   type PlayMode,
 } from '../lib/audio/playOptions';
 import { buildTraversalRun, joinTraversals } from '../lib/audio/traversal';
 import {
-  buildLadderProgressionChordViews,
   getChordIntervals,
   getImpliedChordQuality,
+  getProgressionLibraryEntry,
   getProgressionStepPositionScope,
+  progressionFeel,
   noteToSemitone,
   type ProgressionLadderDirection,
 } from '../lib/music';
 import type { StudyMode } from '../types/music';
+import { useJamLoop } from '../modes/progressions/useJamLoop';
 import type { ProgressionViews } from '../modes/progressions/useProgressionViews';
 import type { ProgressionsState } from '../modes/progressions/useProgressionsState';
 import type { ScalesState } from '../modes/scales/useScalesState';
@@ -57,10 +58,11 @@ export function usePlayback({
   board,
   progressionViews,
 }: PlaybackInput) {
-  const { rootNote, notation } = keyState;
+  const { rootNote } = keyState;
   const { scaleQuality, scaleSystem, scaleAnchor, setScaleAnchor } = scales;
   const {
     progressionId,
+    progressionStepIndex,
     resolvedProgressionSteps,
     setProgressionStepIndex,
     setLadderAnchor,
@@ -68,14 +70,13 @@ export function usePlayback({
   const { theoryShowFretboard, theoryScaleQuality } = theory;
   const { displayRegions, positionByScope, setPositionIndex } = neck;
   const { positions } = board;
-  const { savedProgressionChordViews, displayProgressionChordViews } =
-    progressionViews;
-
   const [tempo, setTempo] = usePersistentState(
     'tempo',
     DEFAULT_TEMPO,
     isNumber,
   );
+  const { displayProgressionChordViews } = progressionViews;
+
   const effectiveScalePlayback =
     studyMode === 'scales' ||
     (studyMode === 'theory' && theoryShowFretboard);
@@ -87,7 +88,23 @@ export function usePlayback({
         : effectiveScalePlayback
           ? 'scales'
           : 'notes';
-  const { options: playOptions, setOptions: setPlayOptions } = usePlayOptions();
+  const { options: playOptions, setOptions: setPlayOptions } = usePlayOptions({
+    id: progressionId,
+    feel: progressionFeel(getProgressionLibraryEntry(progressionId)),
+  });
+  const jam = useJamLoop({
+    audio,
+    steps: resolvedProgressionSteps,
+    chordPositions: displayProgressionChordViews.map((chord) => chord.positions),
+    backing: playOptions.backing,
+    feel: playOptions.feel,
+    click: playOptions.click,
+    loop: playOptions.jamLoop,
+    tempo,
+    progressionId,
+    stepIndex: progressionStepIndex,
+    setStepIndex: setProgressionStepIndex,
+  });
   const scaleOrdering: ScaleOrdering =
     effectiveScalePlayback && scaleSystem === '3nps' ? 'builtIn' : 'pitch';
 
@@ -177,8 +194,7 @@ export function usePlayback({
   const playProgression = () => {
     const ladder = playOptions.ladder;
     audio.stopAll();
-    let chords = savedProgressionChordViews.map((chord) => chord.positions);
-    let id = 'progression';
+    let id = 'jam';
     if (ladder === 'off') {
       setLadderAnchor(null);
     } else {
@@ -191,30 +207,10 @@ export function usePlayback({
         0,
         step0.quality,
       );
-      const anchor = positionByScope[step0Scope] ?? 0;
-      chords = buildLadderProgressionChordViews(
-        resolvedProgressionSteps,
-        anchor,
-        direction,
-        notation,
-      ).map((chord) => chord.positions);
-      id = `progression-${direction}`;
-      setLadderAnchor(anchor);
-      setProgressionStepIndex(0);
+      id = `jam-${direction}`;
+      setLadderAnchor(positionByScope[step0Scope] ?? 0);
     }
-    if (playOptions.articulation === 'arpeggio') {
-      void audio.playPattern(
-        arpeggioProgressionPattern(chords, playOptions.direction),
-        {
-          bpm: tempo,
-          loop: playOptions.loop,
-          onEvent: (event) => setProgressionStepIndex(event.index),
-        },
-        id,
-      );
-    } else {
-      audio.playProgression(chords, tempo, id, setProgressionStepIndex, playOptions.loop);
-    }
+    jam.start(id);
   };
 
   /** Play when stopped, Stop while anything plays. */
@@ -254,5 +250,5 @@ export function usePlayback({
     onToggle: togglePlay,
   };
 
-  return { playProps, togglePlay, traversalActive, tempo, setTempo };
+  return { playProps, togglePlay, traversalActive, tempo, setTempo, jam: jam.state };
 }

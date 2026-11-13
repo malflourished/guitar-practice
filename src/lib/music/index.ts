@@ -94,6 +94,8 @@ export {
   entryToProgressionDef,
   getProgressionLibraryEntry,
   getProgressionLibraryGroups,
+  progressionFeel,
+  type ProgressionFeel,
   type ProgressionLibraryEntry,
   type ProgressionLibraryGroup,
 } from './progressionLibrary';

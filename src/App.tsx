@@ -120,7 +120,7 @@ function App() {
     neck,
     progressionViews,
   });
-  const { playProps, togglePlay, traversalActive, tempo, setTempo } = usePlayback({
+  const { playProps, togglePlay, traversalActive, tempo, setTempo, jam } = usePlayback({
     studyMode,
     audio,
     keyState,
@@ -314,6 +314,7 @@ function App() {
         resolvedSteps={progressions.resolvedProgressionSteps}
         onProgressionChange={progressions.handleProgressionChange}
         onProgressionStepChange={progressions.setProgressionStepIndex}
+        jam={jam}
       />
     ) : null;
 
@@ -350,6 +351,7 @@ function App() {
         views={progressionViews}
         notation={notation}
         display={display}
+        jamPlaying={jam.playing}
       />
     ) : studyMode === 'theory' ? (
       <TheoryPanel keyContext={keyContext} theory={theory} />

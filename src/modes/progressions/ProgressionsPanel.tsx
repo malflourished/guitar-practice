@@ -17,6 +17,8 @@ interface ProgressionsPanelProps {
   views: ProgressionViews;
   notation: NotationPreference;
   display: DisplaySettings;
+  /** The jam loop is running: the chord marked is the one sounding. */
+  jamPlaying?: boolean;
 }
 
 /** Progressions side panel: this key, the library, the chord diagrams, and the reading. */
@@ -26,6 +28,7 @@ export function ProgressionsPanel({
   views,
   notation,
   display,
+  jamPlaying = false,
 }: ProgressionsPanelProps) {
   const {
     progressionId,
@@ -68,7 +71,10 @@ export function ProgressionsPanel({
             showNoteLabels={display.showNoteLabels}
             fullDotOpacity={display.fullDotOpacity}
             showChordTones={display.showChordTones}
-            onSelectStep={setProgressionStepIndex}
+            playing={jamPlaying}
+            onSelectStep={(index) => {
+              if (!jamPlaying) setProgressionStepIndex(index);
+            }}
           />
         </SettingsSection>
       )}

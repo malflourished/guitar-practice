@@ -5,6 +5,7 @@ import {
   type ScalePlaybackContext,
 } from './pitch';
 import type { PatternEvent, PracticePattern } from './pattern';
+import type { JamBacking, JamFeel } from './jamSchedule';
 
 /** Which way a run goes. Up and down plays the way up, then back down. */
 export type PlayDirection = 'up' | 'down' | 'updown';
@@ -21,6 +22,14 @@ export interface PlayOptions {
   loop: boolean;
   reach: PlayReach;
   ladder: PlayLadder;
+  /** Progressions: what plays the chords under the loop. */
+  backing: JamBacking;
+  /** Progressions: straight, or swung. Starts at the entry's own feel. */
+  feel: JamFeel;
+  /** Progressions: a click on every beat (the count-in always clicks). */
+  click: boolean;
+  /** Progressions: round and round (the other modes' Loop starts off). */
+  jamLoop: boolean;
 }
 
 export const DEFAULT_PLAY_OPTIONS: PlayOptions = {
@@ -29,6 +38,10 @@ export const DEFAULT_PLAY_OPTIONS: PlayOptions = {
   loop: false,
   reach: 'position',
   ladder: 'off',
+  backing: 'strum',
+  feel: 'straight',
+  click: false,
+  jamLoop: true,
 };
 
 /** The modes that use the Play control. Theory with the neck counts as scales. */
@@ -40,7 +53,11 @@ export type PlayOptionId =
   | 'articulation'
   | 'reach'
   | 'ladder'
-  | 'loop';
+  | 'loop'
+  | 'backing'
+  | 'feel'
+  | 'click'
+  | 'jamLoop';
 
 export interface PlayMenuContext {
   articulation: Articulation;
@@ -74,12 +91,7 @@ export function playMenuOptions(
         'loop',
       ];
     case 'progressions':
-      return [
-        'articulation',
-        ...(articulation === 'arpeggio' ? (['direction'] as const) : []),
-        'ladder',
-        'loop',
-      ];
+      return ['backing', 'feel', 'click', 'jamLoop', 'ladder'];
   }
 }
 

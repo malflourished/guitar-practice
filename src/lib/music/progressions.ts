@@ -34,6 +34,8 @@ export interface ResolvedProgressionStep {
   root: NoteName;
   quality: ChordQuality;
   numeral: string;
+  /** A slash chord's bass note, when it is not the root. */
+  bass?: NoteName;
   chordName: string;
   qualityLabel: string;
 }
@@ -101,6 +103,9 @@ export function resolveProgressionStep(
     root,
     quality: step.quality,
     numeral: step.numeral,
+    ...(step.bass !== undefined
+      ? { bass: semitoneToNote(noteToSemitone(keyRoot) + step.bass) }
+      : {}),
     chordName: bassSpelling ? `${chord}/${bassSpelling}` : chord,
     qualityLabel: getChordQualityLabel(step.quality),
   };

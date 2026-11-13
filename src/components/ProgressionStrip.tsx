@@ -15,6 +15,8 @@ interface ProgressionStripProps {
   showNoteLabels: boolean;
   fullDotOpacity: boolean;
   showChordTones: boolean;
+  /** The jam loop is running: the active chord is the one sounding. */
+  playing?: boolean;
   onSelectStep: (index: number) => void;
 }
 
@@ -27,6 +29,7 @@ export function ProgressionStrip({
   showNoteLabels,
   fullDotOpacity,
   showChordTones,
+  playing = false,
   onSelectStep,
 }: ProgressionStripProps) {
   if (chords.length === 0) return null;
@@ -42,7 +45,7 @@ export function ProgressionStrip({
                 key={`${chord.step.root}-${chord.step.quality}-${index}`}
                 role="button"
                 tabIndex={0}
-                className={isActive ? styles.itemActive : styles.item}
+                className={isActive ? (playing ? styles.itemPlaying : styles.itemActive) : styles.item}
                 aria-pressed={isActive}
                 aria-label={`${chord.step.chordName} (${chord.step.numeral}), chord ${index + 1} of ${chords.length}`}
                 onClick={() => onSelectStep(index)}

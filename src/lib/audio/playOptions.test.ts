@@ -39,12 +39,10 @@ describe('playMenuOptions', () => {
     ).toEqual(['articulation', 'direction', 'loop']);
   });
 
-  it('Progressions: adds moving along the neck; never Start on', () => {
-    const strum = playMenuOptions('progressions', plain);
-    expect(strum).toEqual(['articulation', 'ladder', 'loop']);
-    expect(
-      playMenuOptions('progressions', { ...plain, articulation: 'arpeggio' }),
-    ).toEqual(['articulation', 'direction', 'ladder', 'loop']);
+  it('Progressions: the jam loop\'s four groups, then moving along the neck; no Strum or Arpeggio', () => {
+    const menu = playMenuOptions('progressions', plain);
+    expect(menu).toEqual(['backing', 'feel', 'click', 'jamLoop', 'ladder']);
+    expect(menu).not.toContain('articulation');
     for (const mode of ['notes', 'chords', 'progressions'] as const) {
       expect(playMenuOptions(mode, plain)).not.toContain('anchor');
     }
@@ -97,13 +95,17 @@ describe('runs', () => {
     expect(pattern.events.map((e) => e.index)).toEqual([0, 0, 0, 1, 1]);
   });
 
-  it('starts as before: up, strum, no loop, this position', () => {
+  it('starts as before: up, strum, no loop, this position; the jam loop loops, strums, no click', () => {
     expect(DEFAULT_PLAY_OPTIONS).toEqual({
       direction: 'up',
       articulation: 'strum',
       loop: false,
       reach: 'position',
       ladder: 'off',
+      backing: 'strum',
+      feel: 'straight',
+      click: false,
+      jamLoop: true,
     });
   });
 });
