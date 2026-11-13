@@ -173,9 +173,9 @@ export class DrumSynth {
     const seconds = Number.isFinite(durationFrames) && durationFrames > 0 ? durationFrames / this.sampleRate : 0;
     const brushes = (this.pendingKit ?? this.kitId) === 'brushes';
     if (brushes && (piece === 'brushTap' || piece === 'snare')) {
-      BRUSH_SPREAD_SECONDS.forEach((delay, i) => {
-        this.schedule(at + Math.round(delay * this.sampleRate), piece, strength * BRUSH_SPREAD_SHARES[i], seconds);
-      });
+      for (let i = 0; i < BRUSH_SPREAD_SECONDS.length; i++) {
+        this.schedule(at + Math.round(BRUSH_SPREAD_SECONDS[i] * this.sampleRate), piece, strength * BRUSH_SPREAD_SHARES[i], seconds);
+      }
     } else {
       this.schedule(at, piece, strength, seconds);
     }

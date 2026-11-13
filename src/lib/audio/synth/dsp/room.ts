@@ -93,9 +93,9 @@ export class SmallRoom {
     if (!input && !this.active) return;
     // Written out line by line, not as loops over the eight lines: this runs for every sample the kit makes.
     const { buffers, masks, lengths, gains, lowpass, damping: d, pre, preMask, preLength, diffusers } = this;
-    const [b0, b1, b2, b3, b4, b5, b6, b7] = buffers;
-    const [m0, m1, m2, m3, m4, m5, m6, m7] = masks;
-    const [n0, n1, n2, n3, n4, n5, n6, n7] = lengths;
+    const b0 = buffers[0], b1 = buffers[1], b2 = buffers[2], b3 = buffers[3], b4 = buffers[4], b5 = buffers[5], b6 = buffers[6], b7 = buffers[7];
+    const m0 = masks[0], m1 = masks[1], m2 = masks[2], m3 = masks[3], m4 = masks[4], m5 = masks[5], m6 = masks[6], m7 = masks[7];
+    const n0 = lengths[0], n1 = lengths[1], n2 = lengths[2], n3 = lengths[3], n4 = lengths[4], n5 = lengths[5], n6 = lengths[6], n7 = lengths[7];
     const g0 = gains[0], g1 = gains[1], g2 = gains[2], g3 = gains[3], g4 = gains[4], g5 = gains[5], g6 = gains[6], g7 = gains[7];
     let p0 = lowpass[0], p1 = lowpass[1], p2 = lowpass[2], p3 = lowpass[3], p4 = lowpass[4], p5 = lowpass[5], p6 = lowpass[6], p7 = lowpass[7];
     const first = diffusers[0];

@@ -258,7 +258,7 @@ export class PlateCymbal implements DrumVoice {
       this.washAge = washAge;
       // the same wash as plain noise, to fill between the modes
       const { bodyBuffer, bodyLevel } = this;
-      bodyBuffer.set(cascadeBuffer.subarray(0, count));
+      for (let i = 0; i < count; i++) bodyBuffer[i] = cascadeBuffer[i];
       this.bodyFilter.processBlock(bodyBuffer, 0, count);
       for (let i = 0; i < count; i++) out[i] += bodyLevel * bodyBuffer[i];
     }
