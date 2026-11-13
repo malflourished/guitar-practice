@@ -71,6 +71,12 @@
   grid-row: neck-start / neck-end;
 }
 
+/* Settings is open: Practice and Intervals draw their own side panel inside
+   the body; it steps aside for the Settings page. */
+.frame[data-settings='true'] :global([data-region='side']:not([data-page='settings'])) {
+  display: none;
+}
+
 @media (max-height: 760px) {
   .frame {
     --frame-pad: 8px;

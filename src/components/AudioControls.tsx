@@ -1,5 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
-import { GUITAR_INSTRUMENTS, type GuitarInstrumentName } from '../lib/audio/engine';
 import type { ScaleAnchor, ScaleDirection } from '../lib/audio/pitch';
 import type { ProgressionLadderDirection } from '../lib/music';
 import styles from './AudioControls.module.css';
@@ -16,28 +14,16 @@ const ANCHOR_TIP =
   'Start on: the scale note that scale runs (Ascending, Descending) start and end on. It changes playback only, not the notes shown.';
 
 interface AudioControlsProps {
-  /**
-   * Which half to draw: the transport (play buttons, start note, tempo) or
-   * the sound (guitar, mute, volume). Both when omitted.
-   */
-  part?: 'transport' | 'sound';
-  instrument: GuitarInstrumentName;
-  volume: number;
   muted: boolean;
   loading: boolean;
   canPlay: boolean;
   playbackMode: PlaybackMode;
   playingId: string | null;
-  tempo: number;
   /** Enable "run the whole neck" traversal playback (multi-position scales). */
   canTraverse?: boolean;
   /** Which chord tone scale runs start on (scale playback only). */
   scaleAnchor?: ScaleAnchor;
   onScaleAnchorChange?: (anchor: ScaleAnchor) => void;
-  onInstrumentChange: (name: GuitarInstrumentName) => void;
-  onVolumeChange: (volume: number) => void;
-  onMutedToggle: () => void;
-  onTempoChange: (bpm: number) => void;
   onStrum: () => void;
   onPlayScale: (direction: ScaleDirection) => void;
   onPlayTraversal?: (direction: ScaleDirection) => void;
@@ -45,102 +31,15 @@ interface AudioControlsProps {
   onPlayProgressionLadder: (direction: ProgressionLadderDirection) => void;
 }
 
-export const MIN_TEMPO = 40;
-export const MAX_TEMPO = 400;
-export const DEFAULT_TEMPO = 90;
-
-function clampTempo(bpm: number): number {
-  return Math.min(MAX_TEMPO, Math.max(MIN_TEMPO, Math.round(bpm)));
-}
-
-interface TempoFieldProps {
-  tempo: number;
-  onTempoChange: (bpm: number) => void;
-}
-
-function TempoField({ tempo, onTempoChange }: TempoFieldProps) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(String(tempo));
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (editing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }
-  }, [editing]);
-
-  const commit = () => {
-    const parsed = Number(draft);
-    if (Number.isFinite(parsed)) {
-      onTempoChange(clampTempo(parsed));
-    }
-    setEditing(false);
-  };
-
-  const cancel = () => {
-    setDraft(String(tempo));
-    setEditing(false);
-  };
-
-  if (editing) {
-    return (
-      <div className={styles.tempoField}>
-        <input
-          ref={inputRef}
-          className={styles.tempoInput}
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          aria-label="Tempo in beats per minute"
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onBlur={commit}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              commit();
-            }
-            if (event.key === 'Escape') {
-              event.preventDefault();
-              cancel();
-            }
-          }}
-        />
-        <span className={styles.tempoSuffix}>BPM</span>
-      </div>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      className={styles.tempoButton}
-      aria-label={`Tempo ${tempo} beats per minute. Click to edit.`}
-      onClick={() => { setDraft(String(tempo)); setEditing(true); }}
-    >
-      {tempo} BPM
-    </button>
-  );
-}
-
 export function AudioControls({
-  part,
-  instrument,
-  volume,
   muted,
   loading,
   canPlay,
   playbackMode,
   playingId,
-  tempo,
   canTraverse = false,
   scaleAnchor,
   onScaleAnchorChange,
-  onInstrumentChange,
-  onVolumeChange,
-  onMutedToggle,
-  onTempoChange,
   onStrum,
   onPlayScale,
   onPlayTraversal,
@@ -149,15 +48,13 @@ export function AudioControls({
 }: AudioControlsProps) {
   const playDisabled = !canPlay || muted;
   const playingProgression = playingId === 'progression';
-  const showTempo = playbackMode === 'sequence' || playbackMode === 'progression';
-  const showTransport = part !== 'sound';
-  const showSound = part !== 'transport';
+  const showTransport = true;
 
   return (
     <div
       className={styles.row}
       role="group"
-      aria-label={part === 'sound' ? 'Sound' : part === 'transport' ? 'Playback' : 'Audio'}
+      aria-label="Playback"
     >
       {showTransport && playbackMode === 'sequence' && scaleAnchor && onScaleAnchorChange && (
         <div className={styles.anchorField} title={ANCHOR_TIP}>
@@ -270,51 +167,6 @@ export function AudioControls({
         >
           {loading ? 'Loading…' : 'Strum'}
         </button>
-      )}
-
-      {showSound && (
-      <select
-        className={styles.select}
-        aria-label="Instrument sound"
-        value={instrument}
-        onChange={(event) =>
-          onInstrumentChange(event.target.value as GuitarInstrumentName)
-        }
-      >
-        {GUITAR_INSTRUMENTS.map(({ name, label }) => (
-          <option key={name} value={name}>
-            {label}
-          </option>
-        ))}
-      </select>
-      )}
-
-      {showTransport && showTempo && (
-        <TempoField tempo={tempo} onTempoChange={onTempoChange} />
-      )}
-
-      {showSound && (
-      <button
-        type="button"
-        className={muted ? styles.iconButtonSelected : styles.iconButton}
-        aria-pressed={muted}
-        aria-label={muted ? 'Unmute' : 'Mute'}
-        onClick={onMutedToggle}
-      >
-        {muted ? 'Muted' : 'Sound'}
-      </button>
-      )}
-
-      {showSound && (
-      <input
-        className={styles.slider}
-        type="range"
-        min={0}
-        max={100}
-        value={Math.round(volume * 100)}
-        aria-label="Volume"
-        onChange={(event) => onVolumeChange(Number(event.target.value) / 100)}
-      />
       )}
     </div>
   );

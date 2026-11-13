@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { DEFAULT_TEMPO, type PlaybackMode } from '../components/AudioControls';
+import type { PlaybackMode } from '../components/AudioControls';
+import { DEFAULT_TEMPO } from '../lib/audio/tempo';
 import {
   orderScalePositions,
   type ScaleDirection,
@@ -40,7 +41,7 @@ interface PlaybackInput {
 /**
  * Tempo and every way the neck plays: strum a chord, run a scale, walk the
  * boxes across the neck, play a progression or its ladder. Returns the props
- * the transport and sound controls take.
+ * the transport takes, and the tempo Settings edits.
  */
 export function usePlayback({
   studyMode,
@@ -209,8 +210,6 @@ export function usePlayback({
   }, [studyMode, progressionId, rootNote, stopPlayback]);
 
   const audioProps = {
-    instrument: audio.instrument,
-    volume: audio.volume,
     muted: audio.muted,
     loading: audio.loading,
     canPlay:
@@ -219,14 +218,9 @@ export function usePlayback({
         : positions.length > 0,
     playbackMode,
     playingId: audio.playingId,
-    tempo,
     canTraverse,
     scaleAnchor: effectiveScalePlayback ? scaleAnchor : undefined,
     onScaleAnchorChange: effectiveScalePlayback ? setScaleAnchor : undefined,
-    onInstrumentChange: audio.setInstrument,
-    onVolumeChange: audio.setVolume,
-    onMutedToggle: () => audio.setMuted(!audio.muted),
-    onTempoChange: setTempo,
     onStrum: handleStrum,
     onPlayScale: handlePlayScale,
     onPlayTraversal: handlePlayTraversal,
@@ -234,5 +228,5 @@ export function usePlayback({
     onPlayProgressionLadder: handlePlayProgressionLadder,
   };
 
-  return { audioProps, traversalActive };
+  return { audioProps, traversalActive, tempo, setTempo };
 }

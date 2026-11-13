@@ -40,6 +40,16 @@ export class GuitarAudioEngine {
     return () => { this.listeners.delete(listener); };
   }
   getState() { return this.state; }
+  /** Put saved settings back without loading any sound; it loads on the first play. */
+  restore(saved: Partial<Pick<EngineState, 'instrument' | 'volume' | 'muted' | 'room'>>) {
+    const { instrument, volume, muted, room } = saved;
+    this.update({
+      ...(instrument ? { instrument } : {}),
+      ...(volume !== undefined ? { volume: Math.max(0, Math.min(1, volume)) } : {}),
+      ...(muted !== undefined ? { muted } : {}),
+      ...(room !== undefined ? { room: Math.max(0, Math.min(0.5, room)) } : {}),
+    });
+  }
   private update(patch: Partial<EngineState>) {
     this.state = { ...this.state, ...patch };
     this.listeners.forEach(listener => listener(this.state));

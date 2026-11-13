@@ -7,10 +7,11 @@ import styles from './Frame.module.css';
  * strip, the neck (which takes every spare pixel), a deck of fixed height
  * under it, and a side panel that is the only region allowed to scroll.
  *
- * The frame has named slots: `strip`, `neck`, `deck`, `panel`, plus `settings`
- * and `home`, which are empty for now (the Frame lane gives them a place in
- * the grid). Regions render in that order and the CSS grid places them by
- * area. A mode that draws its own regions (Practice, Intervals) passes them as
+ * The frame has named slots: `strip`, `neck`, `deck`, `panel`, `settings` and
+ * `home` (empty for now). Regions render in that order and the CSS grid places
+ * them by area. `settings` is a page in the panel's column: while
+ * `settingsOpen` it replaces the panel (and a mode's own side panel), even
+ * where the panel was closed, and the same fade carries it in and out. A mode that draws its own regions (Practice, Intervals) passes them as
  * `body` instead of `neck` and `deck`. `children` is for overlays.
  */
 
@@ -38,6 +39,7 @@ interface FrameProps {
   body?: ReactNode;
   panel?: ReactNode;
   settings?: ReactNode;
+  settingsOpen?: boolean;
   children?: ReactNode;
 }
 
@@ -54,6 +56,7 @@ export function Frame({
   body,
   panel,
   settings,
+  settingsOpen = false,
   children,
 }: FrameProps) {
   // On close the panel stays for one fade before the grid gives its column
@@ -70,6 +73,10 @@ export function Frame({
     return () => window.clearTimeout(timer);
   }, [closing]);
   const side = shown;
+  // Settings stays drawn while the column fades out after it closes.
+  const [settingsShown, setSettingsShown] = useState(settingsOpen);
+  if (settingsOpen && !settingsShown) setSettingsShown(true);
+  if (!settingsOpen && settingsShown && !closing) setSettingsShown(false);
 
   return (
     <FrameContext.Provider value={{ side, closing, closeSide: onCloseSide }}>
@@ -79,6 +86,7 @@ export function Frame({
         data-focus={focus ? 'true' : undefined}
         data-practice={practice ? 'true' : undefined}
         data-deck={noDeck ? 'none' : undefined}
+        data-settings={settingsShown ? 'true' : undefined}
       >
         <div className={styles.surface} aria-hidden="true" />
         {strip}
@@ -86,8 +94,8 @@ export function Frame({
         {neck}
         {deck}
         {body}
-        {panel}
-        {settings}
+        {settingsShown ? null : panel}
+        {settingsShown ? settings : null}
         {children}
         {side === 'drawer' && (
           <div className={styles.backdrop} aria-hidden="true" onClick={onCloseSide} />
@@ -171,11 +179,13 @@ export function DeckRow({ end, label, className, children }: DeckRowProps) {
 
 interface SidePanelProps {
   label: string;
+  /** Marks the Settings page, so the frame can hide a mode's own side panel. */
+  page?: 'settings';
   className?: string;
   children: ReactNode;
 }
 
-export function SidePanel({ label, className, children }: SidePanelProps) {
+export function SidePanel({ label, page, className, children }: SidePanelProps) {
   const { side, closing, closeSide } = useContext(FrameContext);
   if (side === 'closed') return null;
   return (
@@ -184,6 +194,7 @@ export function SidePanel({ label, className, children }: SidePanelProps) {
       data-region="side"
       data-side={side}
       data-closing={closing ? 'true' : undefined}
+      data-page={page}
       aria-label={label}
     >
       {side === 'drawer' && (

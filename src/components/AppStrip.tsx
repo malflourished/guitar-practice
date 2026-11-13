@@ -26,9 +26,11 @@ interface AppStripProps {
   hasSide: boolean;
   sideShown: boolean;
   onToggleSide: () => void;
+  settingsOpen: boolean;
+  onToggleSettings: () => void;
 }
 
-/** The top strip: wordmark, mode tabs, the way back, Key, Theme and Panel. */
+/** The top strip: wordmark, mode tabs, the way back, Key, Theme, Panel and Settings. */
 export function AppStrip({
   studyMode,
   onStudyModeChange,
@@ -44,6 +46,8 @@ export function AppStrip({
   hasSide,
   sideShown,
   onToggleSide,
+  settingsOpen,
+  onToggleSettings,
 }: AppStripProps) {
   return (
     <Strip>
@@ -112,6 +116,33 @@ export function AppStrip({
             Panel
           </button>
         )}
+        <button
+          type="button"
+          className={`${settingsOpen ? glass.pillSelected : glass.pill} settingsButton`}
+          aria-pressed={settingsOpen}
+          aria-label="Settings"
+          title={
+            settingsOpen
+              ? 'Close Settings (Esc)'
+              : 'Settings: sound, tempo, labels'
+          }
+          onClick={onToggleSettings}
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+            <circle cx="15" cy="7" r="2" />
+            <circle cx="9" cy="17" r="2" />
+          </svg>
+        </button>
       </StripEnd>
     </Strip>
   );

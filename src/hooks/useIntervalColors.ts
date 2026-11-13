@@ -1,6 +1,6 @@
 import { usePersistentState } from './usePersistentState';
 
-/** Remembered under `vibrato:interval-colors`. Package K puts the switch in Settings. */
+/** Remembered under `vibrato:interval-colors`. The switch is in Settings; `useDisplaySettings` holds the one shared copy. */
 export const INTERVAL_COLORS_KEY = 'interval-colors';
 
 /** Interval colours are off: intervals read by shape and label, in the theme's ink. */

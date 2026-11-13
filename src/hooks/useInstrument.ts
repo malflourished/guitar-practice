@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FretPosition } from '../types/music';
 import { positionToMidi } from '../lib/audio/pitch';
+import { readSoundSettings, writeSoundSettings } from './soundSettings';
 import { GuitarAudioEngine, type EngineState, type GuitarInstrumentName } from '../lib/audio/engine';
 import { chordPattern, sequencePattern, type PlaybackOptions, type PracticePattern } from '../lib/audio/pattern';
 
@@ -22,12 +23,28 @@ export interface UseInstrument extends EngineState {
 }
 
 export function useInstrument(): UseInstrument {
-  const [engine] = useState(() => new GuitarAudioEngine());
+  const [engine] = useState(() => {
+    const created = new GuitarAudioEngine();
+    try {
+      created.restore(readSoundSettings(localStorage));
+    } catch {
+      // storage is unavailable: start with the defaults
+    }
+    return created;
+  });
   const [state, setState] = useState(() => engine.getState());
   const [playingPosition, setPlayingPosition] = useState<FretPosition | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
   useEffect(() => engine.subscribe(setState), [engine]);
   useEffect(() => () => engine.stopAll(), [engine]);
+  const { instrument, volume, muted, room } = state;
+  useEffect(() => {
+    try {
+      writeSoundSettings(localStorage, { instrument, volume, muted, room });
+    } catch {
+      // storage is unavailable
+    }
+  }, [instrument, volume, muted, room]);
   const stopAll = useCallback(() => {
     engine.stopAll(); setPlayingPosition(null); setPlayingId(null);
   }, [engine]);

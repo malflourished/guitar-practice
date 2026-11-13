@@ -5,16 +5,10 @@ import glass from '../../styles/glass.module.css';
 
 interface NotesControlsProps {
   keyState: KeyState;
-  showNoteLabels: boolean;
-  onNoteLabelsToggle: () => void;
 }
 
-/** Notes deck: pick any notes, All / Clear, and the Names switch. */
-export function NotesControls({
-  keyState,
-  showNoteLabels,
-  onNoteLabelsToggle,
-}: NotesControlsProps) {
+/** Notes deck: pick any notes, All / Clear. Labels are in Settings. */
+export function NotesControls({ keyState }: NotesControlsProps) {
   const { activeNotes, setActiveNotes, notation, setNotation, applyKey } =
     keyState;
   return (
@@ -40,15 +34,6 @@ export function NotesControls({
           onClick={() => setActiveNotes(new Set())}
         >
           Clear
-        </button>
-        <button
-          type="button"
-          className={showNoteLabels ? glass.pillSelected : glass.pill}
-          aria-pressed={showNoteLabels}
-          title="Show note names on the dots"
-          onClick={onNoteLabelsToggle}
-        >
-          Names
         </button>
       </div>
     </>

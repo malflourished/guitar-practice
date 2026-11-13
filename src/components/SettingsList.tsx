@@ -9,12 +9,14 @@ import styles from './SettingsList.module.css';
 
 interface SettingsSectionProps {
   title?: string;
+  /** Lets Settings scroll to this section when it opens at it. */
+  id?: string;
   children: ReactNode;
 }
 
-export function SettingsSection({ title, children }: SettingsSectionProps) {
+export function SettingsSection({ title, id, children }: SettingsSectionProps) {
   return (
-    <section className={styles.section}>
+    <section id={id} className={styles.section}>
       {title ? <h2 className={styles.sectionTitle}>{title}</h2> : null}
       <div className={styles.sectionBody}>{children}</div>
     </section>

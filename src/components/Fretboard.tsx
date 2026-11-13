@@ -50,6 +50,8 @@ interface FretboardProps {
   mutedStrings?: number[];
   showFingers?: boolean;
   showNoteLabels?: boolean;
+  /** Label each dot as its interval above this note (Settings, Labels: Intervals). */
+  intervalsAbove?: NoteName | null;
   fullDotOpacity?: boolean;
   showChordTones?: boolean;
   rootNote?: NoteName | null;
@@ -88,6 +90,7 @@ export function Fretboard({
   mutedStrings = [],
   showFingers = false,
   showNoteLabels = true,
+  intervalsAbove = null,
   fullDotOpacity = false,
   showChordTones = false,
   rootNote = null,
@@ -187,6 +190,9 @@ export function Fretboard({
     if (intervalLabeling) {
       return getIntervalMarker(intervalLabeling.root, note, intervalLabeling.style)
         .label;
+    }
+    if (intervalsAbove) {
+      return getIntervalMarker(intervalsAbove, note, 'function').label;
     }
     if (chordToneContext) {
       const tone = getChordToneForNote(

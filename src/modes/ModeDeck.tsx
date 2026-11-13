@@ -10,9 +10,9 @@ interface ModeDeckProps {
   controls: ReactNode;
   /** The neck is shown: add the transport and the sound / display row. */
   showFretboard: boolean;
-  /** The position bar is shown: add the dot-display toggles. */
+  /** The position bar is shown: add the Tones and Arpeggio toggles. */
   showDisplayToggles: boolean;
-  audioProps: Omit<ComponentProps<typeof AudioControls>, 'part'>;
+  audioProps: ComponentProps<typeof AudioControls>;
   display: DisplaySettings;
   studyMode: StudyMode;
   supportsChordTones: boolean;
@@ -20,7 +20,8 @@ interface ModeDeckProps {
 
 /**
  * The deck every neck mode shares: the mode's controls on top, then the
- * transport, then sound and dot display pinned to the bottom.
+ * transport, then the views that change what is shown (Tones, Arpeggio).
+ * Sound, tempo and labels live in Settings.
  */
 export function ModeDeck({
   controls,
@@ -36,40 +37,27 @@ export function ModeDeck({
       <DeckRow>{controls}</DeckRow>
       {showFretboard && (
         <DeckRow>
-          <AudioControls part="transport" {...audioProps} />
+          <AudioControls {...audioProps} />
         </DeckRow>
       )}
-      {showFretboard && (
+      {showFretboard && showDisplayToggles && (
         <DeckRow end>
-          <AudioControls part="sound" {...audioProps} />
-          {showDisplayToggles && (
-            <DisplayToggles
-              showFingers={display.showFingers}
-              onFingersToggle={() => display.setShowFingers((prev) => !prev)}
-              showNoteLabels={display.showNoteLabels}
-              fullDotOpacity={display.fullDotOpacity}
-              onNoteLabelsToggle={() =>
-                display.setShowNoteLabels((prev) => !prev)
-              }
-              onFullDotOpacityToggle={() =>
-                display.setFullDotOpacity((prev) => !prev)
-              }
-              showChordTones={
-                supportsChordTones ? display.showChordTones : undefined
-              }
-              onChordTonesToggle={
-                supportsChordTones
-                  ? () => display.setShowChordTones((prev) => !prev)
-                  : undefined
-              }
-              harmonyLayer={
-                studyMode === 'scales' ? display.harmonyLayer : undefined
-              }
-              onHarmonyLayerChange={
-                studyMode === 'scales' ? display.setHarmonyLayer : undefined
-              }
-            />
-          )}
+          <DisplayToggles
+            showChordTones={
+              supportsChordTones ? display.showChordTones : undefined
+            }
+            onChordTonesToggle={
+              supportsChordTones
+                ? () => display.setShowChordTones((prev) => !prev)
+                : undefined
+            }
+            harmonyLayer={
+              studyMode === 'scales' ? display.harmonyLayer : undefined
+            }
+            onHarmonyLayerChange={
+              studyMode === 'scales' ? display.setHarmonyLayer : undefined
+            }
+          />
         </DeckRow>
       )}
     </Deck>

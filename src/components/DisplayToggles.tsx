@@ -2,12 +2,6 @@ import type { HarmonyLayer } from '../types/music';
 import styles from './DisplayToggles.module.css';
 
 interface DisplayTogglesProps {
-  showFingers: boolean;
-  onFingersToggle: () => void;
-  showNoteLabels: boolean;
-  fullDotOpacity: boolean;
-  onNoteLabelsToggle: () => void;
-  onFullDotOpacityToggle: () => void;
   showChordTones?: boolean;
   onChordTonesToggle?: () => void;
   harmonyLayer?: HarmonyLayer;
@@ -15,12 +9,6 @@ interface DisplayTogglesProps {
 }
 
 export function DisplayToggles({
-  showFingers,
-  onFingersToggle,
-  showNoteLabels,
-  fullDotOpacity,
-  onNoteLabelsToggle,
-  onFullDotOpacityToggle,
   showChordTones,
   onChordTonesToggle,
   harmonyLayer,
@@ -45,43 +33,6 @@ export function DisplayToggles({
           Arpeggio
         </button>
       )}
-      <button
-        type="button"
-        className={
-          showFingers ? styles.fingersButtonActive : styles.fingersButton
-        }
-        aria-pressed={showFingers}
-        aria-label={showFingers ? 'Show note names' : 'Show fingering'}
-        onClick={onFingersToggle}
-      >
-        {showFingers ? 'Notes' : 'Fingers'}
-      </button>
-      <button
-        type="button"
-        className={showNoteLabels ? styles.fingersButtonActive : styles.fingersButton}
-        aria-pressed={showNoteLabels}
-        aria-label="Show note and finger labels"
-        title="Show note and finger labels (⌘-click: solid dots)"
-        onClick={(event) => {
-          if (event.metaKey) {
-            onFullDotOpacityToggle();
-            return;
-          }
-          onNoteLabelsToggle();
-        }}
-      >
-        Labels
-      </button>
-      <button
-        type="button"
-        className={fullDotOpacity ? styles.fingersButtonActive : styles.fingersButton}
-        aria-pressed={fullDotOpacity}
-        aria-label="Show every dot at full strength, not only the roots"
-        title="Every dot at full strength, not only the roots"
-        onClick={onFullDotOpacityToggle}
-      >
-        Solid
-      </button>
       {onChordTonesToggle && (
         <button
           type="button"

@@ -40,7 +40,6 @@ import {
 import { Fretboard } from './Fretboard';
 import { Deck, DeckRow, Neck } from './Frame';
 import { usePersistentState } from '../hooks/usePersistentState';
-import { useIntervalColors } from '../hooks/useIntervalColors';
 import {
   DRILLS,
   DRILL_GROUPS,
@@ -72,6 +71,8 @@ interface IntervalTrainerProps {
   root: NoteName;
   notation: NotationPreference;
   noteColors: Record<NoteName, string>;
+  /** Settings, Interval colours: one switch for the whole app. */
+  intervalColors: boolean;
   audio: UseInstrument;
 }
 
@@ -132,11 +133,11 @@ export function IntervalTrainer({
   root,
   notation,
   noteColors,
+  intervalColors,
   audio,
 }: IntervalTrainerProps) {
   const [tab, setTab] = useState<DrillId>('find');
   const [shellStep, setShellStep] = useState<ShellStepId>('see');
-  const [intervalColors] = useIntervalColors();
   const drill = viewFor(tab, shellStep);
   const [labelStyle, setLabelStyle] = useState<LabelStyle>('function');
   const [scope, setScope] = useState<DrillScope>('position');

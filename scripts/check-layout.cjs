@@ -58,6 +58,12 @@ const clickText = (text, scope = '') => `(() => {
   el.click(); return 'ok';
 })()`;
 
+const clickLabel = (label) => `(() => {
+  const el = document.querySelector('button[aria-label=' + JSON.stringify(${JSON.stringify(label)}) + ']');
+  if (!el) return 'missing: ' + ${JSON.stringify(label)};
+  el.click(); return 'ok';
+})()`;
+
 const STATES = [
   { name: 'notes', store: mode('notes') },
   { name: 'scales', store: { ...mode('scales'), 'vibrato:scale-quality': '"minorPentatonic"' } },
@@ -79,6 +85,11 @@ const STATES = [
   { name: 'theory-text', store: { ...mode('theory'), 'vibrato:theory-topic': '"chord-construction"' } },
   { name: 'theory-fretboard', store: { ...mode('theory'), 'vibrato:theory-topic': '"circle-of-fifths"' },
     actions: [clickText('Neck')] },
+  ...['notes', 'chords', 'scales', 'progressions', 'intervals', 'practice', 'theory'].map((m) => ({
+    name: `settings-${m}`, store: mode(m), actions: [clickLabel('Settings')],
+  })),
+  { name: 'settings-panel-closed', store: { ...mode('scales'), 'vibrato:side-panel-open': 'false' },
+    actions: [clickLabel('Settings')] },
   { name: 'scales-panel-closed', store: { ...mode('scales'), 'vibrato:side-panel-open': 'false' } },
   { name: 'scales-drawer', store: mode('scales'), actions: [clickText('Panel')] },
   { name: 'scales-theme-menu', store: mode('scales'), actions: [clickText('Theme')] },

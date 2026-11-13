@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import './styleOrder'; // first: it fixes the order the stylesheets load in
 import { Fretboard } from './components/Fretboard';
 import { PositionSlider } from './components/PositionSlider';
+import { SettingsPanel } from './components/SettingsPanel';
 import { DebugPanel } from './components/DebugPanel';
 import { AmbientBackground } from './components/AmbientBackground';
 import { AppStrip } from './components/AppStrip';
@@ -118,7 +119,7 @@ function App() {
     neck,
     progressionViews,
   });
-  const { audioProps, traversalActive } = usePlayback({
+  const { audioProps, traversalActive, tempo, setTempo } = usePlayback({
     studyMode,
     audio,
     keyState,
@@ -179,6 +180,8 @@ function App() {
       hasSide={hasSide}
       sideShown={frame.sideShown}
       onToggleSide={frame.toggleSide}
+      settingsOpen={frame.settingsOpen}
+      onToggleSettings={frame.toggleSettings}
     />
   );
 
@@ -246,6 +249,7 @@ function App() {
           mutedStrings={board.mutedStrings}
           showFingers={display.showFingers}
           showNoteLabels={display.showNoteLabels}
+          intervalsAbove={display.showIntervals ? board.highlightRoot : null}
           fullDotOpacity={display.fullDotOpacity}
           showChordTones={board.supportsChordTones && display.showChordTones}
           rootNote={board.highlightRoot}
@@ -276,11 +280,7 @@ function App() {
 
   const controls =
     studyMode === 'notes' ? (
-      <NotesControls
-        keyState={keyState}
-        showNoteLabels={display.showNoteLabels}
-        onNoteLabelsToggle={() => display.setShowNoteLabels((prev) => !prev)}
-      />
+      <NotesControls keyState={keyState} />
     ) : studyMode === 'theory' ? (
       theoryControls
     ) : studyMode === 'chords' ? (
@@ -365,6 +365,7 @@ function App() {
         root={rootNote}
         notation={notation}
         noteColors={display.noteColors}
+        intervalColors={display.intervalColors}
         audio={audio}
       />
     ) : undefined;
@@ -405,6 +406,17 @@ function App() {
         deck={ownsRegions || theoryDialShown ? undefined : deck}
         body={body}
         panel={panel}
+        settings={
+          <SettingsPanel
+            audio={audio}
+            tempo={tempo}
+            onTempoChange={setTempo}
+            display={display}
+            section={frame.settingsSection}
+            onClose={frame.closeSettings}
+          />
+        }
+        settingsOpen={frame.settingsOpen}
       >
         {debug.enabled && (
           <DebugPanel
