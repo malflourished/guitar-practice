@@ -19,12 +19,12 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | H | Theory figures: one key dial | Done, merged and pushed 2026-11-12 | – | – |
 | I | Quick fixes from the 2026-11-12 walkthrough | Done, merged 2026-11-12 | nothing | a capable model |
 | J | Split `App.tsx` into mode components | Done, merged 2026-11-12 (`App.tsx` 1,529 → 428 lines) | I | a capable model, carefully: no change in behaviour or look |
-| K | Settings page in the side panel | **In progress**, in one session with L | J | a capable model |
-| L | One Play control for every mode | **In progress**, in one session with K (after K) | J, K | a capable model |
+| K | Settings page in the side panel | Done, merged 2026-11-12 | J | a capable model |
+| L | One Play control for every mode | Done, merged 2026-11-12 | J, K | a capable model |
 | M | Mode controls: Notes, Chords, Scales | After J, K and L | J, K, L | a capable model; the owner approves screenshots |
 | N | Intervals: clear drills, black and white | Done, merged 2026-11-12 | nothing (K adds the colour switch later) | a capable model |
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
-| P | Progressions: the improvising workshop | P1 **in progress**; P2 to P4 after K and L | J, L | the strongest model writes specs and reviews; a capable model builds |
+| P | Progressions: the improvising workshop | P1 done, merged 2026-11-12. P2 to P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
@@ -459,6 +459,13 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 - **Scales:** the Type menu gets a one-line description (formula, character, where it fits). The System switch defaults to CAGED, with one line under it: "CAGED: five shapes tied to the chord shapes, for knowing where you are. 3 per string: longer runs, faster."
 - **Scales drone:** a drone on the root (P2's pad voice), so a scale is heard against its home. This replaces Discover's "Sounds".
 - Package C (all five chord shapes, small triads) lands in this lane too.
+- **Follow-ups from K and L (2026-11-12):**
+  - The chord diagrams in the side panel ignore Labels = Intervals. They should show R, 3, 5, ♭7 when it is chosen.
+  - Interval colours only tint the Intervals drills. Decide whether they should reach the neck too.
+  - The Play options button uses the same icon as Settings. Give it its own.
+  - Mute shows "Sound on" as its button label. Say plainly whether sound is muted.
+  - Progressions' Play menu has four groups, and "Move along the neck" needs a one-line explanation.
+  - The decks in Notes, Chords and Scales are sparse now. This package fills them.
 
 **Done when:** the owner approves screenshots of each mode, and no page scrolls at 1440×900, 1280×720 or 960×640.
 
@@ -492,6 +499,13 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 | Borrowed colour | I–♭VII–IV, the "Creep" lift (I–III–IV–iv), Mario cadence (♭VI–♭VII–I) |
 | Minor drama | Andalusian (i–♭VII–♭VI–V), line cliché, villain mediant |
 | Further out | major-3rd cycle, backdoor, tritone sub, city pop |
+
+**P1 done and merged 2026-11-12.**
+- 23 entries, shown in the Progressions side panel. The deck's picker reads the same list, so the two stay in sync.
+- Steps gained `offset` and `bass` fields, so chromatic roots (♭VII, ♭VI, ♭II) can be written.
+- Left out: Add9 stacks and Line cliché, because there is no add9 or minor-major-7th chord quality yet.
+- City pop plays five bars; in practice its last two chords share one bar.
+- The Lydian float plays a plain II triad, because slash-chord basses are not voiced yet.
 
 **P2. Jam loop.** A count-in, then a loop of 4 or 8 bars at the Settings tempo, played by strummed guitar or a pad. The metronome is optional. The pad voice is new audio work for the Playback lane.
 
@@ -542,3 +556,4 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 - **2026-11-12.** I (quick fixes) reviewed and merged. N and O built on their own branches; small follow-ups sent before merging. J started.
 - **2026-11-12.** N (Intervals) and O (Practice) reviewed and merged. J (the split) in progress.
 - **2026-11-12.** J (the split) reviewed and merged. K and L start as one session; P1 starts beside them.
+- **2026-11-12.** K (Settings), L (Play control) and P1 (Progressions library) reviewed and merged. The progression picker no longer sets Roman numerals in capitals. Follow-ups recorded under M and P.
