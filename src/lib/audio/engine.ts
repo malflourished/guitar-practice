@@ -8,6 +8,13 @@ import { BassVoice } from './bassVoice';
 import { BEATS_PER_BAR, type JamEvent } from './jamSchedule';
 export { DEFAULT_INSTRUMENT, GUITAR_INSTRUMENTS, type GuitarInstrumentName };
 
+/**
+ * The guitar's share of the jam mix, under its own full level so that the bass
+ * and pad fit beneath it without the limiter squashing all three (see the
+ * measured levels in docs/specs/P2-jam-loop.md).
+ */
+const JAM_GUITAR_LEVEL = 0.6;
+
 /** One bar of the jam loop, ready to sound: its events, and the shape the guitar strums. */
 export interface JamBar {
   events: JamEvent[];
@@ -139,7 +146,7 @@ export class GuitarAudioEngine {
     this.reverb?.wet.rampTo(this.state.room, 0.1);
   }
 
-  private note(midi: number, time: number, duration: number, velocity = 0.76, string?: number) {
+  private note(midi: number, time: number, duration: number, velocity = 0.76, string?: number, level = 1) {
     const bank = this.banks.get(this.state.instrument);
     if (!bank?.loaded || !this.filter) return;
     const config = INSTRUMENT_SAMPLES[this.state.instrument];
@@ -158,7 +165,7 @@ export class GuitarAudioEngine {
     this.sources.add(source);
     if (string !== undefined) this.strings.set(string, source);
     // Small, deterministic attack variation; beat timing and pitch stay exact.
-    source.start(time, 0, Math.max(0.06, duration), velocity * config.gain * (0.95 + (this.take % 3) * 0.025));
+    source.start(time, 0, Math.max(0.06, duration), velocity * config.gain * level * (0.95 + (this.take % 3) * 0.025));
     return source;
   }
   private chord(positions: FretPosition[], time: number, duration: number, up = false) {
@@ -255,7 +262,7 @@ export class GuitarAudioEngine {
     this.lastStrum = [];
     ordered.forEach((p, index) => {
       const source = this.note(positionToMidi(p), time + index * spread, duration,
-        velocity * (0.86 + (index % 3) * 0.05), p.string);
+        velocity * (0.86 + (index % 3) * 0.05), p.string, JAM_GUITAR_LEVEL);
       if (source) this.lastStrum.push(source);
     });
   }
