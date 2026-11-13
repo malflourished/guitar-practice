@@ -59,6 +59,30 @@ describe('PlayControl', () => {
     expect(progressions).not.toContain('Start on');
   });
 
+  it('Progressions: Guitar is Whole, Half or Quarter with no Off; the Pad group is gone', () => {
+    const html = menu({ mode: 'progressions' });
+    const guitar = /aria-label="Guitar".*?<\/div><\/div>/.exec(html)?.[0] ?? '';
+    expect(guitar).toContain('>Whole<');
+    expect(guitar).toContain('>Half<');
+    expect(guitar).toContain('>Quarter<');
+    expect(guitar).not.toContain('>Off<');
+    expect(html).not.toContain('>Pad<');
+    expect(html).not.toContain('soft pad');
+    // the Guitar rhythm shows the chosen one
+    expect(menu({ mode: 'progressions', options: { ...DEFAULT_PLAY_OPTIONS, guitar: 'quarter' } })).toMatch(
+      /aria-checked="true"[^>]*>Quarter</,
+    );
+  });
+
+  it('Progressions: the groups come in the order Guitar, Feel, Click, Loop, Move along the neck', () => {
+    const html = menu({ mode: 'progressions' });
+    const order = ['Guitar', 'Feel', 'Click', 'Loop', 'Move along the neck'].map((title) =>
+      html.indexOf(`>${title}<`),
+    );
+    expect(order.every((at) => at >= 0)).toBe(true);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+
   it('shows Loop in every mode and marks the chosen options', () => {
     for (const mode of ['notes', 'scales', 'chords', 'progressions'] as const) {
       expect(menu({ mode })).toContain('Loop');

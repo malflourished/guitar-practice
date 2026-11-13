@@ -39,9 +39,10 @@ describe('playMenuOptions', () => {
     ).toEqual(['articulation', 'direction', 'loop']);
   });
 
-  it('Progressions: the jam loop\'s four groups, then moving along the neck; no Strum or Arpeggio', () => {
+  it('Progressions: Guitar, Feel, Click, Loop, then moving along the neck; no Pad group, no Strum or Arpeggio', () => {
     const menu = playMenuOptions('progressions', plain);
-    expect(menu).toEqual(['guitar', 'pad', 'feel', 'click', 'jamLoop', 'ladder']);
+    expect(menu).toEqual(['guitar', 'feel', 'click', 'jamLoop', 'ladder']);
+    expect(menu).not.toContain('pad');
     expect(menu).not.toContain('articulation');
     for (const mode of ['notes', 'chords', 'progressions'] as const) {
       expect(playMenuOptions(mode, plain)).not.toContain('anchor');
@@ -95,7 +96,7 @@ describe('runs', () => {
     expect(pattern.events.map((e) => e.index)).toEqual([0, 0, 0, 1, 1]);
   });
 
-  it('starts as before: up, strum, no loop, this position; the jam loop loops, half-bar guitar with the pad, no click', () => {
+  it('starts as before: up, strum, no loop, this position; the jam loop loops, a strum on 1 and 3, no click; the pad is the fader’s', () => {
     expect(DEFAULT_PLAY_OPTIONS).toEqual({
       direction: 'up',
       articulation: 'strum',
@@ -103,7 +104,6 @@ describe('runs', () => {
       reach: 'position',
       ladder: 'off',
       guitar: 'half',
-      pad: true,
       feel: 'straight',
       click: false,
       jamLoop: true,

@@ -3,8 +3,13 @@
  * Pure, so the engine only has to turn these events into sound.
  */
 
-/** How long the guitar holds each chord: not at all, a strum a bar, on 1 and 3, or every beat. */
-export type GuitarRhythm = 'off' | 'whole' | 'half' | 'quarter';
+/** How long the guitar holds each chord: a strum a bar, on 1 and 3, or on every beat. */
+export type GuitarHold = 'whole' | 'half' | 'quarter';
+/**
+ * A bar's guitar: one of the holds, or none. The app never asks for none: a
+ * Guitar fader at off schedules nothing instead (see the engine's mix).
+ */
+export type GuitarRhythm = 'off' | GuitarHold;
 export type JamFeel = 'straight' | 'swing';
 
 /** Beats per bar. The jam loop is 4/4. */
@@ -18,7 +23,9 @@ export type JamEvent =
   | { kind: 'bass'; beat: number; midi: number; duration: number; velocity: number }
   | { kind: 'strum'; beat: number; up: boolean; velocity: number; duration: number }
   | { kind: 'pad'; beat: number; midis: number[]; duration: number }
-  | { kind: 'click'; beat: number; accent: boolean };
+  | { kind: 'click'; beat: number; accent: boolean }
+  /** A soft cymbal that marks the top of the form. */
+  | { kind: 'cymbal'; beat: number };
 
 /** What a bar needs to know about its chord. */
 export interface JamBarStep {
@@ -38,6 +45,12 @@ export interface JamBarOptions {
   pad: boolean;
   feel: JamFeel;
   click: boolean;
+  /**
+   * A cymbal on beat 1, as a drummer marks the top of the form: the caller
+   * asks for it on bar 1 from the second pass on. It has nothing to do with
+   * Click, and no fader of its own.
+   */
+  cymbal?: boolean;
 }
 
 /** The pitch class's note in the bass register: MIDI 28 to 39. */
@@ -53,7 +66,8 @@ export function chordFifthPc(rootPc: number, intervals: readonly number[]): numb
 
 /**
  * One bar: the bass (root on 1, 5th on 3, a pickup into the next bar when
- * swung), the guitar's strums, the pad, then the click if it is on.
+ * swung), the guitar's strums, the pad, the cymbal if it is the top of the
+ * form, then the click if it is on.
  */
 export function buildJamBar(step: JamBarStep, options: JamBarOptions): JamEvent[] {
   const events: JamEvent[] = [];
@@ -84,6 +98,7 @@ export function buildJamBar(step: JamBarStep, options: JamBarOptions): JamEvent[
   if (options.pad && step.padMidis && step.padMidis.length > 0) {
     events.push({ kind: 'pad', beat: 0, midis: step.padMidis, duration: BEATS_PER_BAR });
   }
+  if (options.cymbal) events.push({ kind: 'cymbal', beat: 0 });
   if (options.click) {
     for (let beat = 0; beat < BEATS_PER_BAR; beat++) events.push({ kind: 'click', beat, accent: beat === 0 });
   }
@@ -122,6 +137,39 @@ export function jamPosition(bar: number, chords: readonly JamChord[]): JamPositi
     changeComing: chords.length > 1 && !sameChord(chords[stepIndex], chords[nextStepIndex]),
     pass: Math.floor(bar / length),
   };
+}
+
+/**
+ * Whether this bar is the top of the form from the second pass on: bar 1 of
+ * every pass but the first, where a drummer would mark it with a cymbal.
+ */
+export function isTopOfForm({ stepIndex, pass }: JamPosition): boolean {
+  return pass >= 1 && stepIndex === 0;
+}
+
+/** The next different chord, and how far away it is. */
+export interface NextChange {
+  /** The step it starts at. */
+  stepIndex: number;
+  /** Bars until it sounds: 1 is the very next bar. */
+  bars: number;
+}
+
+/**
+ * From the step at `stepIndex`, the next step whose chord differs (root,
+ * quality or bass), wrapping round the loop; null when every step is the same
+ * chord, so there is no change to wait for. In the 12-bar blues from bar 1 it
+ * is F7 in 4 bars, and from bar 12 it is C7 in 1 bar, back round the top.
+ */
+export function nextChange(stepIndex: number, chords: readonly JamChord[]): NextChange | null {
+  const length = chords.length;
+  if (length === 0) return null;
+  const from = ((stepIndex % length) + length) % length;
+  for (let bars = 1; bars < length; bars++) {
+    const index = (from + bars) % length;
+    if (!sameChord(chords[from], chords[index])) return { stepIndex: index, bars };
+  }
+  return null;
 }
 
 /** The bar's chord for `buildJamBar`: the step at `index`, with the next bar's bass for the pickup. */

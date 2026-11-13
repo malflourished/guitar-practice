@@ -4,6 +4,7 @@ import { positionToMidi } from '../lib/audio/pitch';
 import { readSoundSettings, writeSoundSettings } from './soundSettings';
 import { GuitarAudioEngine, type EngineState, type GuitarInstrumentName, type JamPlayOptions } from '../lib/audio/engine';
 import { chordPattern, sequencePattern, type PlaybackOptions, type PracticePattern } from '../lib/audio/pattern';
+import type { JamGains } from '../lib/audio/jamMix';
 
 export interface UseInstrument extends EngineState {
   playingPosition: FretPosition | null;
@@ -22,6 +23,8 @@ export interface UseInstrument extends EngineState {
   /** The jam loop (see the engine): resolves false when nothing started. */
   playJam: (options: JamPlayOptions, id?: string) => Promise<boolean>;
   setJamTempo: (bpm: number) => void;
+  /** The mix faders: each layer's gain (1 is the default level, 0 is off), live. */
+  setJamMix: (gains: JamGains) => void;
   stopAll: () => void;
 }
 
@@ -79,6 +82,7 @@ export function useInstrument(): UseInstrument {
     return success;
   }, [engine]);
   const setJamTempo = useCallback((bpm: number) => engine.setJamTempo(bpm), [engine]);
+  const setJamMix = useCallback((gains: JamGains) => engine.setJamMix(gains), [engine]);
   const playSequence = useCallback((positions: FretPosition[], bpm: number, id: string, onNote?: (index: number) => void, loop = false) => {
     void playPattern(sequencePattern(positions), { bpm, loop, onEvent: e => onNote?.(e.index) }, id);
   }, [playPattern]);
@@ -86,5 +90,5 @@ export function useInstrument(): UseInstrument {
     void playPattern(chordPattern(chords), { bpm, loop, onEvent: e => onStep?.(e.index) }, id);
   }, [playPattern]);
   return { ...state, playingPosition, playingId, setInstrument, setVolume, setMuted, setRoom,
-    playNote, hearInterval, playPosition, strum, playPattern, playSequence, playProgression, playJam, setJamTempo, stopAll };
+    playNote, hearInterval, playPosition, strum, playPattern, playSequence, playProgression, playJam, setJamTempo, setJamMix, stopAll };
 }
