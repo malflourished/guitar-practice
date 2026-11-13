@@ -25,6 +25,20 @@
   composes: select from '../styles/glass.module.css';
 }
 
+/* Roman numerals carry meaning in their case (I is major, i is minor), so a
+   picker that shows them must not be set in capitals. */
+.numeralSelect {
+  composes: select;
+}
+
+/* Doubled class: glass.module.css's .select rule (capitals) is copied into
+   every stylesheet that composes it, some loading after this one, so a single
+   class would lose to it. */
+.numeralSelect.numeralSelect {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
 .stepNav {
   display: flex;
   flex-wrap: wrap;

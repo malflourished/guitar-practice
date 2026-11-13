@@ -27,7 +27,7 @@ export function ProgressionsControls({
     <>
       <SettingsRow label="Progression">
         <select
-          className={styles.select}
+          className={styles.numeralSelect}
           aria-label="Chord progression"
           value={progressionId}
           onChange={(event) => onProgressionChange(event.target.value)}
