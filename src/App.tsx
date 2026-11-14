@@ -165,11 +165,10 @@ function App() {
     singleRootMode &&
     neck.positionRegions.length > 0 &&
     (studyMode !== 'theory' || theory.theoryShowFretboard);
-  // The dial takes the deck's height; its controls move into the stage.
+  // The dial, and the vertical neck in its place, take the deck's height; the
+  // controls move into the stage. Only a topic with no dial has a fretboard demo.
   const theoryDialShown =
-    studyMode === 'theory' &&
-    !theory.theoryShowFretboard &&
-    Boolean(theory.activeTheoryTopic.diagram);
+    studyMode === 'theory' && Boolean(theory.activeTheoryTopic.diagram);
   const showFretboard =
     studyMode !== 'practice' &&
     studyMode !== 'intervals' &&
@@ -282,6 +281,7 @@ function App() {
           selectedRoot={rootNote}
           keyMode={keyMode}
           diagramView={theory.theoryDiagramView}
+          neckShown={theory.theoryShowKeyNeck}
           onSelectKey={theoryMoves.handleTheoryKeySelect}
           controls={theoryDialShown ? theoryControls : undefined}
         />

@@ -3,7 +3,7 @@ import type { UseNeckView } from '../../hooks/useNeckView';
 import type { KeyMode, NoteName } from '../../types/music';
 import type { ModeStates } from '../types';
 
-/** Theory's moves: pick a key on the wheel, show the neck, jump out and back. */
+/** Theory's moves: pick a key on the dial, switch to the neck, jump out and back. */
 export function useTheoryActions(
   { setStudyMode, keyState, scales, theory }: ModeStates,
   audio: UseInstrument,
@@ -12,10 +12,10 @@ export function useTheoryActions(
   const { setActiveNotes, setKeyCenter, setKeyMode } = keyState;
   const {
     activeTheoryTopic,
-    theoryShowFretboard,
+    theoryNeckChosen,
     theoryReturn,
     setTheoryReturn,
-    setTheoryShowFretboard,
+    setTheoryNeckChosen,
     setTheoryTopicId,
   } = theory;
 
@@ -24,7 +24,7 @@ export function useTheoryActions(
     audio.stopAll();
     setStudyMode('theory');
     setTheoryTopicId(theoryReturn.topicId);
-    setTheoryShowFretboard(theoryReturn.showFretboard);
+    setTheoryNeckChosen(theoryReturn.showFretboard);
     setTheoryReturn(null);
   };
 
@@ -34,10 +34,12 @@ export function useTheoryActions(
     setKeyMode(mode);
   };
 
+  // Dial | Neck, or Show on fretboard where the topic has no dial. Only the
+  // fretboard demo has a neck view to set; the vertical neck has none.
   const handleTheoryShowFretboard = (show: boolean) => {
-    setTheoryShowFretboard(show);
+    setTheoryNeckChosen(show);
     const demoView = activeTheoryTopic.fretboardDemo?.neckView;
-    if (show && demoView) {
+    if (show && demoView && !activeTheoryTopic.diagram) {
       neckView.applySpanPreset(demoView);
     }
   };
@@ -49,7 +51,7 @@ export function useTheoryActions(
       mode: link.mode,
       topicId: activeTheoryTopic.id,
       title: activeTheoryTopic.title,
-      showFretboard: theoryShowFretboard,
+      showFretboard: theoryNeckChosen,
     });
     setStudyMode(link.mode);
     if (link.scaleQuality) {
@@ -58,7 +60,7 @@ export function useTheoryActions(
     if (link.neckView) {
       neckView.applySpanPreset(link.neckView);
     }
-    setTheoryShowFretboard(false);
+    setTheoryNeckChosen(false);
   };
 
   return {

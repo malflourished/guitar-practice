@@ -12,6 +12,7 @@ export interface TheoryReturn {
   mode: StudyMode;
   topicId: string;
   title: string;
+  /** Whether Neck was on when the link was followed (the vertical neck or the fretboard demo). */
   showFretboard: boolean;
 }
 
@@ -21,7 +22,8 @@ export function useTheoryState(studyMode: StudyMode) {
     DEFAULT_THEORY_TOPIC_ID,
     oneOf(THEORY_TOPICS.map((topic) => topic.id)),
   );
-  const [theoryShowFretboard, setTheoryShowFretboard] = useState(false);
+  // Neck, as the player chose it with the Dial | Neck switch (or Show on fretboard).
+  const [theoryNeckChosen, setTheoryNeckChosen] = useState(false);
   const [theoryReturn, setTheoryReturn] = useState<TheoryReturn | null>(null);
 
   // The way back lasts only while the player stays where the link sent them.
@@ -33,6 +35,14 @@ export function useTheoryState(studyMode: StudyMode) {
   );
 
   const theoryScaleQuality = activeTheoryTopic.fretboardDemo?.scaleQuality ?? 'major';
+
+  // Neck means the key's chords on the vertical neck, in the dial's place, where
+  // the topic has a dial. Where it has none, it is the fretboard demo: the
+  // horizontal neck and the deck, which the hooks that build the board read as
+  // `theoryShowFretboard`.
+  const hasDial = Boolean(activeTheoryTopic.diagram);
+  const theoryShowKeyNeck = theoryNeckChosen && hasDial;
+  const theoryShowFretboard = theoryNeckChosen && !hasDial;
 
   // The diagram picked for the current topic; a new topic starts on its own.
   const [diagramChoice, setDiagramChoice] = useState<{
@@ -47,14 +57,18 @@ export function useTheoryState(studyMode: StudyMode) {
 
   const handleTheoryTopicChange = (topicId: string) => {
     setTheoryTopicId(topicId);
-    setTheoryShowFretboard(false);
+    setTheoryNeckChosen(false);
   };
 
   return {
     theoryTopicId,
     setTheoryTopicId,
+    theoryNeckChosen,
+    setTheoryNeckChosen,
     theoryShowFretboard,
-    setTheoryShowFretboard,
+    theoryShowKeyNeck,
+    /** The same setter as `setTheoryNeckChosen`, under the name callers outside Theory use to clear it. */
+    setTheoryShowFretboard: setTheoryNeckChosen,
     theoryReturn,
     setTheoryReturn,
     activeTheoryTopic,

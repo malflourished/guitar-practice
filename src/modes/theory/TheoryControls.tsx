@@ -8,9 +8,10 @@ interface TheoryControlsProps {
 }
 
 /**
- * Theory's controls: Dial | Neck, the diagram switch and the practice link.
- * They sit in the deck when the neck is shown, and inside the stage beside
- * the dial otherwise (the dial takes the deck's height).
+ * Theory's controls: the view pills, Dial | Neck and the practice link. A
+ * topic with a dial keeps them in the stage beside the figure, in both Dial and
+ * Neck (the figure takes the deck's height); a topic without one keeps them in
+ * the deck, with Show on fretboard.
  */
 export function TheoryControls({
   theory,
@@ -22,7 +23,7 @@ export function TheoryControls({
       topic={theory.activeTheoryTopic}
       diagramView={theory.theoryDiagramView}
       onDiagramViewChange={theory.setTheoryDiagramView}
-      showFretboard={theory.theoryShowFretboard}
+      showFretboard={theory.theoryNeckChosen}
       onShowFretboardChange={onShowFretboardChange}
       onPracticeLink={
         theory.activeTheoryTopic.practiceLink ? onPracticeLink : undefined

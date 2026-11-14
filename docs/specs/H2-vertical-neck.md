@@ -86,11 +86,11 @@ They overlap only briefly, and are never both at full strength.
 
 ## Done when
 
-- [ ] Neck draws the vertical neck in the dial's place in all three views, for major and minor keys, and follows key changes.
-- [ ] The words follow the view, and the left column and side panel do not move.
-- [ ] The motion runs both ways as described, and reduced motion gives a plain crossfade.
-- [ ] No page scrolls at 1440×900, 1280×720 or 960×640. Screenshots at all three sizes, in both themes, of each view, plus one frame mid-motion.
-- [ ] Tests, lint and `tsc` pass.
+- [x] Neck draws the vertical neck in the dial's place in all three views, for major and minor keys, and follows key changes.
+- [x] The words follow the view, and the left column and side panel do not move.
+- [x] The motion runs both ways as described, and reduced motion gives a plain crossfade.
+- [x] No page scrolls at 1440×900, 1280×720 or 960×640. Screenshots at all three sizes, in both themes, of each view, plus one frame mid-motion.
+- [x] Tests, lint and `tsc` pass.
 - [ ] The owner switches between Dial and Neck and finds it elegant.
 
 ## Out of scope here
