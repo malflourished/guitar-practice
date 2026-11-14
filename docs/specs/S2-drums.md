@@ -2,6 +2,7 @@
 
 **Package:** S2 (sounds we synthesize ourselves), after S1 (the modelled bass).
 **Status:** built 2026-11-13 on `claude/sound-s2-drums-e3cf00`, not merged. The Drums fader starts at off, so the drums change nothing until the owner has listened in the sound lab and turned it up. One thing does change for everyone at merge: the whole jam is 3 dB quieter, to give the mix the headroom it had lost (see "Levels").
+**First listen:** the owner played the 12-bar blues with the drums up on 2026-11-13: "The sounds, they sound great. So success." The lab's comparison of the three kits is still to do.
 **Research behind it:** [docs/sound/drums.md](../sound/drums.md).
 
 ## Why
@@ -334,4 +335,4 @@ Each of these went beyond the brief, read it loosely, or could not be met. Say i
 - [x] Guitar, bass and pad play what they played, 3 dB lower. Every existing test passes; three expectations were updated for the trim.
 - [x] The lab plays each groove on each kit at matched loudness with the dials exposed, and its keys are documented.
 - [x] `npm test`, `npx tsc -b` and `npm run lint` pass. No page scrolls at the three sizes. A CPU budget in tests.
-- [ ] The owner has listened, in the lab and in the jam, on speakers and headphones, and has chosen.
+- [ ] The owner has listened, in the lab and in the jam, on speakers and headphones, and has chosen. (So far: the jam, on the 12-bar blues, 2026-11-13: "they sound great". Not yet: the three kits side by side in the lab.)
