@@ -50,6 +50,20 @@ const history = JSON.stringify([0, 1, 2, 3, 4].map((i) => ({
   elapsed: [120, 180, 120, 180], ratings: {}, attempts: [], completed: true, finishedAt: now,
 })));
 
+// Practice with a plan (package E): a week of sessions that gives the longest
+// plan line (three hard days on box 5, then a new lap), and drafts in a major
+// key with the widest ear labels.
+const daysAgo = (n) => new Date(Date.now() - n * 86_400_000).toISOString();
+const planned = (plan, extra = {}) => ({ version: 1, id: 'measure', startedAt: now, root: 'A#', plan, bpm: 72, block: 3,
+  elapsed: [120, 180, 120, 180], ratings: {}, attempts: [], completed: false, ...extra });
+const plannedDraft = (block, plan) => JSON.stringify(planned(plan, { block, elapsed: [120, 180, 120, 180].map((s, i) => (i < block ? s : 0)) }));
+const track = (box, streak = 0, stage = 0, offset = 0, lap = 0) => ({ lap, box: box - 1, streak, stage, offset });
+const lateDraft = { box: 3, quality: 'major', ear: [9, 10, 11], track: track(3, 0, 6, 6, 5) };
+const weekHistory = JSON.stringify([1, 2, 3, 4, 5, 5, 5].map((box, i) => planned({ box, quality: 'minor', ear: [3, 7, 10], track: track(box, Math.max(0, i - 4)) }, {
+  id: `w${i}`, root: 'A', startedAt: daysAgo(7 - i), finishedAt: daysAgo(7 - i), completed: true, ratings: box === 5 ? { 3: 'revisit' } : {},
+  attempts: Array.from({ length: 12 }, (_, n) => ({ interval: 3, answer: n < 10 ? 3 : 7, correct: n < 10 })),
+})));
+
 const mode = (m) => ({ 'vibrato:study-mode': JSON.stringify(m) });
 const clickText = (text, scope = '') => `(() => {
   const root = ${scope ? `document.querySelector(${JSON.stringify(scope)})` : 'document'};
@@ -105,6 +119,12 @@ const STATES = [
     name: `practice-block${block + 1}`,
     store: { ...mode('practice'), 'vibrato:practice-draft-v1': draft(block) },
   })),
+  { name: 'practice-plan-week', store: { ...mode('practice'), 'vibrato:practice-history-v1': weekHistory } },
+  { name: 'practice-plan-scale', store: { ...mode('practice'), 'vibrato:practice-draft-v1': plannedDraft(1, lateDraft) } },
+  { name: 'practice-plan-ear', store: { ...mode('practice'), 'vibrato:practice-draft-v1': plannedDraft(2, lateDraft) } },
+  { name: 'practice-plan-changes', store: { ...mode('practice'), 'vibrato:practice-draft-v1': plannedDraft(3, lateDraft) } },
+  { name: 'practice-plan-finished', store: { ...mode('practice'), 'vibrato:practice-draft-v1': plannedDraft(3, { box: 1, quality: 'major', ear: [3, 7, 10], track: track(1, 0, 0, 0, 1) }), 'vibrato:practice-history-v1': weekHistory },
+    actions: [clickText('Finish early'), clickText('Save & finish')] },
   { name: 'practice-review', store: { ...mode('practice'), 'vibrato:practice-draft-v1': draft(3, true) } },
   { name: 'practice-finished', store: { ...mode('practice'), 'vibrato:practice-draft-v1': draft(3), 'vibrato:practice-history-v1': history },
     actions: [clickText('Finish early'), clickText('Save & finish')] },

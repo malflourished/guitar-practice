@@ -1,5 +1,6 @@
 import type { NoteName } from '../../types/music';
 import { ALL_NOTES } from '../colors';
+import { validChoice, type PlanChoice } from './plan';
 
 export const PRACTICE_BLOCKS = [
   { id: 'roots', title: 'Find your bearings', short: 'Roots', seconds: 120,
@@ -23,6 +24,8 @@ export interface PracticeSessionData {
   id: string;
   startedAt: string;
   root: NoteName;
+  /** The day's box, key quality and ear set. Absent in sessions saved before plans. */
+  plan?: PlanChoice;
   bpm: number;
   block: number;
   elapsed: number[];
@@ -34,8 +37,8 @@ export interface PracticeSessionData {
 export const DRAFT_KEY = 'vibrato:practice-draft-v1';
 export const HISTORY_KEY = 'vibrato:practice-history-v1';
 
-export function newSession(root: NoteName, bpm: number, id: string, now = new Date().toISOString()): PracticeSessionData {
-  return { version: 1, id, startedAt: now, root, bpm, block: 0,
+export function newSession(root: NoteName, bpm: number, id: string, now = new Date().toISOString(), plan?: PlanChoice): PracticeSessionData {
+  return { version: 1, id, startedAt: now, root, ...(plan ? { plan } : {}), bpm, block: 0,
     elapsed: [0, 0, 0, 0], ratings: {}, attempts: [], completed: false };
 }
 
@@ -55,6 +58,8 @@ export function saveHistory(history: PracticeSessionData[], session: PracticeSes
   return [session, ...history.filter((item) => item.id !== session.id)].slice(0, 100);
 }
 
+const semitones = (n: unknown) => Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 11;
+
 export function validSession(value: unknown): value is PracticeSessionData {
   if (!value || typeof value !== 'object') return false;
   const s = value as PracticeSessionData;
@@ -66,8 +71,9 @@ export function validSession(value: unknown): value is PracticeSessionData {
     && s.elapsed.every((n, i) => Number.isFinite(n) && n >= 0 && n <= PRACTICE_BLOCKS[i].seconds)
     && s.ratings !== null && typeof s.ratings === 'object'
     && Object.values(s.ratings).every((r) => typeof r === 'string' && ['clean', 'working', 'revisit'].includes(r))
-    && Array.isArray(s.attempts) && s.attempts.every((a) => a && [3, 7, 10].includes(a.interval)
-      && [3, 7, 10].includes(a.answer) && a.correct === (a.interval === a.answer))
+    && (s.plan === undefined || validChoice(s.plan))
+    && Array.isArray(s.attempts) && s.attempts.every((a) => a && semitones(a.interval)
+      && semitones(a.answer) && a.correct === (a.interval === a.answer))
     && typeof s.completed === 'boolean'
     && (s.finishedAt === undefined || (typeof s.finishedAt === 'string' && Number.isFinite(Date.parse(s.finishedAt))));
 }
