@@ -23,6 +23,15 @@ a bar and four bars to a line, in the middle (its pure layout helpers are in
 (`src/components/Fader.tsx`) for the guitar, bass and pad. The fader model
 (dB range, gain, saved values) is `src/lib/audio/jamMix.ts`.
 
+Theory's stage (`components/TheoryStage`) holds the key dial (`KeyDial`) and the
+vertical neck (`KeyNeck`) in one square, and the Dial | Neck switch swaps them
+(`theoryNeckChosen` in `useTheoryState`). Both draw from `describeKeyDial`, so
+they cannot disagree: the chords on the neck come from `lib/music/neckChordMap`
+and where they sit from `lib/verticalNeckLayout` (the size rule). The frame has
+no deck in either figure. A Theory topic with no dial keeps Show on fretboard:
+the horizontal neck and the deck, which the board hooks read as
+`theoryShowFretboard` (true only for such a topic).
+
 Shared across modes:
 
 - `src/hooks/`: `useKeyState` (key, notation), `useDisplaySettings` (Labels choice,

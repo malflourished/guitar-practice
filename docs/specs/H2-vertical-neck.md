@@ -29,8 +29,8 @@ Read everything from `describeKeyDial(state)` in `src/lib/music/keyDial.ts`, so 
 | View | Markers |
 |---|---|
 | In key | The key's seven chords (`main`) by root. Home (I, or i in minor): a solid light disc with dark text. Major: filled with the dial's accent and ringed. Minor: ringed only. Diminished: dashed and muted. |
-| Borrowed | The `extra` cells in a second style, clearly brighter, for example the accent with a heavier ring. The `main` chords stay, dimmed to about 40%. Where an extra chord shares a root with a main one (iv and IV on F in C major), the marker shows the extra's numeral: the view is about the extras. |
-| Dominants | As Borrowed, with the secondary dominants (V/ii, V/iii, …) as the extras. Labels up to five characters must fit, at a smaller size. |
+| Borrowed | Only the chords most often borrowed, in a second style, clearly brighter, for example the accent with a heavier ring. They are picked from the dial's `extra` cells by numeral, so `describeKeyDial` stays the source: in a **major key** ♭III, iv, ♭VI and ♭VII from the parallel minor (E♭, Fm, A♭ and B♭ in C), in a **minor key** IV and V from the parallel major (D and E in A minor). The rest of the parallel window is not marked: marking all of it relabelled most of the key (C as i, G as v) and lost the chords that matter. Every other root keeps its own in-key numeral and style, dimmed to about 40%: in C major, C stays I, G stays V, D stays ii. Where a borrowed chord shares a root with one of the key's own (iv and IV on F in C major), the marker shows the borrowed chord's numeral: the view is about them. |
+| Dominants | The `extra` cells, the four secondary dominants (V/ii, V/iii, …), in the same second style. The `main` chords stay, dimmed to about 40%. Where a dominant shares a root with one of the key's own chords (V/V on D, over ii), the marker shows the dominant's numeral. Labels up to five characters must fit, at a smaller size. |
 
 Major and minor keys both work, in every key, with the numerals the dial uses.
 
@@ -39,7 +39,7 @@ Major and minor keys both work, in every key, with the numerals the dial uses.
 The caption in the left column follows the view while Neck is on. Use these lines; the dial keeps its own captions.
 
 - **In key:** "The same seven chords, by root, across the whole neck. Find any I: IV and V are always one string away." In minor, the second sentence uses i, iv and v.
-- **Borrowed, major key:** "Borrowed from {the parallel minor, e.g. C minor}: ♭VII sits two frets below any I on the same string, ♭III three frets above it, ♭VI four below."
+- **Borrowed, major key:** "Borrowed from {the parallel minor, e.g. C minor}: ♭VII sits two frets below any I on the same string, ♭III three above, ♭VI four below. iv shares IV's root; only its 3rd drops a fret."
 - **Borrowed, minor key:** "Borrowed from {the parallel major}: IV and V sit on the same roots as iv and v. Only their 3rds move, a fret up."
 - **Dominants:** "Each secondary dominant sits a 5th above the chord it leads to. Find the target's root: its V7 is one string lower at the same fret, or a fret lower when the target is on the B string."
 
@@ -81,16 +81,17 @@ They overlap only briefly, and are never both at full strength.
 - **The map** (a pure helper, for example `neckChordMap(info)`, returning `{ string, fret, numeral, kind }`):
   - In key, in all 12 keys and both modes: every marker's pitch class is one of the seven roots, and every place a root falls on frets 0–12 is marked.
   - C major has the mock-up's markers, including the open strings: E iii, A vi, D ii, G V, B vii°, e iii.
-  - Borrowed and Dominants: the extras are marked with the extra kind, and a shared root shows the extra's numeral.
+  - Borrowed, in all 12 keys and both modes: the borrowed (extra) kind sits on exactly the commonly borrowed roots and no others, and a shared root shows the borrowed numeral. In C major that is exactly the E♭, F, A♭ and B♭ roots, with C still reading I. In A minor it is only D and E, as IV and V.
+  - Dominants: the four secondary dominants are the extra kind, and a shared root shows the dominant's numeral.
 - **The layout:** at the stage sizes of 1440×900, 1280×720 and 960×640, every fret space is at least 1.15 × the marker diameter, everything fits, and the spacing is graduated where there is room.
 
 ## Done when
 
-- [ ] Neck draws the vertical neck in the dial's place in all three views, for major and minor keys, and follows key changes.
-- [ ] The words follow the view, and the left column and side panel do not move.
-- [ ] The motion runs both ways as described, and reduced motion gives a plain crossfade.
-- [ ] No page scrolls at 1440×900, 1280×720 or 960×640. Screenshots at all three sizes, in both themes, of each view, plus one frame mid-motion.
-- [ ] Tests, lint and `tsc` pass.
+- [x] Neck draws the vertical neck in the dial's place in all three views, for major and minor keys, and follows key changes.
+- [x] The words follow the view, and the left column and side panel do not move.
+- [x] The motion runs both ways as described, and reduced motion gives a plain crossfade.
+- [x] No page scrolls at 1440×900, 1280×720 or 960×640. Screenshots at all three sizes, in both themes, of each view, plus one frame mid-motion.
+- [x] Tests, lint and `tsc` pass.
 - [ ] The owner switches between Dial and Neck and finds it elegant.
 
 ## Out of scope here

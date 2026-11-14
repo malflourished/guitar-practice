@@ -37,14 +37,80 @@
   max-width: 40rem;
 }
 
+/* The dial and the vertical neck share one square: two layers in one grid
+   cell, one shown at a time. */
 .diagram {
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
   container-type: size;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+.layer {
+  grid-area: 1 / 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.layer > figure {
+  width: 100%;
+  height: 100%;
+}
+
+/* The swap between Dial and Neck. Nothing else on the page moves.
+   Leaving (ease-in, 180 ms): the dial turns about 10° and shrinks as it
+   fades; the neck sinks 14 px as it fades. Arriving (ease-out, 220 ms, from
+   120 ms in): the other comes into place. They overlap only briefly and are
+   never both at full strength. The layer not shown is hidden and inert once
+   it has faded. */
+.layer[data-active='false'] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 180ms ease-in,
+    transform 180ms ease-in,
+    visibility 0s linear 180ms;
+}
+
+.layer[data-layer='dial'][data-active='false'] {
+  transform: rotate(-10deg) scale(0.92);
+}
+
+.layer[data-layer='neck'][data-active='false'] {
+  transform: translateY(14px);
+}
+
+.layer[data-active='true'] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 220ms ease-out 120ms,
+    transform 220ms ease-out 120ms,
+    visibility 0s;
+}
+
+/* Reduced motion: a plain 120 ms crossfade, nothing turns or moves. */
+@media (prefers-reduced-motion: reduce) {
+  .layer[data-layer='dial'][data-active='false'],
+  .layer[data-layer='neck'][data-active='false'] {
+    transform: none;
+  }
+
+  .layer[data-active='false'] {
+    transition:
+      opacity 120ms linear,
+      visibility 0s linear 120ms;
+  }
+
+  .layer[data-active='true'] {
+    transition:
+      opacity 120ms linear,
+      visibility 0s;
+  }
 }
 
 /* With a dial: words on the left, the dial the full height of the stage on the
@@ -82,6 +148,25 @@
   margin: 0 0 0.35rem;
 }
 
+/* The caption's box is as tall as the tallest caption the stage can show, so
+   nothing beside the figure moves when the words change (see allCaptions). */
+.caption {
+  display: grid;
+}
+
+.caption > * {
+  grid-area: 1 / 1;
+}
+
+.captionNow {
+  align-self: start;
+}
+
+.captionReserve {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .controls {
   display: flex;
   flex-direction: column;
@@ -96,11 +181,6 @@
 .stageWithDial .diagram {
   min-width: 0;
   min-height: 0;
-}
-
-.diagram > figure {
-  width: 100%;
-  height: 100%;
 }
 
 .diagramToggle {

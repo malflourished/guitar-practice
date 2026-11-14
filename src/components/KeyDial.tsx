@@ -19,6 +19,7 @@ import {
   dialNameToNote,
   type DialCell,
   type DialRing,
+  type KeyDialInfo,
 } from '../lib/music/keyDial';
 import styles from './KeyDial.module.css';
 
@@ -71,8 +72,12 @@ interface KeyDialProps {
   view: TheoryDiagram;
   /** Which name a black-key root takes when the two cost the same (F♯ or G♭). */
   notation?: NotationPreference;
-  /** Told the two caption lines for what the dial shows; the caller places them. */
-  onCaption?: (lines: [string, string]) => void;
+  /**
+   * Told what the dial shows (its chords, caption and key name) whenever it
+   * changes, so the caller can place the caption and draw the same chords on
+   * the vertical neck (`KeyNeck`) without the two disagreeing.
+   */
+  onInfo?: (info: KeyDialInfo) => void;
 }
 
 function usePrefersReducedMotion(): () => boolean {
@@ -91,7 +96,7 @@ export function KeyDial({
   onSelectKey,
   view,
   notation = 'sharps',
-  onCaption,
+  onInfo,
 }: KeyDialProps) {
   // The one position printed both ways. The app only knows pitches, so the
   // dial remembers which name was clicked last (F♯ again gives G♭).
@@ -111,8 +116,8 @@ export function KeyDial({
     [keyName, keyMode, view],
   );
   useEffect(() => {
-    onCaption?.(info.caption);
-  }, [info, onCaption]);
+    onInfo?.(info);
+  }, [info, onInfo]);
   const infoKey = `${keyName}|${keyMode}|${view}`;
   const [litKey, setLitKey] = useState(infoKey);
   const lit = litKey === infoKey;
@@ -124,7 +129,9 @@ export function KeyDial({
     const svg = svgRef.current;
     if (!svg) return undefined;
     const measure = () => {
-      const width = svg.getBoundingClientRect().width;
+      // The layout width, not the painted one: while the stage swaps the dial for
+      // the neck, the dial's layer is turned and shrunk, which would read short.
+      const width = svg.clientWidth || svg.getBoundingClientRect().width;
       if (width > 0) setScale(width / 1000);
     };
     measure();
