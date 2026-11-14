@@ -1,5 +1,5 @@
 import { AMBIENT_MOTIONS, AMBIENT_MOTION_LABELS, type AmbientMotion } from '../lib/ambientMotion';
-import type { UiTheme, VibratoCanvas } from '../types/ui';
+import type { UiTheme, VibratoCanvas, VibratoPanels } from '../types/ui';
 import { setTexture, useTexture } from '../lab/analogStore';
 import { Popover } from './Popover';
 import glass from '../styles/glass.module.css';
@@ -15,6 +15,13 @@ const CANVASES: { id: VibratoCanvas; label: string }[] = [
   { id: 'light', label: 'Light' },
 ];
 
+const PANELS: { id: VibratoPanels; label: string }[] = [
+  { id: 'on', label: 'On' },
+  { id: 'outline', label: 'Outline' },
+  { id: 'lines', label: 'Lines' },
+  { id: 'off', label: 'Off' },
+];
+
 interface UiThemeSelectorProps {
   motion: AmbientMotion;
   onMotionChange: (motion: AmbientMotion) => void;
@@ -22,6 +29,8 @@ interface UiThemeSelectorProps {
   vibratoCanvas: VibratoCanvas;
   onUiThemeChange: (theme: UiTheme) => void;
   onCanvasChange: (canvas: VibratoCanvas) => void;
+  vibratoPanels: VibratoPanels;
+  onPanelsChange: (panels: VibratoPanels) => void;
 }
 
 /**
@@ -36,6 +45,8 @@ export function UiThemeSelector({
   vibratoCanvas,
   onUiThemeChange,
   onCanvasChange,
+  vibratoPanels,
+  onPanelsChange,
 }: UiThemeSelectorProps) {
   const texture = useTexture();
   const pill = (selected: boolean) => (selected ? glass.pillSelected : glass.pill);
@@ -70,6 +81,21 @@ export function UiThemeSelector({
                     className={pill(vibratoCanvas === id)}
                     aria-pressed={vibratoCanvas === id}
                     onClick={() => onCanvasChange(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <span className={styles.label}>Panels</span>
+              <div className={styles.options} role="group" aria-label="Vibrato panels">
+                {PANELS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={pill(vibratoPanels === id)}
+                    aria-pressed={vibratoPanels === id}
+                    onClick={() => onPanelsChange(id)}
                   >
                     {label}
                   </button>

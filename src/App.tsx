@@ -398,6 +398,10 @@ function App() {
       className="themeRoot"
       data-ui-theme={theme.uiTheme}
       data-vibrato-canvas={theme.vibratoCanvas}
+      data-vibrato-panels={theme.uiTheme === 'vibrato' ? theme.vibratoPanels : undefined}
+      data-on-lava={
+        theme.uiTheme === 'vibrato' && theme.vibratoPanels !== 'on' ? 'true' : undefined
+      }
       data-contrast={theme.rootContrastMode}
       data-debug-bg={debug.enabled && debug.whiteBackground ? 'white' : undefined}
       data-debug-text={

@@ -189,6 +189,53 @@
   --fretboard-focus-outline: rgba(18, 14, 28, 0.45);
 }
 
+/* Vibrato with the panels' fill gone (Panels: Outline, Lines or Off): the
+   controls sit straight on the lava, so lines and type step up a little and
+   carry a soft halo of the canvas colour. --lava-rule draws the panel edges
+   and dividing rules. These come
+   after the canvas rules above and are more specific than the contrast rules
+   below, so they win on both. */
+.themeRoot[data-ui-theme='vibrato'][data-on-lava][data-vibrato-canvas='dark'] {
+  --lava-halo: 0 0 3px rgba(0, 0, 0, 0.55), 0 0 14px rgba(0, 0, 0, 0.6);
+  --foreground-secondary: rgba(255, 255, 255, 0.76);
+  --foreground-muted: rgba(255, 255, 255, 0.62);
+  --glass-bg-hover: rgba(255, 255, 255, 0.18);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-border-subtle: rgba(255, 255, 255, 0.52);
+  --glass-divider: rgba(255, 255, 255, 0.24);
+  --lava-rule: rgba(255, 255, 255, 0.3);
+
+  --fret-line: rgba(255, 255, 255, 0.72);
+  --string-line: rgba(255, 255, 255, 0.86);
+  --string-label: rgba(255, 255, 255, 0.76);
+  --fret-number: rgba(255, 255, 255, 0.66);
+  --fret-marker: rgba(255, 255, 255, 0.48);
+  --fretboard-shadow: 0 0 2px rgba(0, 0, 0, 0.65);
+  --fretboard-control-track: rgba(255, 255, 255, 0.34);
+  --fretboard-control-text: rgba(255, 255, 255, 0.76);
+  --fretboard-control-border: rgba(255, 255, 255, 0.52);
+}
+
+.themeRoot[data-ui-theme='vibrato'][data-on-lava][data-vibrato-canvas='light'] {
+  --lava-halo: 0 0 3px rgba(255, 255, 255, 0.7), 0 0 14px rgba(255, 255, 255, 0.75);
+  --foreground-secondary: rgba(18, 14, 28, 0.76);
+  --foreground-muted: rgba(18, 14, 28, 0.6);
+  --glass-border: rgba(18, 14, 28, 0.5);
+  --glass-border-subtle: rgba(18, 14, 28, 0.3);
+  --glass-divider: rgba(18, 14, 28, 0.18);
+  --lava-rule: rgba(18, 14, 28, 0.24);
+
+  --fret-line: rgba(18, 14, 28, 0.56);
+  --string-line: rgba(18, 14, 28, 0.72);
+  --string-label: rgba(18, 14, 28, 0.66);
+  --fret-number: rgba(18, 14, 28, 0.56);
+  --fret-marker: rgba(18, 14, 28, 0.4);
+  --fretboard-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+  --fretboard-control-track: rgba(18, 14, 28, 0.22);
+  --fretboard-control-text: rgba(18, 14, 28, 0.7);
+  --fretboard-control-border: rgba(18, 14, 28, 0.34);
+}
+
 /* Dark / vivid background → light foreground (default) */
 .themeRoot[data-contrast='dark'],
 .themeRoot [data-contrast='dark'] {

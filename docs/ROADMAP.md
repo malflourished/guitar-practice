@@ -1,7 +1,7 @@
 # vibrato~ roadmap
 
 **Working branch:** `vibrato-next` (cut from `codex/practice-sessions` at `1a91f7c`)
-**Last updated:** 2026-11-11
+**Last updated:** 2026-11-13
 
 This file is the plan of record. It came out of a full review of the app on 2026-11-10 (teaching, layout, look) that the owner approved. It is written so that anyone, human or AI, can pick up a work package without having seen that conversation.
 
@@ -14,7 +14,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | C | Chord shapes and small triads | Ready | nothing | a strong model, and a guitarist should check the fingerings |
 | D | Discover mode | Folded into M and P on 2026-11-12: no separate mode | – | – |
 | E | Practice that adapts | After O. The jam loop moved to P | O | a capable model |
-| F | Look: analog texture | Default look done and reviewed, 2026-11-11. Open: measure its cost on real hardware | nothing | any capable model: the values are decided |
+| F | Look: analog texture, and Vibrato's panels | Default look done and reviewed, 2026-11-11. Vibrato's panels became outlines on the lava, 2026-11-13. Open: measure the texture's cost on real hardware | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
 | H | Theory figures: one key dial | Done, merged and pushed 2026-11-12. H2 (a vertical neck in the dial's place): the owner approved the mock-up 2026-11-13; spec written, being built | – | the strongest model designs; a capable model builds |
 | I | Quick fixes from the 2026-11-12 walkthrough | Done, merged 2026-11-12 | nothing | a capable model |
@@ -344,6 +344,17 @@ Scholar: clean and Print.
 | Black lift, warmth, falloff | milky blacks, warm highlights, darker corners | faded ink, cream stock, toned edges | full-window layers with blend modes |
 | Raster | faint scanlines and colour stripes | halftone dots | repeating gradients |
 
+### Vibrato's panels: outlines on the lava (2026-11-13)
+
+**Chosen by the owner on 2026-11-13: Outline.** The owner asked for "a version of vibrato style where there aren't any windows obscuring the lava flow ... just elements against the background", then for "outlines for the panels ... or perhaps just horizontal dividing lines". After comparing all four in the installed app: "I think outline is the move. looks great".
+
+The filled panels (86% dark, 92% light) hid nearly all of the lava. Vibrato now draws each region (top strip, neck and deck, side panel) as a hairline outline with no fill. The drawer and the menus keep their solid surfaces, because they open over the neck.
+
+- **Panels setting:** Theme → Panels, shown only on Vibrato. On (the old filled panels), **Outline (default)**, Lines (a rule under the strip and the deck's own rule, no boxes), Off (no edges). Saved under `guitar-practice-vibrato-panels-choice`, and only when the user picks one, so a later change of default still reaches everyone who never chose.
+- **Legibility without a fill** (every choice except On): the lava is dimmed 30% (lightened 30% on the light canvas), light type gets a soft halo of the canvas colour (`--lava-halo`), and frets, strings, pill borders and secondary text step up in strength. The edges and rules use `--lava-rule`. Practice's muted grey is lifted too, and the pale Start button keeps no halo.
+- **Code:** tokens in `src/styles/tokens.css`; the region rules in `src/components/Frame.module.css` (`data-on-lava` marks "no fill", `data-vibrato-panels` names the choice); the dimming in `AmbientBackground.module.css`; state in `src/hooks/useUiTheme.ts`; the row in `UiThemeSelector.tsx`.
+- **Checked:** screenshots at 1440×900 of Scales, Chords and Practice, dark and light canvas, in a hidden window. The worst case was small grey text over a bright yellow pool, which the halo and the lifted greys fixed. Not checked: every key's palette, or the 960×640 window.
+
 **Known limits.**
 
 - The glow filter redraws the whole window. Its real cost (GPU, battery, older Macs) has not been measured. A hidden test window held 120 frames a second with it on, which only shows the main thread is not blocked. The panel shows a live frame rate.
@@ -623,3 +634,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   - Neck no longer brings back the deck.
   
   The build has started on Sonnet.
+- **2026-11-13.** Vibrato's panels are now outlines with no fill, so the lava shows behind every control. The owner compared On, Outline, Lines and Off in the installed app and chose Outline. The other three stay in Theme → Panels. See package F.

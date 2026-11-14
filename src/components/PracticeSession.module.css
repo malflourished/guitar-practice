@@ -19,6 +19,14 @@
   --practice-accent: #243e2d;
   --practice-ink: #fafbf4;
 }
+:global(.themeRoot[data-on-lava][data-vibrato-canvas='dark']) .practice {
+  --practice-muted: #d4d8d0;
+  --practice-line: rgba(231, 239, 218, 0.3);
+}
+:global(.themeRoot[data-on-lava][data-vibrato-canvas='light']) .practice {
+  --practice-muted: #3c4840;
+  --practice-line: rgba(20, 40, 20, 0.28);
+}
 .practice h1, .practice h2, .practice p { margin: 0; }
 .practice h1 { font-size: clamp(1.8rem, 3.8vw, 3.5rem); line-height: 1.12; letter-spacing: -0.055em; font-weight: 400; }
 .practice h2 { font-size: 1.05rem; font-weight: 400; letter-spacing: -0.02em; }
@@ -164,3 +172,6 @@
   .beats { display: none; }
   .spaceHint { display: none; }
 }
+
+/* With no panel fill, light type gets a dark halo; ink on the pale accent needs none. */
+:global(.themeRoot[data-on-lava]) .primary, :global(.themeRoot[data-on-lava]) .chordStrip .activeChord { text-shadow: none; }

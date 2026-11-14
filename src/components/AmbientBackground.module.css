@@ -15,3 +15,9 @@
 @media (prefers-reduced-motion: reduce) { .root, .canvas { transition: none; } .fallback i { animation: none; } }
 
 .grain { position: absolute; inset: 0; opacity: 0.2; mix-blend-mode: soft-light; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.9' filter='url(%23n)'/%3E%3C/svg%3E"); background-size: 180px 180px; }
+
+/* No panel fill (Panels: Outline, Lines or Off): nothing stands between the lava and the type, so the lava sits a
+   little lower (darker on the dark canvas, paler on the light one). */
+:global(.themeRoot[data-on-lava][data-vibrato-canvas='dark']) .shade { background-color: #0000004d; }
+:global(.themeRoot[data-on-lava][data-vibrato-canvas='light']) .shade { background: #ffffff4d; }
+.shade { transition: background-color 900ms; }

@@ -398,3 +398,52 @@
 :global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='light']) .side[data-side='drawer'] {
   background: rgba(249, 249, 243, 0.98);
 }
+
+/* ---- Vibrato with no panel fill (Panels: Outline, Lines or Off) ---- */
+
+/* The panels fade rather than snap when the setting changes. */
+:global(.themeRoot[data-ui-theme='vibrato']) .strip,
+:global(.themeRoot[data-ui-theme='vibrato']) .surface,
+:global(.themeRoot[data-ui-theme='vibrato']) .side {
+  transition:
+    background-color var(--duration-theme) var(--ease-calm),
+    border-color var(--duration-theme) var(--ease-calm);
+}
+
+/* The drawer still floats over the neck, so it keeps its surface. */
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava]) .strip,
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava]) .surface,
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava]) .side:not([data-side='drawer']) {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+/* Outline: each panel keeps its edge as a hairline on the lava. */
+:global(.themeRoot[data-on-lava][data-vibrato-panels='outline']) .strip,
+:global(.themeRoot[data-on-lava][data-vibrato-panels='outline']) .surface,
+:global(.themeRoot[data-on-lava][data-vibrato-panels='outline']) .side:not([data-side='drawer']) {
+  border-color: var(--lava-rule);
+}
+
+/* Lines: no boxes, only horizontal rules: one under the strip, and the deck's
+   own rule between the neck and the controls. */
+:global(.themeRoot[data-on-lava][data-vibrato-panels='lines']) .strip {
+  border-bottom-color: var(--lava-rule);
+  border-radius: 0;
+}
+
+:global(.themeRoot[data-on-lava][data-vibrato-panels='outline']) .deck,
+:global(.themeRoot[data-on-lava][data-vibrato-panels='lines']) .deck {
+  border-top-color: var(--lava-rule);
+}
+
+/* Light type carries a soft halo of the canvas colour (see tokens.css), so it
+   reads over the brightest pools. The neck draws its own shadow. */
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava]) .frame {
+  text-shadow: var(--lava-halo);
+}
+
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava]) .frame svg,
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava]) .side[data-side='drawer'] {
+  text-shadow: none;
+}
