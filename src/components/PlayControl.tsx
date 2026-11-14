@@ -57,10 +57,12 @@ const REACHES: Choice<PlayReach>[] = [
   { id: 'position', label: 'This position' },
   { id: 'neck', label: 'Whole neck', title: 'Every position in turn, up or down the neck' },
 ];
+const LADDER_HINT =
+  'Each pass of the form is played in one stretch of the neck, and the stretch moves between passes. The same chord higher up is nearly the same notes, so the point is where your hand goes.';
 const LADDERS: Choice<PlayLadder>[] = [
   { id: 'off', label: 'In place' },
-  { id: 'up', label: 'Up the neck', title: 'Each chord a position higher' },
-  { id: 'down', label: 'Down the neck', title: 'Each chord a position lower' },
+  { id: 'up', label: 'Up the neck', title: 'Each pass a region higher, then back down' },
+  { id: 'down', label: 'Down the neck', title: 'Each pass a region lower, then back up' },
 ];
 
 const GUITARS: Choice<GuitarHold>[] = [
@@ -221,6 +223,7 @@ export function PlayMenu({
               <Choices
                 key={id}
                 title={TITLES[id]}
+                hint={LADDER_HINT}
                 choices={LADDERS}
                 value={options.ladder}
                 onChange={(ladder) => onOptionsChange({ ladder })}

@@ -3,6 +3,7 @@ import {
   PROGRESSIONS,
   getProgressionById,
   resolveProgression,
+  type ClimbChoice,
   type NotationPreference,
 } from '../../lib/music';
 import { oneOf, usePersistentState } from '../../hooks/usePersistentState';
@@ -27,7 +28,11 @@ export function useProgressionsState({
     oneOf(PROGRESSIONS.map((progression) => progression.id)),
   );
   const [progressionStepIndex, setProgressionStepIndex] = useState(0);
-  const [ladderAnchor, setLadderAnchor] = useState<number | null>(null);
+  // Move along the neck: what Play chose (null for In place), and the pass the
+  // loop is on, which the jam sets at each beat so the neck and the panel show
+  // that pass's region.
+  const [climb, setClimb] = useState<ClimbChoice | null>(null);
+  const [climbPass, setClimbPass] = useState(0);
 
   const activeProgression = useMemo(
     () => getProgressionById(progressionId) ?? PROGRESSIONS[0],
@@ -71,8 +76,10 @@ export function useProgressionsState({
     setProgressionId,
     progressionStepIndex,
     setProgressionStepIndex,
-    ladderAnchor,
-    setLadderAnchor,
+    climb,
+    setClimb,
+    climbPass,
+    setClimbPass,
     activeProgression,
     resolvedProgressionSteps,
     activeProgressionStep,

@@ -2,12 +2,34 @@
    bar lines between the cells, the current bar lit like a selected pill, and
    a hairline playhead that crosses it with the beat. */
 .strip {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   min-width: 0;
   min-height: 0;
   width: 100%;
+}
+
+/* A line of small text under the strip, in the deck's label style (the beat
+   row's). It hangs below the strip's box, where the centred strip leaves room
+   even for twelve bars, so it takes no space and moves nothing. */
+.caption {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 0.3rem 0 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.15rem;
+  color: var(--text-muted);
+  letter-spacing: var(--label-tracking);
+  font-variant-numeric: tabular-nums;
 }
 
 .line {

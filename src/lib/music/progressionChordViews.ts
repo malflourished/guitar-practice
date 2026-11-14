@@ -5,7 +5,7 @@ import {
   getSpelledChordNotes,
   spelledRootFromNoteName,
 } from './noteSpelling';
-import { buildChordPositions } from './positions';
+import { buildChordPositions, type Position } from './positions';
 import {
   getProgressionStepPositionScope,
   type ResolvedProgressionStep,
@@ -21,6 +21,27 @@ export interface ProgressionChordView {
   noteLabels: Map<NoteName, string>;
 }
 
+/** A chord's view, drawn from a shape that is already chosen. */
+export function buildChordViewFromShape(
+  step: ResolvedProgressionStep,
+  shape: Position | undefined,
+  notation: NotationPreference,
+  /** The number to show when there is no shape: its index, from 0. */
+  fallbackIndex = 0,
+): ProgressionChordView {
+  const spelledRoot = spelledRootFromNoteName(step.root, notation);
+  const spelled = getSpelledChordNotes(spelledRoot, step.quality);
+  return {
+    step,
+    positions: shape?.positions ?? [],
+    mutedStrings: shape?.mutedStrings ?? [],
+    startFret: shape?.startFret ?? 0,
+    endFret: shape?.endFret ?? 4,
+    positionNumber: shape?.number ?? fallbackIndex + 1,
+    noteLabels: buildSpellingMap(spelled),
+  };
+}
+
 export function buildProgressionChordView(
   step: ResolvedProgressionStep,
   positionIndex: number,
@@ -31,18 +52,7 @@ export function buildProgressionChordView(
     positionIndex,
     Math.max(0, regions.length - 1),
   );
-  const region = regions[regionIndex];
-  const spelledRoot = spelledRootFromNoteName(step.root, notation);
-  const spelled = getSpelledChordNotes(spelledRoot, step.quality);
-  return {
-    step,
-    positions: region?.positions ?? [],
-    mutedStrings: region?.mutedStrings ?? [],
-    startFret: region?.startFret ?? 0,
-    endFret: region?.endFret ?? 4,
-    positionNumber: region?.number ?? regionIndex + 1,
-    noteLabels: buildSpellingMap(spelled),
-  };
+  return buildChordViewFromShape(step, regions[regionIndex], notation, regionIndex);
 }
 
 export function buildSavedProgressionChordViews(

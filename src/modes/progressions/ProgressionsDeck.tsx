@@ -4,6 +4,7 @@ import { DisplayToggles } from '../../components/DisplayToggles';
 import { Deck } from '../../components/Frame';
 import type { DisplaySettings } from '../../hooks/useDisplaySettings';
 import type { FaderLevel, JamLayer, JamMix } from '../../lib/audio/jamMix';
+import { formatClimb, type ClimbNow } from '../../lib/music';
 import type { ProgressionsState } from './useProgressionsState';
 import { FormStrip } from './FormStrip';
 import { MixFaders } from './MixFaders';
@@ -16,6 +17,8 @@ interface ProgressionsDeckProps {
   progressions: ProgressionsState;
   /** Where the jam loop is. */
   jam: JamLoopState;
+  /** While "Move along the neck" plays: the region the pass is in and what comes next. */
+  climb: ClimbNow | null;
   /** Beats a minute, for the form strip's playhead. */
   tempo: number;
   play: PlayControlProps;
@@ -35,6 +38,7 @@ interface ProgressionsDeckProps {
 export function ProgressionsDeck({
   progressions,
   jam,
+  climb,
   tempo,
   play,
   display,
@@ -50,6 +54,9 @@ export function ProgressionsDeck({
     setProgressionStepIndex,
   } = progressions;
   const chords = useMemo(() => jamChordsOf(steps), [steps]);
+  // "frets 3–7 · up next pass": it sits under the form strip, which is wide enough for it
+  // (the beat row beside the dots is not: 284 px at the smallest window)
+  const climbText = climb ? formatClimb(climb, play.options.jamLoop) : '';
 
   return (
     <Deck>
@@ -63,6 +70,7 @@ export function ProgressionsDeck({
               onProgressionChange={handleProgressionChange}
               onProgressionStepChange={setProgressionStepIndex}
               jam={jam}
+              climbText={climbText}
               loop={play.options.jamLoop}
             />
             <div className={styles.playRow}>
@@ -82,6 +90,7 @@ export function ProgressionsDeck({
           selectedIndex={progressionStepIndex}
           jam={jam}
           tempo={tempo}
+          caption={climbText}
           onSelect={setProgressionStepIndex}
         />
         <MixFaders mix={mix} onChange={onMixChange} />

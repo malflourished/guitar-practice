@@ -13,7 +13,11 @@ export type PlayDirection = 'up' | 'down' | 'updown';
 export type Articulation = 'strum' | 'arpeggio';
 /** How far a scale run goes: the box on the neck, or every box in turn. */
 export type PlayReach = 'position' | 'neck';
-/** Progressions: keep each chord where it is, or walk the voicings up or down the neck. */
+/**
+ * Progressions, "Move along the neck": every pass in the shapes shown, or the
+ * region of the neck moving between passes, up and then back down (or the
+ * reverse). See `buildClimbPlan`.
+ */
 export type PlayLadder = 'off' | 'up' | 'down';
 
 export interface PlayOptions {

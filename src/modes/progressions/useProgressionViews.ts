@@ -1,11 +1,13 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
-  buildLadderProgressionChordViews,
+  buildClimbChordViews,
+  buildClimbPlan,
   buildSavedProgressionChordViews,
+  climbShapesAt,
+  describeClimb,
   type NotationPreference,
-  type ProgressionLadderDirection,
 } from '../../lib/music';
-import type { StudyMode } from '../../types/music';
+import type { FretPosition, StudyMode } from '../../types/music';
 import type { ProgressionsState } from './useProgressionsState';
 
 interface ProgressionViewsInput {
@@ -14,13 +16,15 @@ interface ProgressionViewsInput {
   progressions: ProgressionsState;
   /** The neck view's saved position per scope (each chord has its own). */
   positionByScope: Record<string, number>;
-  /** Which playback is running (a ladder run swaps the shapes shown). */
+  /** Which playback is running (a climb swaps the shapes shown). */
   playingId: string | null;
 }
 
 /**
  * The chord shapes the Progressions panel and neck show: each chord's saved
- * position, or, while a ladder run plays, the shapes the ladder walks through.
+ * position, or, while a climb plays ("Move along the neck"), the shapes of the
+ * region the loop is in. The climb plan is built once, here, so the screen and
+ * the guitar's strum (`positionsForPass`) read the same shapes.
  */
 export function useProgressionViews({
   studyMode,
@@ -33,7 +37,8 @@ export function useProgressionViews({
     progressionId,
     progressionStepIndex,
     resolvedProgressionSteps,
-    ladderAnchor,
+    climb,
+    climbPass,
   } = progressions;
 
   const savedProgressionChordViews = useMemo(() => {
@@ -52,32 +57,28 @@ export function useProgressionViews({
     positionByScope,
   ]);
 
-  const ladderDirection: ProgressionLadderDirection | null =
-    playingId === 'jam-ascending'
-      ? 'ascending'
-      : playingId === 'jam-descending'
-        ? 'descending'
-        : null;
+  const climbPlan = useMemo(
+    () =>
+      studyMode === 'progressions' && climb
+        ? buildClimbPlan(resolvedProgressionSteps, climb)
+        : null,
+    [studyMode, climb, resolvedProgressionSteps],
+  );
 
-  const ladderActive = ladderDirection !== null && ladderAnchor !== null;
+  // A climb plays under the id 'jam-up' or 'jam-down'; In place is plain 'jam'.
+  const climbActive = climbPlan !== null && (playingId?.startsWith('jam-') ?? false);
 
   const displayProgressionChordViews = useMemo(() => {
     if (studyMode !== 'progressions') return [];
-    if (ladderActive && ladderDirection && ladderAnchor !== null) {
-      return buildLadderProgressionChordViews(
-        resolvedProgressionSteps,
-        ladderAnchor,
-        ladderDirection,
-        notation,
-      );
+    if (climbActive && climbPlan) {
+      return buildClimbChordViews(climbPlan, climbPass, notation);
     }
     return savedProgressionChordViews;
   }, [
     studyMode,
-    ladderActive,
-    ladderDirection,
-    ladderAnchor,
-    resolvedProgressionSteps,
+    climbActive,
+    climbPlan,
+    climbPass,
     notation,
     savedProgressionChordViews,
   ]);
@@ -87,8 +88,8 @@ export function useProgressionViews({
       Math.min(progressionStepIndex, displayProgressionChordViews.length - 1)
     ];
 
-  const ladderPositionRegion = useMemo(() => {
-    if (!ladderActive || !activeDisplayChord) return undefined;
+  const climbRegion = useMemo(() => {
+    if (!climbActive || !activeDisplayChord) return undefined;
     return {
       number: activeDisplayChord.positionNumber,
       startFret: activeDisplayChord.startFret,
@@ -96,14 +97,35 @@ export function useProgressionViews({
       positions: activeDisplayChord.positions,
       mutedStrings: activeDisplayChord.mutedStrings,
     };
-  }, [ladderActive, activeDisplayChord]);
+  }, [climbActive, activeDisplayChord]);
+
+  /** Where the climb is and what happens next, for the deck's label. */
+  const climbNow = useMemo(
+    () => (climbActive && climbPlan ? describeClimb(climbPlan, climbPass) : null),
+    [climbActive, climbPlan, climbPass],
+  );
+
+  /**
+   * The shapes the guitar strums in a pass, one per step. The jam asks by pass
+   * number, which it works out from the bar itself, because it schedules a bar
+   * about 100 ms before the screen (and so `climbPass`) catches up.
+   */
+  const positionsForPass = useCallback(
+    (pass: number): FretPosition[][] =>
+      climbPlan
+        ? climbShapesAt(climbPlan, pass).map((shape) => shape.positions)
+        : savedProgressionChordViews.map((chord) => chord.positions),
+    [climbPlan, savedProgressionChordViews],
+  );
 
   return {
     savedProgressionChordViews,
     displayProgressionChordViews,
     activeDisplayChord,
-    ladderActive,
-    ladderPositionRegion,
+    climbActive,
+    climbRegion,
+    climbNow,
+    positionsForPass,
   };
 }
 

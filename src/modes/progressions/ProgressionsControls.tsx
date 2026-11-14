@@ -15,6 +15,11 @@ interface ProgressionsControlsProps {
   onProgressionStepChange: (index: number) => void;
   /** Where the jam loop is: the beat dots, the pass count and the next change show while it plays. */
   jam: JamLoopState;
+  /**
+   * While "Move along the neck" plays: where this pass is on the neck and what
+   * comes next, for the beat row's spoken label. The form strip shows it.
+   */
+  climbText: string;
   /** The loop goes round and round (Loop is on), so the next change may be round the top. */
   loop: boolean;
 }
@@ -34,6 +39,7 @@ export function ProgressionsControls({
   onProgressionChange,
   onProgressionStepChange,
   jam,
+  climbText,
   loop,
 }: ProgressionsControlsProps) {
   const activeStep = resolvedSteps[progressionStepIndex];
@@ -117,7 +123,7 @@ export function ProgressionsControls({
               jam.playing
                 ? jam.countIn
                   ? `Count-in, beat ${jam.beat + 1}`
-                  : `Bar ${jam.stepIndex + 1} of ${resolvedSteps.length}, beat ${jam.beat + 1}${jam.pass > 0 ? `, pass ${jam.pass + 1}` : ''}`
+                  : `Bar ${jam.stepIndex + 1} of ${resolvedSteps.length}, beat ${jam.beat + 1}${jam.pass > 0 ? `, pass ${jam.pass + 1}` : ''}${climbText ? `, ${climbText}` : ''}`
                 : undefined
             }
           >

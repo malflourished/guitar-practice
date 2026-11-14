@@ -56,8 +56,12 @@ export const IDLE_JAM: JamLoopState = {
 interface JamLoopInput {
   audio: UseInstrument;
   steps: ResolvedProgressionStep[];
-  /** The shapes the neck and panel show now, one per step (the strum follows them). */
-  chordPositions: FretPosition[][];
+  /**
+   * The shapes the neck and panel show in a pass, one per step: what the guitar
+   * strums. Asked by pass, from the bar being scheduled, because a bar is
+   * scheduled before the screen has caught up with it.
+   */
+  chordPositionsAt: (pass: number) => FretPosition[][];
   /** How long the guitar holds each chord (the Guitar fader decides whether it sounds). */
   guitar: Exclude<JamBarOptions['guitar'], 'off'>;
   /** The three faders, applied to the engine at once, also while the loop is stopped. */
@@ -69,6 +73,8 @@ interface JamLoopInput {
   progressionId: string;
   stepIndex: number;
   setStepIndex: (index: number) => void;
+  /** The screen follows the loop's pass, so "Move along the neck" shows that pass's region. */
+  setPass: (pass: number) => void;
 }
 
 /**
@@ -107,6 +113,7 @@ export function useJamLoop(input: JamLoopInput) {
       if (now.chords.length === 0) return;
       before.current = { stepIndex: now.stepIndex, progressionId: now.progressionId };
       now.setStepIndex(0);
+      now.setPass(0);
       setState({ ...IDLE_JAM, playing: true, countIn: true, changeComing: false });
       void now.audio
         .playJam(
@@ -130,7 +137,8 @@ export function useJamLoop(input: JamLoopInput) {
                     cymbal: isTopOfForm(position),
                   },
                 ),
-                strum: latestNow.chordPositions[stepIndex] ?? [],
+                // the shapes of this bar's own pass, worked out from the bar, not from the screen
+                strum: latestNow.chordPositionsAt(position.pass)[stepIndex] ?? [],
               };
             },
             loop: () => latest.current.loop,
@@ -142,6 +150,7 @@ export function useJamLoop(input: JamLoopInput) {
               }
               const position = jamPosition(bar, latestNow.chords);
               latestNow.setStepIndex(position.stepIndex);
+              latestNow.setPass(position.pass);
               setState({
                 playing: true,
                 countIn: false,
