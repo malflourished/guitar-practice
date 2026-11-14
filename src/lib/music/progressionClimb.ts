@@ -25,7 +25,12 @@ export const CLIMB_MIN_BARS = 4;
 /** What Play chose: which way to go, and the shape the first chord starts from. */
 export interface ClimbChoice {
   direction: ClimbDirection;
-  /** The shape the player had selected for the first chord: an index into `buildChordPositions`. */
+  /**
+   * The shape the player had selected for the first chord: an index into
+   * `buildChordPositions`. Up starts at the region nearest it. Down ignores it
+   * and starts at the top: from the open shape it would otherwise have nowhere
+   * lower to go and behave exactly like Up.
+   */
   start: number;
 }
 
@@ -43,7 +48,10 @@ export interface ClimbPlan {
   steps: ResolvedProgressionStep[];
   /** Low to high. */
   regions: ClimbRegion[];
-  /** The region nearest the shape the player had selected for the first chord. */
+  /**
+   * Where the first pass is played. Up: the region nearest the shape the player
+   * had selected for the first chord. Down: the highest region.
+   */
   startRegion: number;
   /** How many passes the loop stays in a region before it moves. */
   passesPerRegion: number;
@@ -118,8 +126,10 @@ export function climbPassesPerRegion(stepCount: number): number {
  * their shapes around it (`fitPass`). The same chord is always the same shape
  * within a region, and as the region goes up no chord's shape goes down.
  *
- * `choice.start` picks where the climb begins: the region nearest the shape
- * the player had selected for the first chord. Returns null for an empty form.
+ * Where the climb begins depends on the way. Up begins at the region nearest
+ * the shape the player had selected for the first chord (`choice.start`). Down
+ * begins at the highest region, whatever was selected, and steps down from
+ * there. Returns null for an empty form.
  */
 export function buildClimbPlan(
   steps: ResolvedProgressionStep[],
@@ -149,9 +159,12 @@ export function buildClimbPlan(
 
   const all = buildChordPositions(steps[0].root, steps[0].quality);
   const selected = all[Math.min(Math.max(0, choice.start), Math.max(0, all.length - 1))];
-  const startRegion = selected
-    ? anchors.indexOf(nearestShape(anchors, middle(selected)))
-    : 0;
+  const startRegion =
+    choice.direction === 'down'
+      ? regions.length - 1
+      : selected
+        ? anchors.indexOf(nearestShape(anchors, middle(selected)))
+        : 0;
   return {
     direction: choice.direction,
     steps,
@@ -165,7 +178,8 @@ export function buildClimbPlan(
  * The region a pass is played in. The climb starts at `startRegion`, moves one
  * region every `passesPerRegion` passes in its direction, turns round at the
  * highest (or the lowest) region and comes back, and never stops at an end.
- * Down is Up seen in a mirror: it goes the other way first.
+ * Down is Up seen in a mirror: begun at the top it goes down first, turns
+ * round at the lowest region and comes back up.
  */
 export function climbRegionIndex(plan: ClimbPlan, pass: number): number {
   const top = plan.regions.length - 1;

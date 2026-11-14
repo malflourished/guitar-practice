@@ -15,8 +15,8 @@ export type Articulation = 'strum' | 'arpeggio';
 export type PlayReach = 'position' | 'neck';
 /**
  * Progressions, "Move along the neck": every pass in the shapes shown, or the
- * region of the neck moving between passes, up and then back down (or the
- * reverse). See `buildClimbPlan`.
+ * region of the neck moving between passes: Up from the shape selected, then
+ * back down; Down from the top region, then back up. See `buildClimbPlan`.
  */
 export type PlayLadder = 'off' | 'up' | 'down';
 

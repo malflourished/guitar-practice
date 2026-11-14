@@ -62,7 +62,7 @@ const LADDER_HINT =
 const LADDERS: Choice<PlayLadder>[] = [
   { id: 'off', label: 'In place' },
   { id: 'up', label: 'Up the neck', title: 'Each pass a region higher, then back down' },
-  { id: 'down', label: 'Down the neck', title: 'Each pass a region lower, then back up' },
+  { id: 'down', label: 'Down the neck', title: 'From the top, each pass a region lower, then back up' },
 ];
 
 const GUITARS: Choice<GuitarHold>[] = [

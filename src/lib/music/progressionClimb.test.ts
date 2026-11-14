@@ -104,20 +104,75 @@ describe('the 12-bar blues in D, Up the neck', () => {
     expect(planOf('blues-12', 'D', 'up', 99).startRegion).toBe(2);
   });
 
-  it('Down is Up in a mirror: it goes the other way first and turns round at the bottom', () => {
-    const down = planOf('blues-12', 'D', 'down', 2);
-    expect(down.startRegion).toBe(2);
-    expect(regionsOver(down, 9)).toEqual([2, 1, 0, 1, 2, 1, 0, 1, 2]);
-    // from the bottom, Down has nowhere to go but up, and does not stand still
-    expect(regionsOver(planOf('blues-12', 'D', 'down', 0), 7)).toEqual([0, 1, 2, 1, 0, 1, 2]);
-    // from the top, Up goes down first
-    expect(regionsOver(planOf('blues-12', 'D', 'up', 2), 5)).toEqual([2, 1, 0, 1, 2]);
+  it('Up from the top region goes down first, and turns round at the bottom', () => {
+    expect(regionsOver(planOf('blues-12', 'D', 'up', 2), 7)).toEqual([2, 1, 0, 1, 2, 1, 0]);
+  });
+});
+
+describe('the 12-bar blues in D, Down the neck', () => {
+  const plan = planOf('blues-12', 'D', 'down');
+  const up = planOf('blues-12', 'D', 'up');
+
+  it('from the open shape, the first pass is the top region, frets 10 to 14', () => {
+    // the open shape is D7's first of five (see the Up tests): Down no longer starts where Up does
+    expect(up.startRegion).toBe(0);
+    expect(plan.startRegion).toBe(2);
+    expect(plan.regions[plan.startRegion]).toBe(plan.regions.at(-1));
+    expect(climbRegionIndex(plan, 0)).toBe(2);
+    const first = climbShapesAt(plan, 0);
+    expect(frets(first)).toEqual({ low: 10, high: 14 });
+    expect(first.map((shape, bar) => `${plan.steps[bar].chordName}@${shape.startFret}-${shape.endFret}`)).toEqual([
+      'D7@10-12', 'D7@10-12', 'D7@10-12', 'D7@10-12', 'G7@10-12', 'G7@10-12',
+      'D7@10-12', 'D7@10-12', 'A7@12-14', 'G7@10-12', 'D7@10-12', 'A7@12-14',
+    ]);
+  });
+
+  it('later passes descend: each pass is lower than the one before, down to the open position', () => {
+    expect(regionsOver(plan, 3)).toEqual([2, 1, 0]);
+    expect([0, 1, 2].map((pass) => frets(climbShapesAt(plan, pass)))).toEqual([
+      { low: 10, high: 14 },
+      { low: 3, high: 7 },
+      { low: 0, high: 3 },
+    ]);
+    // every bar's shape sits lower than it did a pass before
+    for (const pass of [0, 1]) {
+      const here = climbShapesAt(plan, pass);
+      const next = climbShapesAt(plan, pass + 1);
+      here.forEach((shape, bar) => expect(middle(next[bar]), `bar ${bar + 1}`).toBeLessThan(middle(shape)));
+    }
+  });
+
+  it('turns round at the bottom and comes back up, and is never still', () => {
+    expect(regionsOver(plan, 13)).toEqual([2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2]);
+    const regions = regionsOver(plan, 40);
+    regions.slice(1).forEach((region, i) => expect(region).not.toBe(regions[i]));
+  });
+
+  it('starts at the top whichever shape was selected: the selection belongs to Up', () => {
+    // D7's five shapes, and a choice past the last
+    expect([0, 1, 2, 3, 4, 99].map((start) => planOf('blues-12', 'D', 'down', start).startRegion)).toEqual([2, 2, 2, 2, 2, 2]);
+  });
+
+  it('is Up seen in a mirror: from the open shape, Down is the top minus Up, pass by pass', () => {
+    expect(regionsOver(plan, 24)).toEqual(regionsOver(up, 24).map((region) => 2 - region));
     // and in general Down from a region is Up from the mirrored region, mirrored
     for (let start = 0; start < plan.regions.length; start++) {
       const mirrored = plan.regions.length - 1 - start;
-      const up = { ...plan, startRegion: mirrored };
-      const mirror = { ...plan, direction: 'down' as const, startRegion: start };
-      expect(regionsOver(mirror, 20)).toEqual(regionsOver(up, 20).map((region) => plan.regions.length - 1 - region));
+      const mirrorUp = { ...plan, direction: 'up' as const, startRegion: mirrored };
+      const mirrorDown = { ...plan, direction: 'down' as const, startRegion: start };
+      expect(regionsOver(mirrorDown, 20)).toEqual(regionsOver(mirrorUp, 20).map((region) => plan.regions.length - 1 - region));
+    }
+  });
+
+  it('plays the same regions Up does, and never a shape above fret 15', () => {
+    const regionNames = (p: ClimbPlan) =>
+      p.regions.map((region) => region.shapes.map((shape) => `${shape.startFret}-${shape.endFret}`));
+    expect(regionNames(plan)).toEqual(regionNames(up));
+    for (let pass = 0; pass < 24; pass++) {
+      for (const shape of climbShapesAt(plan, pass)) {
+        expect(shape.endFret).toBeLessThanOrEqual(CLIMB_TOP_FRET);
+        for (const dot of shape.positions) expect(dot.fret).toBeLessThanOrEqual(CLIMB_TOP_FRET);
+      }
     }
   });
 });
@@ -219,6 +274,61 @@ describe('every library entry, in every key', () => {
     }
   });
 
+  it('Up starts at the region nearest the selected shape; Down starts at the highest region', () => {
+    for (const { entry, key, steps, start, direction, plan } of everyPlan()) {
+      const where = `${entry.id} in ${key}, ${direction} from ${start}`;
+      if (direction === 'down') {
+        expect(plan.startRegion, where).toBe(plan.regions.length - 1);
+        continue;
+      }
+      // worked out on its own: the first chord's shapes that fit, the one selected, the nearest middle (a tie to the lower)
+      const all = buildChordPositions(steps[0].root, steps[0].quality);
+      const fits = all.filter((shape) => shape.endFret <= CLIMB_TOP_FRET);
+      const selectedMiddle = middle(all[Math.min(start, all.length - 1)]);
+      const distances = fits.map((shape) => Math.abs(middle(shape) - selectedMiddle));
+      expect(plan.startRegion, where).toBe(distances.indexOf(Math.min(...distances)));
+    }
+  });
+
+  it('walks between the ends like a ball, either way: an independent simulation agrees pass by pass', () => {
+    /** One region every `stay` passes, in the way it is going; it turns round at an end, and never stops there. */
+    const simulate = (plan: ClimbPlan, passes: number) => {
+      const top = plan.regions.length - 1;
+      let here = plan.startRegion;
+      let heading = plan.direction === 'up' ? 1 : -1;
+      return Array.from({ length: passes }, (_, pass) => {
+        if (pass > 0 && pass % plan.passesPerRegion === 0 && top > 0) {
+          if (here + heading < 0 || here + heading > top) heading = -heading;
+          here += heading;
+        }
+        return here;
+      });
+    };
+    for (const { entry, key, direction, start, plan } of everyPlan()) {
+      const passes = 12 * plan.passesPerRegion;
+      expect(regionsOver(plan, passes), `${entry.id} in ${key}, ${direction} from ${start}`).toEqual(simulate(plan, passes));
+    }
+  });
+
+  it('from the open (lowest) shape, Down is Up in a mirror, in every entry and key: it starts at the top, not where Up does', () => {
+    for (const entry of PROGRESSION_LIBRARY) {
+      for (const key of KEYS) {
+        const up = planOf(entry.id, key, 'up', 0);
+        const down = planOf(entry.id, key, 'down', 0);
+        const top = up.regions.length - 1;
+        const where = `${entry.id} in ${key}`;
+        // the lowest shape is the first of the first chord's shapes, so Up begins at the bottom
+        expect(climbRegionIndex(up, 0), where).toBe(0);
+        // and Down's first pass is the top region: not the same walk as Up, and not stuck at the bottom
+        expect(climbRegionIndex(down, 0), where).toBe(top);
+        expect(top, where).toBeGreaterThan(0);
+        expect(regionsOver(down, 16 * down.passesPerRegion), where).toEqual(
+          regionsOver(up, 16 * up.passesPerRegion).map((region) => top - region),
+        );
+      }
+    }
+  });
+
   it('never moves a chord down as the region goes up', () => {
     for (const { entry, key, steps, plan } of everyPlan()) {
       for (let region = 1; region < plan.regions.length; region++) {
@@ -278,6 +388,15 @@ describe('forms under four bars', () => {
     expect(plan.steps).toHaveLength(2);
     expect(plan.passesPerRegion).toBe(2);
     expect(regionsOver(plan, 12)).toEqual([0, 0, 1, 1, 2, 2, 1, 1, 0, 0, 1, 1]);
+  });
+
+  it('Down on a two-bar vamp starts at the top and changes region every second pass', () => {
+    const plan = planOf('vamp-mixolydian', 'A', 'down');
+    expect(plan.regions).toHaveLength(3);
+    expect(regionsOver(plan, 12)).toEqual([2, 2, 1, 1, 0, 0, 1, 1, 2, 2, 1, 1]);
+    expect(describeClimb(plan, 0).next).toEqual({ direction: 'down', passes: 2 });
+    expect(describeClimb(plan, 3).next).toEqual({ direction: 'down', passes: 1 });
+    expect(describeClimb(plan, 5).next).toEqual({ direction: 'up', passes: 1 });
   });
 
   it('a three-bar form changes region every second pass', () => {
@@ -360,6 +479,21 @@ describe('the label', () => {
     expect(label(2)).toBe('frets 10–14 · down next pass');
     expect(label(3)).toBe('frets 3–7 · down next pass');
     expect(label(4)).toBe('frets 0–3 · up next pass');
+  });
+
+  it('names the frets and what happens next, Down the neck from the open shape', () => {
+    const down = planOf('blues-12', 'D', 'down');
+    const downLabel = (pass: number) => formatClimb(describeClimb(down, pass), true);
+    expect([0, 1, 2, 3, 4, 5, 6, 7].map(downLabel)).toEqual([
+      'frets 10–14 · down next pass',
+      'frets 3–7 · down next pass',
+      'frets 0–3 · up next pass',
+      'frets 3–7 · up next pass',
+      'frets 10–14 · down next pass',
+      'frets 3–7 · down next pass',
+      'frets 0–3 · up next pass',
+      'frets 3–7 · up next pass',
+    ]);
   });
 
   it('names only the frets when the loop will not come round again', () => {
