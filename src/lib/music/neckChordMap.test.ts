@@ -123,25 +123,110 @@ describe('the map in key', () => {
   });
 });
 
+/**
+ * The chords Borrowed marks, as the spec names them: not the whole parallel
+ * window but the few most often borrowed, by numeral. Spelled out here so the
+ * tests do not lean on the helper they check.
+ */
+const BORROWED: Record<'major' | 'minor', string[]> = {
+  major: ['♭III', 'iv', '♭VI', '♭VII'],
+  minor: ['IV', 'V'],
+};
+
+/** The dial's extra cells a view marks on the neck. */
+const markedCells = (dial: KeyDialInfo) =>
+  dial.state.view === 'borrowed'
+    ? dial.extra.filter((cell) => BORROWED[dial.state.mode].includes(cell.numeral))
+    : dial.extra;
+
 describe('the map in Borrowed and Dominants', () => {
-  it('Borrowed in C major: the extras are marked extra, and a shared root shows the extra\'s numeral', () => {
-    const dial = info('C', 'major', 'borrowed');
-    const markers = neckChordMap(dial);
+  it('Borrowed in C major: the borrowed kind sits on exactly the E♭, F, A♭ and B♭ roots, and C still reads I', () => {
+    const markers = neckChordMap(info('C', 'major', 'borrowed'));
+    const borrowed = markers.filter((m) => m.kind === 'extra');
+    expect(Object.fromEntries(borrowed.map((m) => [m.root, m.numeral]))).toEqual({
+      'E♭': '♭III',
+      F: 'iv',
+      'A♭': '♭VI',
+      'B♭': '♭VII',
+    });
+    // Every place those four roots fall is marked, in the borrowed style at full strength.
+    expect(borrowed.map(placeOf).sort()).toEqual(placesOf(new Set([3, 5, 8, 10])).sort());
+    expect(borrowed.every((m) => !m.dimmed)).toBe(true);
+
     const lowE = Object.fromEntries(markers.filter((m) => m.string === 5).map((m) => [m.fret, m]));
-    // F, C and G are roots of both IV I V and iv i v: the extra wins.
+    // F is the root of IV and of iv: the borrowed chord's numeral shows.
     expect(lowE[1]).toMatchObject({ numeral: 'iv', kind: 'extra' });
-    expect(lowE[8]).toMatchObject({ numeral: 'i', kind: 'extra' });
-    expect(lowE[3]).toMatchObject({ numeral: 'v', kind: 'extra' });
-    // D: ii° replaces ii. A♭, E♭, B♭ are new roots.
-    expect(lowE[10]).toMatchObject({ numeral: 'ii°', kind: 'extra' });
     expect(lowE[4]).toMatchObject({ numeral: '♭VI', kind: 'extra' });
     expect(lowE[11]).toMatchObject({ numeral: '♭III', kind: 'extra' });
     expect(lowE[6]).toMatchObject({ numeral: '♭VII', kind: 'extra' });
-    // The key's own chords nobody replaced stay, in their own style, stepped back.
+    // Every other root keeps its own in-key numeral and style, stepped back: C stays I, G stays V, D stays ii.
+    expect(lowE[8]).toMatchObject({ numeral: 'I', kind: 'home', dimmed: true });
+    expect(lowE[3]).toMatchObject({ numeral: 'V', kind: 'major', dimmed: true });
+    expect(lowE[10]).toMatchObject({ numeral: 'ii', kind: 'minor', dimmed: true });
+    expect(lowE[0]).toMatchObject({ numeral: 'iii', kind: 'minor', dimmed: true });
     expect(lowE[5]).toMatchObject({ numeral: 'vi', kind: 'minor', dimmed: true });
     expect(lowE[7]).toMatchObject({ numeral: 'vii°', kind: 'dim', dimmed: true });
-    expect(lowE[0]).toMatchObject({ numeral: 'iii', kind: 'minor', dimmed: true });
-    for (const m of markers.filter((x) => x.kind === 'extra')) expect(m.dimmed).toBe(false);
+    // Nothing else of C minor: no i, v or ii°.
+    expect(new Set(markers.map((m) => m.numeral))).toEqual(
+      new Set(['♭III', 'iv', '♭VI', '♭VII', 'I', 'ii', 'iii', 'V', 'vi', 'vii°']),
+    );
+  });
+
+  it('Borrowed in A minor: only D and E are the borrowed kind, as IV and V', () => {
+    // 'C' with mode minor is the relative minor, A minor.
+    const dial = info('C', 'minor', 'borrowed');
+    expect(dial.tonic).toBe('A');
+    const markers = neckChordMap(dial);
+    const borrowed = markers.filter((m) => m.kind === 'extra');
+    expect(Object.fromEntries(borrowed.map((m) => [m.root, m.numeral]))).toEqual({ D: 'IV', E: 'V' });
+    expect(borrowed.map(placeOf).sort()).toEqual(placesOf(new Set([2, 4])).sort());
+    expect(borrowed.every((m) => !m.dimmed)).toBe(true);
+
+    const lowE = Object.fromEntries(markers.filter((m) => m.string === 5).map((m) => [m.fret, m]));
+    // D and E are the roots of iv and v too: the borrowed numeral shows.
+    expect(lowE[10]).toMatchObject({ numeral: 'IV', kind: 'extra' });
+    expect(lowE[0]).toMatchObject({ numeral: 'V', kind: 'extra' });
+    // The other roots keep the minor key's own numerals, stepped back.
+    expect(lowE[5]).toMatchObject({ numeral: 'i', kind: 'home', dimmed: true });
+    expect(lowE[7]).toMatchObject({ numeral: 'ii°', kind: 'dim', dimmed: true });
+    expect(lowE[8]).toMatchObject({ numeral: 'III', kind: 'major', dimmed: true });
+    expect(lowE[1]).toMatchObject({ numeral: 'VI', kind: 'major', dimmed: true });
+    expect(lowE[3]).toMatchObject({ numeral: 'VII', kind: 'major', dimmed: true });
+    expect(new Set(markers.map((m) => m.numeral))).toEqual(new Set(['IV', 'V', 'i', 'ii°', 'III', 'VI', 'VII']));
+  });
+
+  it('Borrowed in all 12 keys and both modes: the borrowed kind sits on exactly the commonly borrowed roots, and home keeps its numeral', () => {
+    for (const major of MAJORS) {
+      for (const mode of MODES) {
+        const dial = info(major, mode, 'borrowed');
+        const cells = markedCells(dial);
+        expect(cells.map((c) => c.numeral).sort()).toEqual([...BORROWED[mode]].sort());
+        const roots = new Set(cells.map((c) => rootPitch(c.label)));
+        expect(roots.size).toBe(BORROWED[mode].length);
+
+        const markers = neckChordMap(dial);
+        const borrowed = markers.filter((m) => m.kind === 'extra');
+        expect(borrowed.map(placeOf).sort()).toEqual(placesOf(roots).sort());
+        expect(new Set(borrowed.map((m) => m.numeral))).toEqual(new Set(BORROWED[mode]));
+        for (const m of borrowed) {
+          expect(roots.has(m.pitchClass)).toBe(true);
+          expect(m.dimmed).toBe(false);
+        }
+
+        // The key's own home is never one of them: it keeps I (i in minor), stepped back.
+        const homePitch = rootPitch(dial.main.find((c) => c.home)!.label);
+        expect(roots.has(homePitch)).toBe(false);
+        const homes = markers.filter((m) => m.pitchClass === homePitch);
+        expect(homes.length).toBeGreaterThan(0);
+        for (const m of homes) {
+          expect(m).toMatchObject({ numeral: mode === 'major' ? 'I' : 'i', kind: 'home', dimmed: true });
+        }
+
+        // Nothing from the rest of the parallel window: only the key's own roots and the borrowed few.
+        const own = new Set(dial.main.map((c) => rootPitch(c.label)));
+        for (const m of markers) expect(own.has(m.pitchClass) || roots.has(m.pitchClass)).toBe(true);
+      }
+    }
   });
 
   it('Dominants in C major: V/V D7, V/ii A7, V/vi E7, V/iii B7 sit on the roots of ii, vi, iii, vii°', () => {
@@ -166,16 +251,16 @@ describe('the map in Borrowed and Dominants', () => {
     expect(at(markers, 5, 0)).toMatchObject({ numeral: 'V', kind: 'extra' });
   });
 
-  it('in every key, both modes: each extra wears all its places, and the key\'s own chords fill the rest', () => {
+  it('in every key, both modes: each marked extra wears all its places, and the key\'s own chords fill the rest', () => {
     for (const major of MAJORS) {
       for (const mode of MODES) {
         for (const view of ['borrowed', 'dominants'] as const) {
           const dial = info(major, mode, view);
           const markers = neckChordMap(dial);
-          const extraRoots = new Map(dial.extra.map((cell) => [rootPitch(cell.label), cell]));
+          const extraRoots = new Map(markedCells(dial).map((cell) => [rootPitch(cell.label), cell]));
           const mainRoots = new Map(dial.main.map((cell) => [rootPitch(cell.label), cell]));
 
-          expect(dial.extra.length).toBeGreaterThan(0);
+          expect(extraRoots.size).toBeGreaterThan(0);
           const all = new Set([...extraRoots.keys(), ...mainRoots.keys()]);
           expect(markers.map(placeOf).sort()).toEqual(placesOf(all).sort());
 
@@ -198,13 +283,12 @@ describe('the map in Borrowed and Dominants', () => {
     }
   });
 
-  it('Borrowed from the parallel key puts the extras where the dial puts them (A♭ and E♭ in C major)', () => {
-    const roots = new Set(
-      neckChordMap(info('C', 'major', 'borrowed'))
-        .filter((m) => m.kind === 'extra')
-        .map((m) => m.root),
+  it('Borrowed in a respelled parallel key keeps the dial\'s spelling (G♭ major borrows D, A, E and B from F♯ minor)', () => {
+    const markers = neckChordMap(info('G♭', 'major', 'borrowed'));
+    const borrowed = Object.fromEntries(
+      markers.filter((m) => m.kind === 'extra').map((m) => [m.numeral, m.root]),
     );
-    expect(roots).toEqual(new Set(['A♭', 'E♭', 'B♭', 'F', 'C', 'G', 'D']));
+    expect(borrowed).toEqual({ '♭VI': 'D', '♭III': 'A', '♭VII': 'E', iv: 'B' });
   });
 });
 
@@ -255,7 +339,7 @@ describe('the words that follow the view', () => {
 
   it('Borrowed in a major key names the parallel minor, as the dial spells it', () => {
     expect(neckCaption(info('C', 'major', 'borrowed'))).toEqual([
-      'Borrowed from C minor: ♭VII sits two frets below any I on the same string, ♭III three frets above it, ♭VI four below.',
+      "Borrowed from C minor: ♭VII sits two frets below any I on the same string, ♭III three above, ♭VI four below. iv shares IV's root; only its 3rd drops a fret.",
     ]);
     // G♭ major's parallel minor is written F♯ minor, as on the dial.
     expect(neckCaption(info('G♭', 'major', 'borrowed'))[0]).toMatch(/^Borrowed from F♯ minor: /);
@@ -289,7 +373,7 @@ describe('the words that follow the view', () => {
     }
   });
 
-  it('claims of the Borrowed caption hold on the neck: ♭VII two frets below I, ♭III three above, ♭VI four below', () => {
+  it('claims of the Borrowed caption hold on the neck: ♭VII two frets below I, ♭III three above, ♭VI four below; iv shares IV\'s root and its 3rd drops a fret', () => {
     for (const major of MAJORS) {
       const dial = info(major, 'major', 'borrowed');
       const pitch = (numeral: string) => rootPitch(dial.extra.find((c) => c.numeral === numeral)!.label);
@@ -297,6 +381,13 @@ describe('the words that follow the view', () => {
       expect((home - pitch('♭VII') + 12) % 12).toBe(2);
       expect((pitch('♭III') - home + 12) % 12).toBe(3);
       expect((home - pitch('♭VI') + 12) % 12).toBe(4);
+
+      // IV is major and iv is minor on the same root: the 3rd is a fret lower.
+      const four = info(major, 'major', 'in-key').main.find((c) => c.numeral === 'IV')!;
+      const minorFour = dial.extra.find((c) => c.numeral === 'iv')!;
+      expect(rootPitch(minorFour.label)).toBe(rootPitch(four.label));
+      expect(four.label.endsWith('m')).toBe(false);
+      expect(minorFour.label.endsWith('m')).toBe(true);
     }
   });
 

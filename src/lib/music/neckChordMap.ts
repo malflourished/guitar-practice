@@ -1,3 +1,4 @@
+import type { KeyMode } from '../../types/music';
 import {
   parseDialName,
   type DialCell,
@@ -21,8 +22,8 @@ export const NECK_FRETS = 12;
 
 /**
  * How a marker is drawn. `home` is I (i in minor); `major`, `minor` and `dim`
- * follow the chord's ring; `extra` is a borrowed chord or a secondary
- * dominant, which the Borrowed and Dominants views draw in a style of their own.
+ * follow the chord's ring; `extra` is a chord the view is about (one of the few
+ * most often borrowed, or a secondary dominant), drawn in a style of its own.
  */
 export type NeckMarkerKind = 'home' | 'major' | 'minor' | 'dim' | 'extra';
 
@@ -66,19 +67,44 @@ function kindOf(cell: DialCell, extra: boolean): NeckMarkerKind {
 }
 
 /**
+ * The chords the Borrowed view marks: the few most often borrowed, not the
+ * whole parallel window, which would relabel most of the key (C as i, G as v).
+ * They are picked from the dial's `extra` cells by numeral, so `describeKeyDial`
+ * stays the source: ♭III, iv, ♭VI and ♭VII from the parallel minor in a major
+ * key (E♭, Fm, A♭ and B♭ in C), and IV and V from the parallel major in a
+ * minor key (D and E in A minor).
+ */
+const BORROWED_MARKED: Record<KeyMode, string[]> = {
+  major: ['♭III', 'iv', '♭VI', '♭VII'],
+  minor: ['IV', 'V'],
+};
+
+/**
+ * The dial's extra cells this view marks on the neck: a pick of the borrowed
+ * window in Borrowed, all four secondary dominants in Dominants, none in key.
+ */
+export function markedExtras(info: KeyDialInfo): DialCell[] {
+  if (info.state.view !== 'borrowed') return info.extra;
+  const wanted = BORROWED_MARKED[info.state.mode];
+  return info.extra.filter((cell) => wanted.includes(cell.numeral));
+}
+
+/**
  * Every marker the neck draws for a dial state, string by string. One marker
  * per place: where an extra chord shares a root with one of the key's own
  * (iv and IV on F in C major), the extra wins, because the view is about it.
+ * Every other root keeps its own in-key numeral and style, stepped back.
  */
 export function neckChordMap(info: KeyDialInfo): NeckMarker[] {
+  const extras = markedExtras(info);
   const byPitch = new Map<number, { cell: DialCell; extra: boolean }>();
   for (const cell of info.main) {
     byPitch.set(pitchClassOf(parseDialName(chordRoot(cell.label))), { cell, extra: false });
   }
-  for (const cell of info.extra) {
+  for (const cell of extras) {
     byPitch.set(pitchClassOf(parseDialName(chordRoot(cell.label))), { cell, extra: true });
   }
-  const dimMain = info.extra.length > 0;
+  const dimMain = extras.length > 0;
 
   const markers: NeckMarker[] = [];
   for (let string = 0; string < STRING_COUNT; string++) {
@@ -129,11 +155,12 @@ export function neckLegend(info: KeyDialInfo): NeckLegendItem[] {
     { kind: 'minor', word: 'minor', numeral: sample('minor'), dimmed },
     { kind: 'dim', word: 'diminished', numeral: sample('dim'), dimmed },
   ];
-  if (view !== 'in-key' && info.extra.length > 0) {
+  const extras = markedExtras(info);
+  if (view !== 'in-key' && extras.length > 0) {
     items.push({
       kind: 'extra',
       word: view === 'borrowed' ? 'borrowed' : 'dominant',
-      numeral: info.extra[0].numeral,
+      numeral: extras[0].numeral,
       dimmed: false,
     });
   }
@@ -159,7 +186,7 @@ export function neckCaption(info: KeyDialInfo): string[] {
     return [
       minorKey
         ? `Borrowed from ${borrowedFrom(info)}: IV and V sit on the same roots as iv and v. Only their 3rds move, a fret up.`
-        : `Borrowed from ${borrowedFrom(info)}: ♭VII sits two frets below any I on the same string, ♭III three frets above it, ♭VI four below.`,
+        : `Borrowed from ${borrowedFrom(info)}: ♭VII sits two frets below any I on the same string, ♭III three above, ♭VI four below. iv shares IV's root; only its 3rd drops a fret.`,
     ];
   }
   if (info.state.view === 'dominants') {
