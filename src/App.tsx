@@ -245,7 +245,7 @@ function App() {
             spanEndIndex={neck.neckView.spanEndIndex}
             onSpanEndChange={neck.setSpanEndIndex}
             allowRange={neck.neckViewEnabled}
-            disabled={progressionViews.ladderActive || traversalActive}
+            disabled={progressionViews.climbActive || traversalActive}
           />
         ) : null
       }
@@ -317,6 +317,7 @@ function App() {
       <ProgressionsDeck
         progressions={progressions}
         jam={jam}
+        climb={progressionViews.climbNow}
         tempo={tempo}
         play={playControl}
         display={display}

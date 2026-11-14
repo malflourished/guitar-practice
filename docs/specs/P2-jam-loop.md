@@ -60,7 +60,7 @@ The Play menu's Feel choice starts at the entry's feel and can override it.
 Four groups, in this order: **Backing** (Strum, Pad), **Feel** (Straight, Swing), **Click** (Off, On), **Loop** (Off, On).
 
 - Remove "Strum or Arpeggio" from Progressions. Arpeggiating a progression isn't useful for jamming, and Chords mode keeps it.
-- Keep the existing "Move along the neck" (`ladder`) working inside the loop exactly as it behaves today. P3's Climb lens will replace it.
+- Keep the existing "Move along the neck" (`ladder`) working inside the loop exactly as it behaves today. P3's Climb lens will replace it. (Rebuilt on 2026-11-13 as the Climb lens's first slice: a pass in one region, the region moving between passes. See [P3-climb.md](P3-climb.md). The behaviour this line describes, a position a bar, is gone.)
 - Each group gets a one-line hint where the menu shows hints.
 
 ## Timing

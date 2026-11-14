@@ -50,7 +50,7 @@ export function useBoardData({
   } = progressions;
   const { theoryShowFretboard, theoryScaleQuality, activeTheoryTopic } = theory;
   const { qualityLabel, activePositionRegion } = neck;
-  const { ladderActive, activeDisplayChord, ladderPositionRegion } =
+  const { climbActive, activeDisplayChord, climbRegion } =
     progressionViews;
 
   const highlightRoot =
@@ -75,7 +75,7 @@ export function useBoardData({
     if (studyMode === 'theory' && !theoryShowFretboard) {
       return [];
     }
-    if (studyMode === 'progressions' && ladderActive && activeDisplayChord) {
+    if (studyMode === 'progressions' && climbActive && activeDisplayChord) {
       return activeDisplayChord.positions;
     }
     return activePositionRegion ? activePositionRegion.positions : [];
@@ -83,23 +83,23 @@ export function useBoardData({
     activeNotes,
     studyMode,
     theoryShowFretboard,
-    ladderActive,
+    climbActive,
     activeDisplayChord,
     activePositionRegion,
   ]);
 
   const mutedStrings = useMemo(() => {
-    if (studyMode === 'progressions' && ladderActive && activeDisplayChord) {
+    if (studyMode === 'progressions' && climbActive && activeDisplayChord) {
       return activeDisplayChord.mutedStrings;
     }
     return activePositionRegion?.mutedStrings ?? [];
-  }, [studyMode, ladderActive, activeDisplayChord, activePositionRegion]);
+  }, [studyMode, climbActive, activeDisplayChord, activePositionRegion]);
 
   const spellingMap = useMemo(() => {
     if (studyMode === 'notes' || (studyMode === 'theory' && !theoryShowFretboard)) {
       return null;
     }
-    if (studyMode === 'progressions' && ladderActive && activeDisplayChord) {
+    if (studyMode === 'progressions' && climbActive && activeDisplayChord) {
       return activeDisplayChord.noteLabels;
     }
     const spellingRoot =
@@ -128,7 +128,7 @@ export function useBoardData({
     chordQuality,
     activeChordQuality,
     notation,
-    ladderActive,
+    climbActive,
     activeDisplayChord,
   ]);
 
@@ -153,7 +153,7 @@ export function useBoardData({
         studyMode,
         qualityLabel,
         notation,
-        ladderActive ? ladderPositionRegion : activePositionRegion,
+        climbActive ? climbRegion : activePositionRegion,
         studyMode === 'progressions' && activeProgressionStep
           ? {
               progressionId,
@@ -171,8 +171,8 @@ export function useBoardData({
       studyMode,
       qualityLabel,
       notation,
-      ladderActive,
-      ladderPositionRegion,
+      climbActive,
+      climbRegion,
       activePositionRegion,
       progressionId,
       progressionStepIndex,

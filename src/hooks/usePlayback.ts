@@ -15,7 +15,7 @@ import {
   progressionFeel,
   progressionGroove,
   noteToSemitone,
-  type ProgressionLadderDirection,
+  type ClimbChoice,
 } from '../lib/music';
 import type { StudyMode } from '../types/music';
 import { useJamLoop } from '../modes/progressions/useJamLoop';
@@ -67,7 +67,8 @@ export function usePlayback({
     progressionStepIndex,
     resolvedProgressionSteps,
     setProgressionStepIndex,
-    setLadderAnchor,
+    setClimb,
+    setClimbPass,
   } = progressions;
   const { theoryShowFretboard, theoryScaleQuality } = theory;
   const { displayRegions, positionByScope, setPositionIndex } = neck;
@@ -104,7 +105,7 @@ export function usePlayback({
   const jam = useJamLoop({
     audio,
     steps: resolvedProgressionSteps,
-    chordPositions: displayProgressionChordViews.map((chord) => chord.positions),
+    chordPositionsAt: progressionViews.positionsForPass,
     guitar: playOptions.guitar,
     mix,
     feel: playOptions.feel,
@@ -115,6 +116,7 @@ export function usePlayback({
     progressionId,
     stepIndex: progressionStepIndex,
     setStepIndex: setProgressionStepIndex,
+    setPass: setClimbPass,
   });
   const scaleOrdering: ScaleOrdering =
     effectiveScalePlayback && scaleSystem === '3nps' ? 'builtIn' : 'pitch';
@@ -203,25 +205,22 @@ export function usePlayback({
   };
 
   const playProgression = () => {
-    const ladder = playOptions.ladder;
     audio.stopAll();
-    let id = 'jam';
-    if (ladder === 'off') {
-      setLadderAnchor(null);
-    } else {
-      const step0 = resolvedProgressionSteps[0];
-      if (!step0) return;
-      const direction: ProgressionLadderDirection =
-        ladder === 'up' ? 'ascending' : 'descending';
-      const step0Scope = getProgressionStepPositionScope(
-        progressionId,
-        0,
-        step0.quality,
-      );
-      id = `jam-${direction}`;
-      setLadderAnchor(positionByScope[step0Scope] ?? 0);
-    }
-    jam.start(id);
+    // Move along the neck: which way, and the shape of the first chord the
+    // climb starts from. In place leaves no climb.
+    const first = resolvedProgressionSteps[0];
+    const climb: ClimbChoice | null =
+      playOptions.ladder === 'off' || !first
+        ? null
+        : {
+            direction: playOptions.ladder,
+            start:
+              positionByScope[
+                getProgressionStepPositionScope(progressionId, 0, first.quality)
+              ] ?? 0,
+          };
+    setClimb(climb);
+    jam.start(climb ? `jam-${climb.direction}` : 'jam');
   };
 
   /** Play when stopped, Stop while anything plays. */

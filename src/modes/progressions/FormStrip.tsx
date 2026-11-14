@@ -14,6 +14,12 @@ interface FormStripProps {
   jam: JamLoopState;
   /** Beats a minute: how fast the playhead crosses a beat. */
   tempo: number;
+  /**
+   * A line of small text under the strip, for what is not a bar of the form:
+   * where "Move along the neck" has the hand now, and what happens next. It
+   * hangs in the deck's free space and moves nothing.
+   */
+  caption?: string;
   /** Select a step. Cells do nothing while the loop plays. */
   onSelect: (index: number) => void;
 }
@@ -26,7 +32,7 @@ interface FormStripProps {
  * crosses it with the beat. Stopped, a click selects that step, as the
  * stepper does.
  */
-export function FormStrip({ steps, chords, selectedIndex, jam, tempo, onSelect }: FormStripProps) {
+export function FormStrip({ steps, chords, selectedIndex, jam, tempo, caption, onSelect }: FormStripProps) {
   const cells = useRef<(HTMLButtonElement | null)[]>([]);
   const repeats = repeatedBars(chords);
   const lines = formLines(steps.length);
@@ -101,6 +107,11 @@ export function FormStrip({ steps, chords, selectedIndex, jam, tempo, onSelect }
           })}
         </div>
       ))}
+      {caption && (
+        <p className={styles.caption} aria-hidden="true">
+          {caption}
+        </p>
+      )}
     </div>
   );
 }

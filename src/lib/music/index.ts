@@ -102,6 +102,7 @@ export {
   type ProgressionLibraryGroup,
 } from './progressionLibrary';
 export {
+  buildChordViewFromShape,
   buildProgressionChordView,
   buildSavedProgressionChordViews,
   followProgressionRegions,
@@ -114,11 +115,21 @@ export {
   type ChordPositionView,
 } from './chordPositionViews';
 export {
-  buildLadderProgressionChordViews,
-  capEffectiveAnchor,
-  getLadderPositionIndex,
-  type ProgressionLadderDirection,
-} from './progressionLadder';
+  CLIMB_MIN_BARS,
+  CLIMB_TOP_FRET,
+  buildClimbChordViews,
+  buildClimbPlan,
+  climbPassesPerRegion,
+  climbRegionIndex,
+  climbShapesAt,
+  describeClimb,
+  formatClimb,
+  type ClimbChoice,
+  type ClimbDirection,
+  type ClimbNow,
+  type ClimbPlan,
+  type ClimbRegion,
+} from './progressionClimb';
 export {
   buildChordPositions,
   buildScalePositions,
