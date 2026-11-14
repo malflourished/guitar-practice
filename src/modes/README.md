@@ -23,6 +23,13 @@ a bar and four bars to a line, in the middle (its pure layout helpers are in
 (`src/components/Fader.tsx`) for the guitar, bass and pad. The fader model
 (dB range, gain, saved values) is `src/lib/audio/jamMix.ts`.
 
+While the loop plays, `useJamCoach` (called from `App.tsx`) works out two
+things from the loop's clock: the rings on the neck that show where to land
+on the next chord (`Fretboard`'s `targets`; the picking is
+`src/lib/music/landingTargets.ts`), and the prompt of the pass, the line over
+the form strip (`progressions/jamPrompts.ts`), which also decides what the
+rings show. Spec: `docs/specs/P3-targets.md`.
+
 Shared across modes:
 
 - `src/hooks/`: `useKeyState` (key, notation), `useDisplaySettings` (Labels choice,

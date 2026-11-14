@@ -41,7 +41,10 @@ export const JAM_PROMPTS: readonly JamPrompt[] = [
   { id: 'ear', text: 'Eyes off the neck: find the 3rds by ear', focus: { kind: 'none' } },
 ];
 
-/** The strip is 326 px wide at its narrowest; this many characters fit on one line. */
+/**
+ * The strip is 301 px wide at its narrowest (a 960 px window); the line over it
+ * has 330. This many characters fit there on one line, with "Next: " in front.
+ */
 export const PROMPT_MAX_LENGTH = 42;
 /** A prompt stays long enough to read it, try it and hear the result. */
 export const PROMPT_MIN_BARS = 8;

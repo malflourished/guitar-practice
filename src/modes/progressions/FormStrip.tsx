@@ -77,8 +77,7 @@ export function FormStrip({ steps, chords, selectedIndex, jam, tempo, caption, p
           title={`${prompt.text}\nClick for another prompt`}
           onClick={prompt.onNext}
         >
-          {prompt.upcoming && <span className={styles.promptNext}>Next: </span>}
-          {prompt.text}
+          {prompt.upcoming ? `Next: ${prompt.text}` : prompt.text}
         </button>
       )}
       {lines.map((count, line) => (

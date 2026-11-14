@@ -24,7 +24,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | M | Mode controls: Notes, Chords, Scales | Started 2026-11-14 with C, on Fable 5.2 | J, K, L | a capable model; the owner approves screenshots |
 | N | Intervals: clear drills, black and white | Done, merged 2026-11-12 | nothing (K adds the colour switch later) | a capable model |
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
-| P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) and P2.2 (mix faders, the form strip) 2026-11-13. P3 (targets on the neck) and P4 (one prompt per pass): spec and build started 2026-11-14 on Fable 5.2 | J, L | the strongest model writes specs and reviews; a capable model builds |
+| P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) and P2.2 (mix faders, the form strip) 2026-11-13. P3's targets on the neck and P4 (one prompt per pass): spec written and built 2026-11-14 on `claude/progressions-p3-p4-1faf6f` (Fable 5.2), not merged; the owner's play-along and thirteen decisions are open. Not built: the neck showing every tone of the current chord, and the Whole neck, Region and One string lenses as a choice (proposed as P3.2) | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | Started 2026-11-14 on Sonnet 5.5 | J, K (both edit the frame) | a capable model |
 | S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) merged 2026-11-13 and is now the jam loop's default. S2 (drums: three kits, four grooves, fills, a Drums fader) merged 2026-11-13. The owner compared the kits on 2026-11-14: a great first pass, but no kit impressed yet. S2.1 (better kits) started 2026-11-14 on Fable 5.2. More bass presets and organ later | P2.1 | Fable 5.2, at the owner's request |
 
@@ -520,7 +520,7 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
   - Interval colours only tint the Intervals drills. Decide whether they should reach the neck too.
   - The Play options button uses the same icon as Settings. Give it its own.
   - Mute shows "Sound on" as its button label. Say plainly whether sound is muted.
-  - Progressions' Play menu has four groups, and "Move along the neck" needs a one-line explanation.
+  - ~~Progressions' Play menu has four groups, and "Move along the neck" needs a one-line explanation.~~ Done with P3/P4, 2026-11-14: the line is "Each pass stays in one stretch of the neck, then moves on.", and the short groups share rows (Click with Loop, Targets with Prompts).
   - The decks in Notes, Chords and Scales are sparse now. This package fills them.
 
 **Done when:** the owner approves screenshots of each mode, and no page scrolls at 1440×900, 1280×720 or 960×640.
@@ -585,12 +585,20 @@ Built and merged 2026-11-12. Notes from the build:
 
 **P4. One prompt per pass.** Drawn from Discover's sparks and lenses: "land on the 3rd of each chord on beat 1", "only the notes that change", "one string only", "two beats of silence after every phrase".
 
+**P3's targets and P4, built 2026-11-14** on `claude/progressions-p3-p4-1faf6f`, not merged. Spec: [specs/P3-targets.md](specs/P3-targets.md). What the spec changed in the rules above:
+- **Targets come a bar early, not on the last beat.** A beat is half a second at 120 BPM, too late to play towards anything. They appear a whole bar before the change (at least two seconds at fast tempos, up to two bars) and brighten on the last beat.
+- **The targets are every 3rd and 7th of the next chord within the hand's reach** (the next chord's shape and a fret each side, on the top four strings), not one nearest pair, and not from `changesTargeting.ts`, whose one line on the D and G strings suits the Intervals drill. When neither guide tone is new (I to vi), the note that changes is added.
+- **Rings are the chord next; filled dots are the chord now.** A dashed ring is a note the current chord already has.
+- **With Climb, the rings at the end of a pass are in the next region**, so they show where to shift to.
+- **A prompt lasts at least eight bars**, so a four-bar loop changes it every second pass. Ten prompts in a lesson's order; each also sets what the rings show ("Land on the 3rd" rings only 3rds, "by ear" rings nothing). The line sits above the form strip. Play starts with the prompt you stopped on.
+- **Not built, and the owner's call:** the first line of P3, "the neck shows the current chord's tones everywhere". The neck still shows the strummed shape, because Climb promised that neck, panel and strum agree, and because it changes the look of the mode. Proposed as P3.2 with a mock-up: a "Neck shows" choice of Shape, Region and One string.
+
 **P5 (later). Song form.** Sections and bar counts (AABA, verse and chorus), so a progression becomes a structure.
 
 **Done when (P1–P4):**
 - Pick an entry, press Play, and while the loop runs the neck shows where to land on the next chord.
-- Switching lens redraws without stopping the loop.
-- The prompt changes each pass.
+- Switching lens redraws without stopping the loop. (Open: only In place and Climb exist as lenses, and Climb is still read at Play. See P3.2 in the spec.)
+- The prompt changes each pass. (Built as: at the top of the form, after at least eight bars.)
 
 ## Q. Home screen and resizable panel
 
@@ -684,3 +692,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   - H's two small items wait for H2, which the owner is reviewing.
   - Measuring the texture's cost waits until the builds are done, so the machine is quiet.
   - G and the later instruments stay later.
+- **2026-11-14.** P3's targets and P4 built on `claude/progressions-p3-p4-1faf6f`, 597 tests. While the loop plays, rings on the neck show the next chord's 3rd and 7th within the hand's reach, a bar before the change, and one of ten prompts sits above the form strip and sets what the rings show. The spec overrules the roadmap twice: "on the last beat" is too late to use, and "the prompt changes each pass" is too fast on a short loop. The Play menu gained Targets and Prompts and a line under "Move along the neck" (M's follow-up). Left for the owner: whether the neck should show every chord tone instead of the strummed shape (P3.2). Spec: [specs/P3-targets.md](specs/P3-targets.md).

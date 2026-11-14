@@ -139,7 +139,7 @@ One line **above the form strip**, hung in the free space over it the way the Cl
 
 - It crowds nothing: it is outside the strip's box and moves no cell. The deck's free space above the strip is the same as the space below it, where the caption already fits with 10 px to spare under twelve bars at 960×640.
 - Stopped, it shows the prompt Play will start with, in the quiet tone, so the plan is visible before Start (package O's rule). Playing, it is in the text colour.
-- It is one line and never wraps. Every prompt is 42 characters or fewer, which fits the strip's narrowest width (326 px at 960 wide). The full text is also its tooltip.
+- It is one line and never wraps. Every prompt is 42 characters or fewer. The strip is 301 px wide at its narrowest (a 960 px window), and the line may run 0.9rem into the empty column gap each side, which gives it 330 px: enough for the longest prompt with "Next:" in front (measured: 309). The full text is also its tooltip.
 - The beat row beside the dots was the other candidate. It has 140 px free at 960 wide, which is not enough, and the Climb label already failed to fit there.
 
 ## The Play menu
@@ -177,6 +177,22 @@ M's follow-up: "Progressions' Play menu has four groups, and 'Move along the nec
 - **Prompts:** the order; ⌈8 ÷ bars⌉ for 1, 2, 3, 4, 5, 8 and 12 bars; which are left out with triads and with Climb; resuming from a saved id, and from one that no longer suits; Hold; the "Next:" preview only in the last bar before a change; every text is 42 characters or fewer.
 - **Play options:** Targets and Prompts default to On and Rotate, are saved, and are in the Progressions menu only.
 
+## Checked
+
+**Tests.** 37 new, all pure functions: `landingTargets.test.ts` (23), `jamPrompts.test.ts` (12) and two in `PlayControl.test.tsx`. The suite is 597 tests (560 before). `npx tsc -b` and `npm run lint` are clean. The library sweep runs every one-bar change of all 23 entries in 12 keys through three kinds of focus, in place and in every Climb region (more than 5,000 sets of targets), and pins the two counts this spec quotes: 996 changes, 156 where no guide tone is new.
+
+**In the running app** (this branch's dev server, a hidden 960×640 window, 300 BPM so that passes go by quickly):
+
+- The blues with "by ear": no rings in bar 4. In bar 12 the line reads "Next: Land on the 3rd of each chord on beat 1" and two rings, both `3`, show C7's 3rd for the next pass. At pass 2 the line is at full strength and the saved prompt is `thirds`. After Stop the line is quiet, the rings are gone and the saved prompt stays.
+- A four-bar loop of triads (I–V–vi–IV): the prompt holds for passes 1 and 2, "Next:" shows only in bar 4 of pass 2, and pass 3 has the new one. Over eleven passes the order was 3rds, silence, notes that change, B string, repeat, G string: the 7th prompt was left out. A click while playing moved to the next prompt and saved it.
+- Hold kept one prompt for four passes. Prompts Off removed the line and Targets Off the rings; both came back from the menu while the loop played.
+- Loop off (ii–V–I): rings in bar 2, none in the last bar.
+- The console had no React warnings. Tone logs "Events scheduled inside of scheduled callbacks should use the passed in scheduling time" while the jam plays; this slice schedules no audio, so it was left alone.
+
+**Layout.** `scripts/check-layout.cjs` for Progressions at rest, with Settings and with the Play menu open, at 1440×900, 1280×720 and 960×640 in Vibrato dark, Vibrato light and Scholar: page height equals window height in all 27, the neck's top is 74, 64 and 64 and the deck 232, 216 and 216 as before, and nothing is cut off (the open menu spills out of the deck on purpose, and stays inside the window: its top is at 190 px at 960×640). Playing, in ten states at the three sizes: page equals window in height and width; the prompt line sits 11 px or more under the deck's top edge and 14 px or more above the picker in the left column; the first cell's top did not move from rest. The longest line, "Next: One short idea. Repeat it, change one note", needs 316 px and has 330 at 960 wide.
+
+**Screenshots** are with the hand-over note, in `p3-p4-shots/`: the blues in C with the rings coming and arriving (1440×900), the count-in and the held and new rings of ii–V–I (1280×720), a one-string prompt (1280×720), the Climb's rings in the next region with "Next:" (960×640), Vibrato light and Scholar (960×640), and the Play menu at 1440×900 and 960×640.
+
 ## Done when
 
 - [x] Pick an entry, press Play, and while the loop runs the neck shows where to land on the next chord.
@@ -201,6 +217,7 @@ M's follow-up: "Progressions' Play menu has four groups, and 'Move along the nec
 10. **The prompt shows before Play**, quietly. It could show only while the loop runs.
 11. **Prompts and Targets are in the Play menu**, not on the deck beside Tones. The deck's left column has no room for two more pills at 960 wide.
 12. **The menu's one-line explanation** for Move along the neck: the wording.
+13. **The string shows through a ring's label.** Rings have no fill, so the string runs behind the `3` or `♭7`. It is most visible in Vibrato light and Scholar, where the strings are dark (see `blues-C-bar4-960-light.png`). A faint backing behind the label would fix it, and is a change to the look, so it was left for the owner.
 
 ## Files
 
