@@ -11,6 +11,51 @@
   width: 100%;
 }
 
+/* The prompt of the pass: one line over the strip, where a lead sheet has its
+   performance note. It hangs above the strip's box as the caption hangs below
+   it, so it takes no space and moves nothing. Quiet (the muted text colour)
+   while stopped and while it is only the next one coming. */
+.prompt {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin: 0 0 0.3rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 1.15rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: color 160ms ease-out;
+}
+
+.prompt[data-quiet] {
+  color: var(--text-muted);
+}
+
+.prompt:hover {
+  color: var(--text-primary);
+}
+
+.prompt:focus-visible {
+  outline: 1px solid var(--text-muted);
+  outline-offset: 2px;
+}
+
+.promptNext {
+  font-size: 0.75rem;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+}
+
 /* A line of small text under the strip, in the deck's label style (the beat
    row's). It hangs below the strip's box, where the centred strip leaves room
    even for twelve bars, so it takes no space and moves nothing. */

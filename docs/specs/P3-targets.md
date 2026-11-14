@@ -62,7 +62,7 @@ Worked examples, in place, from the default shapes:
 - **New** targets have a solid line. **Held** ones have a dashed line, the same dash the neck already uses for a note two boxes share. A held target that falls on a dot of the current shape is drawn as a dashed halo round that dot, with no second label.
 - The label is always the job, even when Labels is set to note names, because the job is why it is a target. The dots keep the Labels setting.
 - Rings use the neck's own ring colour. No new colours.
-- They fade in over 150 ms and are at 0.62 strength while the change is coming, full strength on the last beat. With reduced motion they do not fade.
+- They fade in over 150 ms and are at 0.78 strength with a thinner line while the change is coming, full strength on the last beat. With reduced motion they do not fade.
 - Rings are not buttons. A screen reader gets them in the neck's label: "Next: F7. Land on A, the 3rd, or E♭, the ♭7."
 
 ### 4. When they appear
@@ -146,9 +146,9 @@ One line **above the form strip**, hung in the free space over it the way the Cl
 
 M's follow-up: "Progressions' Play menu has four groups, and 'Move along the neck' needs a one-line explanation." It had five by now, and this slice adds two. So:
 
-- **Click and Loop share a row**, and so do **Targets and Prompts**. Seven groups in five rows: the menu is no taller than it was.
+- **Click and Loop share a row**, and so do **Targets and Prompts**. Seven groups in five rows: the menu is one line of small text taller than it was, for the explanation.
 - Order: Guitar, Feel, Click and Loop, Move along the neck, Targets and Prompts.
-- **Move along the neck** has a line of small text under its title: "Each pass is played in one stretch of the neck, then the stretch moves." The longer explanation stays as its tooltip.
+- **Move along the neck** has a line of small text under its title: "Each pass stays in one stretch of the neck, then moves on." The longer explanation stays as its tooltip.
 - **Targets** (On, Off): "Rings on the neck show where to land on the next chord."
 - **Prompts** (Off, Rotate, Hold): "One thing to try each time round the form."
 - Both are saved with the other Play options (`vibrato:play-targets`, `vibrato:play-prompts`) and both can be changed while the loop plays.
@@ -182,7 +182,7 @@ M's follow-up: "Progressions' Play menu has four groups, and 'Move along the nec
 - [x] Pick an entry, press Play, and while the loop runs the neck shows where to land on the next chord.
 - [x] The prompt shows above the form strip, changes at the top of the form after at least eight bars, and can be held, skipped or turned off.
 - [x] The rings follow the prompt, and follow the Climb into the next region.
-- [x] The Play menu explains "Move along the neck" in one line and is no taller than before.
+- [x] The Play menu explains "Move along the neck" in one line, and its two new groups add no rows.
 - [x] Tests cover the target picking in all 12 keys. Lint and `tsc` pass.
 - [x] No page scrolls at 1440×900, 1280×720 or 960×640. Screenshots at all three, playing.
 - [ ] The owner plays the blues and a ii–V–I with the rings on and says they knew where to go.

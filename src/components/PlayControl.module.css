@@ -52,6 +52,23 @@
   color: var(--text-muted);
 }
 
+/* One line that says what a group does, in the menu's small type. */
+.groupNote {
+  max-width: 24rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+/* Two short groups on one row. */
+.pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 1.5rem;
+}
+
 .choices {
   display: flex;
   flex-wrap: wrap;

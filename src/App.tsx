@@ -35,6 +35,7 @@ import { ModeDeck } from './modes/ModeDeck';
 import { NotesControls } from './modes/notes/NotesControls';
 import { ProgressionsDeck } from './modes/progressions/ProgressionsDeck';
 import { ProgressionsPanel } from './modes/progressions/ProgressionsPanel';
+import { useJamCoach } from './modes/progressions/useJamCoach';
 import { useProgressionViews } from './modes/progressions/useProgressionViews';
 import { useProgressionsState } from './modes/progressions/useProgressionsState';
 import { ScalesControls } from './modes/scales/ScalesControls';
@@ -130,6 +131,19 @@ function App() {
     neck,
     board,
     progressionViews,
+  });
+
+  // Progressions, while the loop plays: where to land next, and the prompt of the pass.
+  const coach = useJamCoach({
+    studyMode,
+    steps: progressions.resolvedProgressionSteps,
+    jam,
+    tempo,
+    loop: playProps.options.jamLoop,
+    targetsOn: playProps.options.targets,
+    promptMode: playProps.options.prompts,
+    climbing: jam.playing ? progressions.climb !== null : playProps.options.ladder !== 'off',
+    views: progressionViews,
   });
 
   const effectiveKeyMode = getEffectiveKeyMode(
@@ -275,6 +289,9 @@ function App() {
           overlapKeys={neck.neckView.layers.overlapKeys}
           regionBadges={neck.neckView.badges}
           onSelectRegion={traversalActive ? undefined : neck.setPositionIndex}
+          targets={coach.targets}
+          targetsArriving={coach.targetsArriving}
+          targetsLabel={coach.targetsLabel}
         />
       ) : studyMode === 'theory' ? (
         <TheoryStage
@@ -318,6 +335,8 @@ function App() {
         progressions={progressions}
         jam={jam}
         climb={progressionViews.climbNow}
+        prompt={coach.prompt}
+        targetsLabel={coach.targetsLabel}
         tempo={tempo}
         play={playControl}
         display={display}

@@ -20,6 +20,12 @@ interface FormStripProps {
    * hangs in the deck's free space and moves nothing.
    */
   caption?: string;
+  /**
+   * The prompt of the pass (P4): one line over the strip, where a lead sheet
+   * has its performance note. It hangs in the deck's free space like the
+   * caption and moves nothing. A click asks for the next prompt.
+   */
+  prompt?: { text: string; upcoming: boolean; quiet: boolean; onNext: () => void } | null;
   /** Select a step. Cells do nothing while the loop plays. */
   onSelect: (index: number) => void;
 }
@@ -32,7 +38,7 @@ interface FormStripProps {
  * crosses it with the beat. Stopped, a click selects that step, as the
  * stepper does.
  */
-export function FormStrip({ steps, chords, selectedIndex, jam, tempo, caption, onSelect }: FormStripProps) {
+export function FormStrip({ steps, chords, selectedIndex, jam, tempo, caption, prompt, onSelect }: FormStripProps) {
   const cells = useRef<(HTMLButtonElement | null)[]>([]);
   const repeats = repeatedBars(chords);
   const lines = formLines(steps.length);
@@ -62,6 +68,19 @@ export function FormStrip({ steps, chords, selectedIndex, jam, tempo, caption, o
   if (steps.length === 0) return null;
   return (
     <div className={styles.strip} role="group" aria-label="Form: one bar to a cell">
+      {prompt && (
+        <button
+          type="button"
+          className={styles.prompt}
+          data-quiet={prompt.quiet ? 'true' : undefined}
+          aria-label={`${prompt.upcoming ? 'Next prompt' : 'Prompt'}: ${prompt.text}. Click for another`}
+          title={`${prompt.text}\nClick for another prompt`}
+          onClick={prompt.onNext}
+        >
+          {prompt.upcoming && <span className={styles.promptNext}>Next: </span>}
+          {prompt.text}
+        </button>
+      )}
       {lines.map((count, line) => (
         <div key={line} className={styles.line}>
           {steps.slice(starts[line], starts[line] + count).map((step, offset) => {

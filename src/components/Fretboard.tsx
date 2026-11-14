@@ -23,6 +23,7 @@ import {
   getIntervalMarker,
   samePitchClass,
   type GhostLayer,
+  type LandingTarget,
   type NotationPreference,
   type RegionBadge,
 } from '../lib/music';
@@ -79,6 +80,16 @@ interface FretboardProps {
   regionBadges?: RegionBadge[];
   /** Jump to a region when its badge is clicked. */
   onSelectRegion?: (index: number) => void;
+  /**
+   * Progressions, while the loop plays: where to land on the next chord. Drawn
+   * as rings, because the filled dots are the chord now. Each has its job in
+   * the next chord inside it; one the current chord already has is dashed.
+   */
+  targets?: LandingTarget[];
+  /** The last beat before the change: the rings go to full strength. */
+  targetsArriving?: boolean;
+  /** The targets in words, for a screen reader. */
+  targetsLabel?: string;
 }
 
 export function Fretboard({
@@ -104,6 +115,9 @@ export function Fretboard({
   overlapKeys,
   regionBadges = [],
   onSelectRegion,
+  targets = [],
+  targetsArriving = false,
+  targetsLabel,
 }: FretboardProps) {
   const isActive = (string: number, fret: number) =>
     activePosition?.string === string && activePosition?.fret === fret;
@@ -536,6 +550,49 @@ export function Fretboard({
                 </g>
               );
             })}
+
+            {targets.length > 0 && (
+              <g
+                className={targetsArriving ? styles.targetsArriving : styles.targets}
+                role="img"
+                aria-label={targetsLabel}
+                data-targets={targetsArriving ? 'arriving' : 'coming'}
+              >
+                {targets.filter((target) => visibleFret(target.fret)).map((target) => {
+                  const cx = target.fret === 0 ? openLaneX : fretCenterX(target.fret);
+                  const cy = stringY(target.string);
+                  const radius = target.fret === 0 ? openNoteRadius : noteRadiusForFret(target.fret);
+                  // On a dot of the chord now, a halo round it; the dot keeps its own label.
+                  const onDot = positions.some(
+                    (position) => position.string === target.string && position.fret === target.fret,
+                  );
+                  const small = target.label.length > 1 || radius <= SMALL_LABEL_RADIUS * textScale;
+                  return (
+                    <g
+                      key={`target-${target.string}-${target.fret}`}
+                      data-target={target.held ? 'held' : 'new'}
+                    >
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={onDot ? radius + 3.5 * textScale : radius}
+                        className={target.held ? styles.targetRingHeld : styles.targetRing}
+                      />
+                      {!onDot && (
+                        <text
+                          x={cx}
+                          y={cy + (small ? 4 : 5) * textScale}
+                          textAnchor="middle"
+                          className={small ? styles.targetLabelSmall : styles.targetLabel}
+                        >
+                          {target.label}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </g>
+            )}
 
             {onCellClick &&
               Array.from({ length: STRING_COUNT }, (_, stringIndex) =>

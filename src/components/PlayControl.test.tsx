@@ -83,6 +83,33 @@ describe('PlayControl', () => {
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
+  it('Progressions: Targets and Prompts end the menu, and no other mode has them', () => {
+    const html = menu({ mode: 'progressions' });
+    const order = ['Move along the neck', 'Targets', 'Prompts'].map((title) => html.indexOf(`>${title}<`));
+    expect(order.every((at) => at >= 0)).toBe(true);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+    // the defaults: Targets on, Prompts on Rotate
+    expect(/>Targets<.*?aria-pressed="(true|false)"/.exec(html)?.[1]).toBe('true');
+    expect(html).toMatch(/aria-checked="true"[^>]*>Rotate</);
+    expect(menu({ mode: 'progressions', options: { ...DEFAULT_PLAY_OPTIONS, prompts: 'hold', targets: false } })).toMatch(
+      /aria-checked="true"[^>]*>Hold</,
+    );
+    for (const mode of ['notes', 'scales', 'chords'] as const) {
+      expect(menu({ mode })).not.toContain('>Targets<');
+      expect(menu({ mode })).not.toContain('>Prompts<');
+    }
+  });
+
+  it('Progressions: Move along the neck says what it does in one line, and the short groups share rows', () => {
+    const html = menu({ mode: 'progressions' });
+    expect(html).toContain('Each pass stays in one stretch of the neck, then moves on.');
+    // Click with Loop, Targets with Prompts: two rows of two
+    expect(html.match(/class="[^"]*pair[^"]*"/g)).toHaveLength(2);
+    expect(html).toMatch(/pair[^>]*>.*?>Click<.*?>Loop</);
+    // the other modes' Loop is on a row of its own
+    expect(menu({ mode: 'notes' })).not.toMatch(/class="[^"]*pair/);
+  });
+
   it('shows Loop in every mode and marks the chosen options', () => {
     for (const mode of ['notes', 'scales', 'chords', 'progressions'] as const) {
       expect(menu({ mode })).toContain('Loop');
