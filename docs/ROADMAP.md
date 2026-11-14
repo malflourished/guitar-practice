@@ -535,7 +535,7 @@ Built and merged 2026-11-12. Notes from the build:
   - **Whole neck.**
   - **Region:** a 4 to 5 fret window.
   - **One string:** play horizontally.
-  - **Climb:** the window moves up one position each time round the loop.
+  - **Climb:** the window moves up one position each time round the loop. Built first, 2026-11-13, as "Move along the neck" ([specs/P3-climb.md](specs/P3-climb.md)).
 
 **P4. One prompt per pass.** Drawn from Discover's sparks and lenses: "land on the 3rd of each chord on beat 1", "only the notes that change", "one string only", "two beats of silence after every phrase".
 
@@ -615,3 +615,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
 - **2026-11-13.** The owner A/B'd the basses: "the attack does sound like fingers on string … the four presets sound great … model bass sounds great". The modelled bass is now the jam loop's default. A choice saved while comparing gives way to it once. The owner wants more presets and more instruments built the same way.
 - **2026-11-13.** The owner chose drums as the next instrument. Organ was the research's pick, but drums carry the time feel and the form. S2 started on Fable 5.2.
 - **2026-11-13.** S2 (drums) merged, 528 tests. The owner listened in the jam ("they sound great") and approved 3 dB of headroom for the whole jam. While working with the drums session, the owner also had "Move along the neck" rebuilt, so the region climbs once a pass. It is on its own branch, with a fix for Down under way.
+- **2026-11-13.** Move along the neck merged, 560 tests. Each pass plays in one region of the neck, and the region moves between passes, never above fret 15. Up starts near the selected shape. Down starts at the top and comes down. Both turn round at the ends. It is the first slice of P3's Climb lens: spec [specs/P3-climb.md](specs/P3-climb.md).
