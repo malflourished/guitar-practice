@@ -1,0 +1,40 @@
+/* A strip of the frame's side column along the panel's left edge: wide enough
+   to grab, centred on the edge, so half sits in the gap beside the neck. It is
+   its own grid item (the panel scrolls, so a handle inside it would scroll
+   away). The edge shows as a hairline only when the pointer or focus is on it. */
+.handle {
+  grid-area: side;
+  justify-self: start;
+  align-self: stretch;
+  position: relative;
+  z-index: 4;
+  width: 14px;
+  margin-left: -7px;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.handle::before {
+  content: '';
+  position: absolute;
+  /* Along the panel's straight edge, clear of its rounded corners. */
+  top: var(--region-radius, 14px);
+  bottom: var(--region-radius, 14px);
+  left: 6px;
+  width: 1px;
+  background: var(--glass-border);
+  opacity: 0;
+  transition: opacity var(--duration-key) var(--ease-calm);
+}
+
+.handle:hover::before,
+.handle:focus-visible::before,
+:global([data-resizing='true']) .handle::before {
+  opacity: 1;
+}
+
+/* Focus gets a little more than hover: the line is two pixels. */
+.handle:focus-visible::before {
+  width: 2px;
+}

@@ -1,0 +1,157 @@
+/* Home sits straight on the lava (Vibrato) or the paper (Scholar): no panel of
+   its own. Only the three choices are drawn, as outlined panels, the way the
+   frame draws its regions (Frame.module.css). */
+.home {
+  grid-area: home;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.1rem, 4.5vh, 2.4rem);
+  padding: 0 clamp(1rem, 4vw, 3rem);
+  text-align: center;
+}
+
+/* The wordmark, as the strip sets it (App.css), only larger and thin. */
+.home .mark {
+  margin: 0;
+  font-size: clamp(2.6rem, 7.5vw, 5.2rem);
+  font-weight: 300;
+  line-height: 1.1;
+}
+
+/* The one primary action: the strongest pill, larger. */
+.continue {
+  composes: pillSelected from '../styles/glass.module.css';
+  min-height: 3rem;
+  padding: 0.7rem 2.4rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+}
+
+.choices {
+  list-style: none;
+  margin: clamp(0.2rem, 1.5vh, 0.8rem) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  width: min(100%, 56rem);
+}
+
+.choices > li {
+  display: flex;
+  min-width: 0;
+}
+
+.choice {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1.1rem 1.2rem 1.25rem;
+  text-align: left;
+  font: inherit;
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--region-radius, 14px);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-key) var(--ease-calm),
+    border-color var(--duration-key) var(--ease-calm);
+}
+
+.choice:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border);
+}
+
+.choice:focus-visible,
+.continue:focus-visible {
+  outline: 2px solid var(--glass-border);
+  outline-offset: 3px;
+}
+
+.choiceTitle {
+  font-size: 1.2rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.choiceBlurb {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+/* What Explore will open: its name, and its numerals. */
+.teaser {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.teaserName {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.teaserNumerals {
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Edges and fill per theme: the same as the frame's regions ---- */
+
+/* Scholar is ink on paper: a hairline round each choice. */
+:global(.themeRoot[data-ui-theme='scholar']) .choice {
+  border-color: var(--glass-border-subtle);
+}
+
+/* Vibrato on the lava: the edge is drawn by Panels (Outline), and the fill
+   follows the Fill slider, as for the strip and the side panel. */
+:global(.themeRoot[data-on-lava][data-vibrato-panels='outline']) .choice {
+  border-color: var(--lava-rule);
+}
+
+:global(.themeRoot[data-on-lava][data-vibrato-canvas='dark']) .choice {
+  background-color: rgba(10, 16, 23, calc(0.86 * var(--panel-fill, 0)));
+}
+
+:global(.themeRoot[data-on-lava][data-vibrato-canvas='light']) .choice {
+  background-color: rgba(249, 249, 243, calc(0.92 * var(--panel-fill, 0)));
+}
+
+/* Hover and focus keep their edge and fill whatever Panels says. */
+:global(.themeRoot[data-on-lava]) .choice:hover {
+  background-color: var(--glass-bg-hover);
+  border-color: var(--glass-border);
+}
+
+@media (max-width: 719px) {
+  .choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Short windows: a little less air. */
+@media (max-height: 760px) {
+  .choice {
+    padding: 0.9rem 1.1rem 1rem;
+  }
+}

@@ -1,0 +1,46 @@
+.button {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0.2rem 0.1rem;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: opacity var(--duration-key) var(--ease-calm);
+}
+
+.button:hover {
+  opacity: 0.72;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--glass-border);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* On Home the big wordmark is the one to click: this one keeps its place so the
+   tabs do not jump, and is not drawn. */
+.button[data-on-home='true'] {
+  visibility: hidden;
+}
+
+/* Wide windows show the whole wordmark; narrow ones its wave (the ~). */
+.short {
+  display: none;
+}
+
+@media (max-width: 1219px) {
+  /* The frame hides `.wordmark` in the strip at this width; the wave needs to
+     stay, so it is shown again here, with a rule that outweighs that one. */
+  .button .short:global(.wordmark) {
+    display: inline-block;
+    font-size: 1rem;
+  }
+
+  /* The strip is full at 960 px: the mark takes as little room as it can. */
+  .button.button {
+    padding: 0.2rem 0.15rem;
+  }
+}

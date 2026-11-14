@@ -6,7 +6,12 @@
   --strip-h: 52px;
   --deck-h: 232px;
   --neck-bar-h: 46px;
-  --side-w: clamp(280px, 22vw, 340px);
+  /* The docked panel: 22% of the window until the player drags its edge
+     (--side-want, set on this element), never under 280 px, and never so wide
+     that the neck gets under 640 px. Keep in step with lib/sideWidth.ts. */
+  --side-default: clamp(280px, 22vw, 340px);
+  --side-max: min(520px, calc(100vw - 2 * var(--frame-pad) - var(--frame-gap) - 640px));
+  --side-w: clamp(280px, var(--side-want, var(--side-default)), var(--side-max));
   --region-radius: 14px;
   /* How the tracks move when the side panel or the deck comes or goes. */
   --frame-move: 250ms;
@@ -79,6 +84,27 @@
   column-gap: 0px;
 }
 
+/* Home: the neck and deck's place is one open area; the panel can still come
+   (Settings). The shared surface is not drawn. */
+.frame[data-home='true'] {
+  grid-template-rows: var(--strip-h) minmax(0, 1fr) 0px;
+  grid-template-areas:
+    'strip strip'
+    'home side'
+    'home side';
+}
+
+.frame[data-home='true'] .surface {
+  display: none;
+}
+
+/* Dragging the panel's edge, or moving it by key, follows at once: no 250 ms
+   catch-up behind the pointer. */
+.frame[data-resizing='true'] {
+  transition: none;
+  user-select: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .frame {
     transition: none;
@@ -124,7 +150,7 @@
    The window title still names the app when the wordmark steps aside. */
 @media (max-width: 1219px) {
   .strip {
-    gap: 0.6rem;
+    gap: 0.5rem;
     padding-left: 0.6rem;
     padding-right: 0.6rem;
   }
@@ -133,13 +159,19 @@
     display: none;
   }
 
+  /* The wordmark's wave (the ~) stays as the way Home (WordmarkButton), so the
+     pills give up a pixel and a half each side to make room for it. */
   .strip button {
-    padding-left: 0.55rem;
-    padding-right: 0.55rem;
+    padding-left: 0.45rem;
+    padding-right: 0.45rem;
   }
 
   .strip [aria-label='Study mode'] {
-    gap: 0.3rem;
+    gap: 0.25rem;
+  }
+
+  .stripEnd {
+    gap: 0.4rem;
   }
 }
 

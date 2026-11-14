@@ -3,15 +3,18 @@ import { KeySelector } from './KeySelector';
 import { Popover } from './Popover';
 import { UiThemeSelector } from './UiThemeSelector';
 import { StudyModeSelector } from './StudyModeControls';
+import { WordmarkButton } from './WordmarkButton';
 import type { AppTheme } from '../hooks/useAppTheme';
 import type { NotationPreference } from '../lib/music';
-import { APP_NAME } from '../lib/brand';
 import type { NoteName, StudyMode } from '../types/music';
 import type { TheoryReturn } from '../modes/theory/useTheoryState';
 import glass from '../styles/glass.module.css';
 
 interface AppStripProps {
   studyMode: StudyMode;
+  /** Home is showing: no mode is lit, and the wordmark has moved onto the page. */
+  home: boolean;
+  onHome: () => void;
   onStudyModeChange: (mode: StudyMode) => void;
   theoryReturn: TheoryReturn | null;
   onBackToTheory: () => void;
@@ -30,9 +33,11 @@ interface AppStripProps {
   onToggleSettings: () => void;
 }
 
-/** The top strip: wordmark, mode tabs, the way back, Key, Theme, Panel and Settings. */
+/** The top strip: the wordmark (Home), mode tabs, the way back, Key, Theme, Panel and Settings. */
 export function AppStrip({
   studyMode,
+  home,
+  onHome,
   onStudyModeChange,
   theoryReturn,
   onBackToTheory,
@@ -51,12 +56,9 @@ export function AppStrip({
 }: AppStripProps) {
   return (
     <Strip>
-      <p className="wordmark" aria-label={APP_NAME.slice(0, -1)}>
-        {APP_NAME.slice(0, -1)}
-        <span className="wordmarkWave">{APP_NAME.at(-1)}</span>
-      </p>
+      <WordmarkButton onClick={onHome} onHome={home} />
       <StudyModeSelector
-        studyMode={studyMode}
+        studyMode={home ? null : studyMode}
         onStudyModeChange={onStudyModeChange}
       />
       {theoryReturn && (

@@ -25,7 +25,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | N | Intervals: clear drills, black and white | Done, merged 2026-11-12 | nothing (K adds the colour switch later) | a capable model |
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
 | P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) and P2.2 (mix faders, the form strip) 2026-11-13. P3 (targets on the neck) and P4 (one prompt per pass): spec and build started 2026-11-14 on Fable 5.2 | J, L | the strongest model writes specs and reviews; a capable model builds |
-| Q | Home screen and resizable panel | Started 2026-11-14 on Sonnet 5.5 | J, K (both edit the frame) | a capable model |
+| Q | Home screen and resizable panel | Built 2026-11-14 on Sonnet 5.5, on `claude/home-q-9e6d7e`: waiting for the owner's review | J, K (both edit the frame) | a capable model |
 | S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) merged 2026-11-13 and is now the jam loop's default. S2 (drums: three kits, four grooves, fills, a Drums fader) merged 2026-11-13. The owner compared the kits on 2026-11-14: a great first pass, but no kit impressed yet. S2.1 (better kits) started 2026-11-14 on Fable 5.2. More bass presets and organ later | P2.1 | Fable 5.2, at the owner's request |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
@@ -594,10 +594,34 @@ Built and merged 2026-11-12. Notes from the build:
 
 ## Q. Home screen and resizable panel
 
-- Clicking vibrato~ goes Home: the wordmark on the lava, "Continue" with the last mode, and three choices: Practice, Explore (a random progression or scale with its story) and Learn (Theory).
-- The side panel can be resized by dragging its edge, within limits, and remembers its width.
+Built 2026-11-14 on `claude/home-q-9e6d7e` (Sonnet 5.5). Not merged: the owner reviews first.
 
-**Done when:** Home is reachable from the wordmark, each choice lands in the right mode, and the panel width is remembered.
+**Home**
+
+- [x] Clicking the vibrato~ wordmark goes Home, and so does Esc when nothing nearer wants it (a menu, Settings, Focus, the drawer, a text field).
+- [x] Home sits straight on the lava (Vibrato) or the paper (Scholar), with no filled panel: the wordmark large and centred, one primary button, three outlined choices. The edges follow Panels (Outline or Off) and the Fill slider, as the strip and side panel do.
+- [x] **Continue · {last mode}** is the one primary button and has the default focus. It returns to the mode the app was on.
+- [x] **Practice** opens Practice; **Explore** opens a random progression from the Progressions library, picked when Home opens and shown on its card by name and numerals (never the one just played); **Learn** opens Theory. Each has a one-line description.
+- [x] The app still opens on the last mode, not on Home. Home is one click away.
+- [x] Going Home stops the sound (Home has no Play control).
+
+**Resizable side panel**
+
+- [x] Drag the docked panel's left edge to resize it, 280 to 520 px, and never so far that the neck falls under 640 px (at 1100 px, the narrowest window that docks the panel, the most is 426 px). Below 1100 px (or 680 px tall) the panel is still a drawer, at a fixed width.
+- [x] A resize cursor and a hairline along the edge on hover; the focused handle (Tab) responds to Left and Right (16 px; 64 with Shift) and Home and End; double-click goes back to the usual 22% width.
+- [x] The width is saved (`side-width`, via `usePersistentState`) and survives a reload. Until it is dragged it stays the old 22% of the window (280 to 340 px).
+- [x] Open and close, and the drawer, are as before.
+
+**Decisions to check**
+
+- The app opens on the last mode, as you asked. Home is a click on the wordmark or Esc. Esc in Practice mid-session also goes Home; the session's draft is saved on this device, so Practice offers the place again.
+- Explore shows what it will open (name and numerals) rather than a description, so the card promises what the click does. Entries carry a long "why", which is too long for a one-line card, so none is shown.
+- On Home the strip keeps the mode tabs (none lit), Theme and Settings; Key and Panel step aside. The strip's small wordmark keeps its place but is not drawn, so the tabs do not jump.
+- Below 1220 px the strip hides the wordmark. Home must still be reachable, so the wordmark's wave, the ~, stays there as the Home button (tooltip "Home (Esc)"). The strip was full at 960 px, so below 1220 px the pills lose 1.6 px of padding each side and the gaps shrink a little. This is the one place the look moved.
+- The large wordmark is Inter 300 (the strip's small one is 900); at that size 900 reads as heavy against the thin type.
+- Panel limits: 280 px is today's minimum; 520 px at most; the neck keeps 640 px.
+
+**Measured.** No page scroll at 1440×900, 1280×720 and 960×640 in Home and in the panel at its widest and narrowest, on both Vibrato canvases and Scholar (`scripts/check-layout.cjs`, with the new states `home`, `scales-panel-wide`, `scales-panel-narrow`).
 
 ## S. Sound: instruments we model ourselves
 
@@ -684,3 +708,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   - H's two small items wait for H2, which the owner is reviewing.
   - Measuring the texture's cost waits until the builds are done, so the machine is quiet.
   - G and the later instruments stay later.
+- **2026-11-14.** Q built on `claude/home-q-9e6d7e`: Home (the wordmark or Esc; Continue, Practice, Explore, Learn) and a side panel the player can drag between 280 and 520 px, remembered across reloads. The app still opens on the last mode. See package Q for the decisions to check.

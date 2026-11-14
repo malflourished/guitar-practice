@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { FrameContext, type SideState } from './frameContext';
 import { NeckBandContext } from './neckContext';
+import { SideResizeHandle } from './SideResizeHandle';
 import styles from './Frame.module.css';
 
 /**
@@ -8,9 +9,10 @@ import styles from './Frame.module.css';
  * strip, the neck (which takes every spare pixel), a deck of fixed height
  * under it, and a side panel that is the only region allowed to scroll.
  *
- * The frame has named slots: `strip`, `neck`, `deck`, `panel`, `settings` and
- * `home` (empty for now). Regions render in that order and the CSS grid places
- * them by area. `settings` is a page in the panel's column: while
+ * The frame has named slots: `strip`, `home`, `neck`, `deck`, `panel` and
+ * `settings`. Regions render in that order and the CSS grid places them by
+ * area. While `home` is given the frame shows Home in the neck and deck's
+ * place and the other regions are left out (package Q). `settings` is a page in the panel's column: while
  * `settingsOpen` it replaces the panel (and a mode's own side panel), even
  * where the panel was closed, and the same fade carries it in and out. A mode that draws its own regions (Practice, Intervals) passes them as
  * `body` instead of `neck` and `deck`. `children` is for overlays.
@@ -44,6 +46,9 @@ interface FrameProps {
   panel?: ReactNode;
   settings?: ReactNode;
   settingsOpen?: boolean;
+  /** The docked panel's width in px set by the player; null is the usual. */
+  sideWidth?: number | null;
+  onSideWidthChange?: (width: number | null) => void;
   children?: ReactNode;
 }
 
@@ -61,6 +66,8 @@ export function Frame({
   panel,
   settings,
   settingsOpen = false,
+  sideWidth = null,
+  onSideWidthChange = () => {},
   children,
 }: FrameProps) {
   // On close the panel stays mounted while its column shrinks (the grid
@@ -83,9 +90,20 @@ export function Frame({
   if (!settingsOpen && settingsShown && !closing) setSettingsShown(false);
 
   return (
-    <FrameContext.Provider value={{ side, closing, closeSide: onCloseSide }}>
+    <FrameContext.Provider
+      value={{
+        side,
+        closing,
+        closeSide: onCloseSide,
+        sideWidth,
+        setSideWidth: onSideWidthChange,
+      }}
+    >
       <div
         className={`app ${styles.frame}`}
+        data-frame=""
+        data-home={home ? 'true' : undefined}
+        style={sideWidth ? ({ '--side-want': `${sideWidth}px` } as CSSProperties) : undefined}
         data-side={wanted}
         data-focus={focus ? 'true' : undefined}
         data-practice={practice ? 'true' : undefined}
@@ -203,22 +221,26 @@ export function SidePanel({ label, page, className, children }: SidePanelProps) 
   const { side, closing, closeSide } = useContext(FrameContext);
   if (side === 'closed') return null;
   return (
-    <aside
-      className={join(styles.side, className)}
-      data-region="side"
-      data-side={side}
-      data-closing={closing ? 'true' : undefined}
-      data-page={page}
-      aria-label={label}
-    >
-      <div className={styles.sideInner}>
-        {side === 'drawer' && (
-          <button type="button" className={styles.sideClose} onClick={closeSide}>
-            Close
-          </button>
-        )}
-        {children}
-      </div>
-    </aside>
+    <>
+      <aside
+        className={join(styles.side, className)}
+        data-region="side"
+        data-side={side}
+        data-closing={closing ? 'true' : undefined}
+        data-page={page}
+        aria-label={label}
+      >
+        <div className={styles.sideInner}>
+          {side === 'drawer' && (
+            <button type="button" className={styles.sideClose} onClick={closeSide}>
+              Close
+            </button>
+          )}
+          {children}
+        </div>
+      </aside>
+      {/* Its width is the player's to set; a drawer has none. */}
+      {side === 'docked' && !closing && <SideResizeHandle />}
+    </>
   );
 }

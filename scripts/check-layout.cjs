@@ -69,6 +69,10 @@ const STATES = [
   { name: 'scales', store: { ...mode('scales'), 'vibrato:scale-quality': '"minorPentatonic"' } },
   { name: 'scales-major-caged', store: { ...mode('scales'), 'vibrato:scale-quality': '"major"', 'vibrato:scale-system': '"caged"' } },
   { name: 'chords', store: mode('chords') },
+  // Package Q: Home (the wordmark opens it), and the panel at its widest and narrowest.
+  { name: 'home', store: mode('scales'), actions: [clickLabel('Home')] },
+  { name: 'scales-panel-wide', store: { ...mode('scales'), 'vibrato:side-width': '520' } },
+  { name: 'scales-panel-narrow', store: { ...mode('scales'), 'vibrato:side-width': '280' } },
   { name: 'progressions', store: mode('progressions') },
   ...['See', 'Shapes', 'Find', 'Ear', 'Shell chords', 'Guide tones'].map((drill) => ({
     name: `intervals-${drill.toLowerCase().replace(' ', '-')}`, store: mode('intervals'),
