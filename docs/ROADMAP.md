@@ -26,7 +26,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
 | P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) and P2.2 (mix faders, the form strip) 2026-11-13. P3 and P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
-| S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) merged 2026-11-13 and is now the jam loop's default. S2 (drums: kits, grooves, fills, a Drums fader) in progress on Fable 5.2. More bass presets and organ later | P2.1 | Fable 5.2, at the owner's request |
+| S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) merged 2026-11-13 and is now the jam loop's default. S2 (drums: three kits, four grooves, fills, a Drums fader) merged 2026-11-13; the owner still has to compare the kits in the lab. More bass presets and organ later | P2.1 | Fable 5.2, at the owner's request |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
 
@@ -564,7 +564,13 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   - A hidden sound lab that A/Bs it against today's bass at matched loudness.
   
   The owner chooses by ear before it becomes the default. What was built goes in `docs/specs/S1-modelled-bass.md`.
-- **S2** (in progress, Fable 5.2): drums. The owner chose drums over organ on 2026-11-13, because drums carry the time feel and mark the form. The plan:
+- **S2** (merged 2026-11-13, Fable 5.2): drums. Spec: [specs/S2-drums.md](specs/S2-drums.md). Research: [sound/drums.md](sound/drums.md). Built:
+  - three kits: A acoustic, B machine, C brushes;
+  - four grooves: straight 8ths, shuffle, swing, 16ths;
+  - fills, and the crash at the top of the form;
+  - a Drums fader that starts at off.
+  
+  The whole jam is 3 dB quieter for headroom, which the owner approved. The owner's first listen, in the jam on the 12-bar blues: "they sound great". Still open: comparing the three kits in the lab, and the spec's "Decisions to check". The original plan was: The owner chose drums over organ on 2026-11-13, because drums carry the time feel and mark the form. The plan:
   - research first;
   - at least two kits: a realistic acoustic kit and an 80s drum-machine kit, with brushes if they can sound good;
   - grooves for straight 8ths, a blues shuffle and a jazz swing ride, locked to the jam's swing at 2/3 of the beat;
@@ -608,3 +614,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
 - **2026-11-13.** S1 reviewed and merged: about 7,000 words of research with sources, a modelled electric bass in our own DSP (tuning within 0.13 cents from E1 to G3, about 0.2% of a core per sounding string), and the sound lab. Its one clash with P2.2 was in `engine.ts`: the Bass fader's gain node and S1's voice picker shared the name `jamBass`. The picker is now `jamBassVoice()`, and both basses play through the Bass fader. 406 tests pass. In a hidden window, the lab played the modelled bass and the jam ran on it with no errors.
 - **2026-11-13.** The owner A/B'd the basses: "the attack does sound like fingers on string … the four presets sound great … model bass sounds great". The modelled bass is now the jam loop's default. A choice saved while comparing gives way to it once. The owner wants more presets and more instruments built the same way.
 - **2026-11-13.** The owner chose drums as the next instrument. Organ was the research's pick, but drums carry the time feel and the form. S2 started on Fable 5.2.
+- **2026-11-13.** S2 (drums) merged, 528 tests. The owner listened in the jam ("they sound great") and approved 3 dB of headroom for the whole jam. While working with the drums session, the owner also had "Move along the neck" rebuilt, so the region climbs once a pass. It is on its own branch, with a fix for Down under way.
