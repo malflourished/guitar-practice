@@ -13,6 +13,8 @@ interface ProgressionStripProps {
   notation: NotationPreference;
   showFingers: boolean;
   showNoteLabels: boolean;
+  /** Labels = Intervals: the dots read R, 3, 5, ♭7 above each chord's root. */
+  showIntervals?: boolean;
   fullDotOpacity: boolean;
   showChordTones: boolean;
   /** The jam loop is running: the active chord is the one sounding. */
@@ -27,6 +29,7 @@ export function ProgressionStrip({
   notation,
   showFingers,
   showNoteLabels,
+  showIntervals = false,
   fullDotOpacity,
   showChordTones,
   playing = false,
@@ -70,6 +73,7 @@ export function ProgressionStrip({
                     noteLabels={chord.noteLabels}
                     showFingers={showFingers}
                     showNoteLabels={showNoteLabels}
+                    showIntervals={showIntervals}
                     fullDotOpacity={fullDotOpacity}
                     showChordTones={showChordTones}
                     rootNote={chord.step.root}

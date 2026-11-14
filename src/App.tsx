@@ -107,7 +107,7 @@ function App() {
   const chordPositionViews = useChordPositionViews(
     studyMode,
     rootNote,
-    chords.chordQuality,
+    chords,
     notation,
   );
   const board = useBoardData({

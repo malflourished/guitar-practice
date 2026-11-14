@@ -111,10 +111,13 @@ export {
   type ProgressionChordView,
 } from './progressionChordViews';
 export {
+  CHORD_VOICINGS,
   buildChordPositionViews,
+  buildChordsModePositions,
+  showsTriads,
   type ChordPositionView,
-} from './chordPositionViews';
-export {
+  type ChordVoicing,
+} from './chordPositionViews';export {
   CLIMB_MIN_BARS,
   CLIMB_TOP_FRET,
   buildClimbChordViews,
@@ -136,7 +139,18 @@ export {
   buildSingleStringScale,
   ordinalPosition,
 } from './positions';
-export type { Position } from './positions';
+export type { ChordShapeSet, Position } from './positions';
+export {
+  TRIAD_INVERSIONS,
+  TRIAD_QUALITIES,
+  TRIAD_STRING_SETS,
+  TRIAD_STRING_SET_IDS,
+  buildTriadPositions,
+  getTriadStringSet,
+  isTriadQuality,
+  type TriadQuality,
+  type TriadStringSet,
+} from './triads';
 export {
   buildNeckViewLayers,
   buildRegionBadges,

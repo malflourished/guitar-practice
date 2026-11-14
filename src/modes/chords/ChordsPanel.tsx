@@ -40,6 +40,7 @@ export function ChordsPanel({
             notation={notation}
             showFingers={display.showFingers}
             showNoteLabels={display.showNoteLabels}
+            showIntervals={display.showIntervals}
             fullDotOpacity={display.fullDotOpacity}
             showChordTones={display.showChordTones}
             rootNote={rootNote}

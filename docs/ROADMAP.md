@@ -223,9 +223,17 @@ Follow-ups from the owner's review, where the original rules were musically wron
 
 **Why.** Chords mode only knows the E-shape and A-shape barre chords plus open chords, repeated an octave up (`CHORD_SHAPES` in `src/lib/music/positions.ts`; the loop adds 12 to the base fret). C major's five "positions" are open, 3, 8, 15 and 20. Theory mode teaches all five CAGED shapes, so the two modes disagree.
 
-- [ ] Add the C, G and D shapes for the main qualities.
+- [x] Add the C, G and D shapes for the main qualities.
   **Done when:** C major shows five positions inside frets 0–13: C shape (open), A shape (3), G shape (5), E shape (8), D shape (10), each labelled with its letter.
+  **Built 2026-11-14.** Major, minor, dom7, maj7 and min7 have all five letters in every key, in the forms that are played:
+  - C shape: five strings for major and maj7 (D is x-5-4-2-3-2), four for minor and dom7 (Dm x-5-3-2-3-x, D7 x-5-4-5-3-x), the top four for min7 (Dm7 x-x-3-5-3-5).
+  - G shape: the top four strings for major, dom7 and maj7 (C is x-x-5-5-5-8), the low four for minor (Am 5-3-2-2-x-x). There is no G-shape min7: no form of it can be fingered, so min7 has four shapes.
+  - D shape: the open D chord moved up on the top four strings.
+  - Open chords carry their letter ("Open C shape") and replace that shape at the nut. Open C minor (x-3-1-0-1-x) and G minor (3-1-0-0-3-3) were added for the same reason.
+  - `buildChordPositions` takes a shape set. Chords mode asks for `caged`. Progressions keeps `barre` (E and A shapes and the open chords): its climb is specified on those regions ([specs/P3-climb.md](specs/P3-climb.md)), so moving it to all five is P's decision.
+  - A fingering checker (`fingeringFaults.ts`) runs over every shape in all 12 keys: four frets at most, fingers in order, real barres. It found three old shapes nobody could hold: maj13 and min13 (five fingers, or a five-fret reach) are now the usual root, 7th, 3rd, 13th forms from the low E string, and open Gmaj7 is refingered.
 - [ ] Add triads on three adjacent strings: four string sets, three inversions, for major, minor, diminished and augmented. These are what an improviser actually uses.
+  **Data built 2026-11-14** (`src/lib/music/triads.ts`, tested in all 12 keys); the switch in the Chords deck lands with M. One shape is wider than four frets: the root-position diminished triad on the two lower string sets (B° on E A D is 7-5-3), fingered 1-2-4 like two whole steps on one string.
 
 ---
 
@@ -516,7 +524,7 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 - **Scales drone:** a drone on the root (P2's pad voice), so a scale is heard against its home. This replaces Discover's "Sounds".
 - Package C (all five chord shapes, small triads) lands in this lane too.
 - **Follow-ups from K and L (2026-11-12):**
-  - The chord diagrams in the side panel ignore Labels = Intervals. They should show R, 3, 5, ♭7 when it is chosen.
+  - [x] The chord diagrams in the side panel ignore Labels = Intervals. They should show R, 3, 5, ♭7 when it is chosen. (Done 2026-11-14, in Chords and Progressions: `ChordDiagram` takes `showIntervals`.)
   - Interval colours only tint the Intervals drills. Decide whether they should reach the neck too.
   - The Play options button uses the same icon as Settings. Give it its own.
   - Mute shows "Sound on" as its button label. Say plainly whether sound is muted.
@@ -684,3 +692,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   - H's two small items wait for H2, which the owner is reviewing.
   - Measuring the texture's cost waits until the builds are done, so the machine is quiet.
   - G and the later instruments stay later.
+- **2026-11-14.** C, first half (on `claude/modes-m-c-dc462b`): Chords mode has all five CAGED shapes for major, minor, dom7, maj7 and min7, and the data for small triads. Three rulings, written up under package C: each shape is the form guitarists play, not the full six-string CAGED outline (so the G shape is four strings, and min7 has no G shape); Progressions stays on the E and A shapes until P moves its climb spec; and three older fingerings that could not be held were replaced. The side panel's chord diagrams now follow Labels = Intervals.

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import {
   buildChordPositions,
+  buildChordsModePositions,
   buildScalePositions,
   buildSingleStringScale,
   filterToChordTones,
@@ -42,7 +43,7 @@ export function useNeckPosition({
   harmonyLayer,
 }: NeckPositionInput) {
   const { rootNote } = keyState;
-  const { chordQuality } = chords;
+  const { chordQuality, chordVoicing, triadStrings, triadsShown } = chords;
   const { scaleQuality, scaleSystem, impliedChordQuality } = scales;
   const {
     progressionId,
@@ -66,7 +67,9 @@ export function useNeckPosition({
         ? `${theoryTopicId}-${theoryScaleQuality}`
       : studyMode === 'progressions'
         ? `${progressionId}-${progressionStepIndex}-${activeChordQuality}`
-        : chordQuality;
+        : triadsShown
+          ? `${chordQuality}-triads-${triadStrings}`
+          : chordQuality;
   const qualityLabel =
     studyMode === 'scales'
       ? getQualityLabel(scaleQuality)
@@ -88,7 +91,10 @@ export function useNeckPosition({
   }`;
 
   const positionRegions = useMemo(() => {
-    if (studyMode === 'chords' || studyMode === 'progressions') {
+    if (studyMode === 'chords') {
+      return buildChordsModePositions(rootNote, chordQuality, chordVoicing, triadStrings);
+    }
+    if (studyMode === 'progressions') {
       return buildChordPositions(activeChordRoot, activeChordQuality);
     }
     if (studyMode === 'scales') {
@@ -111,6 +117,9 @@ export function useNeckPosition({
     rootNote,
     activeChordRoot,
     activeChordQuality,
+    chordQuality,
+    chordVoicing,
+    triadStrings,
     scaleQuality,
     scaleSystem,
     theoryShowFretboard,
