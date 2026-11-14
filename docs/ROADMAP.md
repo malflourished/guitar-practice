@@ -16,7 +16,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | E | Practice that adapts | After O. The jam loop moved to P | O | a capable model |
 | F | Look: analog texture | Default look done and reviewed, 2026-11-11. Open: measure its cost on real hardware | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
-| H | Theory figures: one key dial | Done, merged and pushed 2026-11-12. H2 (a vertical neck in the dial's place) mocked up 2026-11-13, waiting for the owner | – | the strongest model designs; a capable model builds |
+| H | Theory figures: one key dial | Done, merged and pushed 2026-11-12. H2 (a vertical neck in the dial's place): the owner approved the mock-up 2026-11-13; spec written, being built | – | the strongest model designs; a capable model builds |
 | I | Quick fixes from the 2026-11-12 walkthrough | Done, merged 2026-11-12 | nothing | a capable model |
 | J | Split `App.tsx` into mode components | Done, merged 2026-11-12 (`App.tsx` 1,529 → 428 lines) | I | a capable model, carefully: no change in behaviour or look |
 | K | Settings page in the side panel | Done, merged 2026-11-12 | J | a capable model |
@@ -378,7 +378,7 @@ The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifth
 - [ ] Pass the notation preference (sharps or flats) from `App.tsx` to `KeyDial` (`notation` prop). Until then F♯/G♭ and D♯m/E♭m follow "sharps" unless the user clicks the cell twice.
 - [ ] Clicking a chord plays it, as elsewhere in the app.
 
-**H2. A vertical neck in the dial's place** (mock-up 2026-11-13, waiting for the owner). The owner (2026-11-13) finds the dial "really pretty". But clicking Neck "just takes you to the neck, and everything kind of disappears". The suggestion: "maybe the neck shows vertically in that space", so the information stays where it is.
+**H2. A vertical neck in the dial's place** (the owner approved the mock-up on 2026-11-13: "build the vertical neck for Theory". Spec: [specs/H2-vertical-neck.md](specs/H2-vertical-neck.md). Being built). The owner (2026-11-13) finds the dial "really pretty". But clicking Neck "just takes you to the neck, and everything kind of disappears". The suggestion: "maybe the neck shows vertically in that space", so the information stays where it is.
 - **Neck** draws a vertical fretboard in the dial's square, oriented like a chord chart: low E on the left, the nut at the top, frets 0–12. Every note of the key wears its chord's numeral in the dial's colours: I solid, major filled, minor ringed, diminished dashed. The words, the view pills and the side panel stay where they are. Mock-up: [design/theory-neck/mock-neck.jpg](design/theory-neck/mock-neck.jpg), drawn into the running app by `mock-neck.js` in the same folder.
 - The caption follows the view: "The same seven chords, by root, across the whole neck. Find any I: IV and V are always one string away."
 - Borrowed and Dominants mark their roots the same way. To be specified.
@@ -616,3 +616,10 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
 - **2026-11-13.** The owner chose drums as the next instrument. Organ was the research's pick, but drums carry the time feel and the form. S2 started on Fable 5.2.
 - **2026-11-13.** S2 (drums) merged, 528 tests. The owner listened in the jam ("they sound great") and approved 3 dB of headroom for the whole jam. While working with the drums session, the owner also had "Move along the neck" rebuilt, so the region climbs once a pass. It is on its own branch, with a fix for Down under way.
 - **2026-11-13.** Move along the neck merged, 560 tests. Each pass plays in one region of the neck, and the region moves between passes, never above fret 15. Up starts near the selected shape. Down starts at the top and comes down. Both turn round at the ends. It is the first slice of P3's Climb lens: spec [specs/P3-climb.md](specs/P3-climb.md).
+- **2026-11-13.** The owner approved H2, the vertical neck. Spec written, with these rulings:
+  - frets 0–12 always, with a size rule instead of fewer frets at 960×640;
+  - the markers read from `describeKeyDial`, so the dial and the neck cannot disagree;
+  - a caption for each view, every claim checked on the neck;
+  - Neck no longer brings back the deck.
+  
+  The build has started on Sonnet.
