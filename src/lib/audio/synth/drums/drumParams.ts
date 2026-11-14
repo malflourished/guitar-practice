@@ -7,18 +7,26 @@
  */
 
 /**
- * `acoustic` aims at a real kit, as far as synthesis gets. `machine` is a
- * drum machine in the early-1980s analogue tradition. `brushes` is the
- * acoustic kit played with wire brushes.
+ * The first three kits (S2): `acoustic` aims at a real kit, as far as
+ * synthesis gets. `machine` is a drum machine in the early-1980s analogue
+ * tradition. `brushes` is the acoustic kit played with wire brushes.
+ *
+ * The next three (S2.1, `studioKits.ts`) are candidates built on a second
+ * engine after the owner compared the first three: `rock` is a hard-hit kit
+ * in a big room, `neon` the gated drums of 1980s pop and synthwave, `garage`
+ * the tight, bright drums of UK garage.
  */
-export type DrumKitId = 'acoustic' | 'machine' | 'brushes';
+export type DrumKitId = 'acoustic' | 'machine' | 'brushes' | 'rock' | 'neon' | 'garage';
 
-export const DRUM_KIT_IDS: readonly DrumKitId[] = ['acoustic', 'machine', 'brushes'];
+export const DRUM_KIT_IDS: readonly DrumKitId[] = ['acoustic', 'machine', 'brushes', 'rock', 'neon', 'garage'];
 
 export const DRUM_KIT_LABELS: Readonly<Record<DrumKitId, string>> = {
   acoustic: 'Acoustic',
   machine: 'Machine',
   brushes: 'Brushes',
+  rock: 'Rock room',
+  neon: 'Neon',
+  garage: 'Garage',
 };
 
 /**
@@ -172,6 +180,51 @@ export const DEFAULT_DRUM_PARAMS: Readonly<Record<DrumKitId, DrumParams>> = {
     room: 0.45,
     drive: 0.15,
     variation: 0.7,
+  },
+  rock: {
+    kickHz: 56,
+    kickDecay: 0.34,
+    kickPunch: 0.6,
+    snareHz: 190,
+    snareWires: 0.6,
+    snareDecay: 0.3,
+    hatTone: 0.5,
+    hatDecay: 0.5,
+    cymbalTone: 0.5,
+    cymbalDecay: 2.4,
+    room: 0.45,
+    drive: 0.35,
+    variation: 0.6,
+  },
+  neon: {
+    kickHz: 52,
+    kickDecay: 0.3,
+    kickPunch: 0.65,
+    snareHz: 172,
+    snareWires: 0.65,
+    snareDecay: 0.22,
+    hatTone: 0.55,
+    hatDecay: 0.4,
+    cymbalTone: 0.55,
+    cymbalDecay: 2.6,
+    room: 0.55,
+    drive: 0.45,
+    variation: 0.3,
+  },
+  garage: {
+    kickHz: 50,
+    kickDecay: 0.24,
+    kickPunch: 0.6,
+    snareHz: 215,
+    snareWires: 0.55,
+    snareDecay: 0.14,
+    hatTone: 0.6,
+    hatDecay: 0.3,
+    cymbalTone: 0.6,
+    cymbalDecay: 1.5,
+    room: 0.3,
+    drive: 0.5,
+    variation: 0.35,
   },
 };
 

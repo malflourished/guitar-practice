@@ -12,6 +12,8 @@
  */
 import { DRUM_PROCESSOR_NAME, type DrumMessage, type DrumProcessorOptions } from './drumMessages';
 import { DrumSynth } from './drumSynth';
+import { primeMetalTables } from './metalTable';
+import type { PreparedMetal } from './studioKits';
 
 // The parts of the worklet scope this file uses (TypeScript's DOM library does not describe it).
 declare const sampleRate: number;
@@ -34,6 +36,7 @@ class DrumProcessor extends AudioWorkletProcessor {
   constructor(options: { processorOptions?: DrumProcessorOptions }) {
     super();
     const setup = options.processorOptions ?? {};
+    this.takeMetal(setup.metal);
     this.synth = new DrumSynth(sampleRate, setup.kit, setup.params, setup.seed);
     this.port.onmessage = (event: MessageEvent<DrumMessage>) => this.receive(event.data);
   }
@@ -47,6 +50,7 @@ class DrumProcessor extends AudioWorkletProcessor {
         this.synth.stop();
         break;
       case 'kit':
+        this.takeMetal(message.metal);
         this.synth.setKit(message.kit, message.params);
         break;
       case 'params':
@@ -56,6 +60,11 @@ class DrumProcessor extends AudioWorkletProcessor {
         this.alive = false;
         break;
     }
+  }
+
+  /** Keep cymbal tables the page built, so making the kit does not hold up the audio thread. */
+  private takeMetal(metal: PreparedMetal[] | undefined): void {
+    for (const prepared of metal ?? []) primeMetalTables(prepared.recipe, sampleRate, prepared.bands);
   }
 
   process(_inputs: Float32Array[][], outputs: Float32Array[][]): boolean {

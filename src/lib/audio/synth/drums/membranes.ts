@@ -130,6 +130,22 @@ export class MembraneModes {
     return largest;
   }
 
+  /**
+   * Set to zero every mode that has died away. A drum whose modes ring for
+   * very different times (a beater's knock of a hundredth of a second on a
+   * kick that booms for two) calls this at its housekeeping, so the short
+   * ones never decay into denormal numbers while the long ones keep it awake.
+   */
+  flush(floor = 1e-12): void {
+    const { x, y } = this;
+    for (let m = 0; m < this.count; m++) {
+      if (x[m] < floor && x[m] > -floor && y[m] < floor && y[m] > -floor) {
+        x[m] = 0;
+        y[m] = 0;
+      }
+    }
+  }
+
   sleep(): void {
     this.x.fill(0);
     this.y.fill(0);
@@ -179,7 +195,7 @@ export function noiseGain(sampleRate: number): number {
  * middle of a render: so the sound cannot depend on how the caller slices
  * its blocks.
  */
-class NoiseBurst {
+export class NoiseBurst {
   /** Still to be rendered: the burst, or its filter ringing out. */
   sounding = false;
   private level = 0;

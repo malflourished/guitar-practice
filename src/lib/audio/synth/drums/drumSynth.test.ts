@@ -611,7 +611,7 @@ describe('robustness', () => {
 });
 
 describe('levels', () => {
-  it('the three kits are equally loud on the reference part, by K-weighted loudness', () => {
+  it('every kit is equally loud on the reference part, by K-weighted loudness', () => {
     const levels = DRUM_KIT_IDS.map((kit) => measureKit(kit, undefined, SAMPLE_RATE));
     for (const level of levels) expect(Math.abs(level.loudness - levels[0].loudness)).toBeLessThan(0.5);
     expect(REFERENCE_BPM).toBe(100);

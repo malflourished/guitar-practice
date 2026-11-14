@@ -5,6 +5,7 @@
  */
 import type { Random } from '../dsp/random';
 import { CrashCymbal, HiHat, RideCymbal } from './cymbals';
+import type { GlueBus } from './drumBus';
 import type { DrumKitId, DrumParams, DrumPiece } from './drumParams';
 import {
   GatedBurst,
@@ -25,6 +26,7 @@ import {
   strokeVariation,
   type DrumVoice,
 } from './membranes';
+import { isStudioKitId, StudioKit } from './studioKits';
 
 /** One voice's place in the mix. */
 export interface KitStrip {
@@ -38,12 +40,25 @@ export interface KitStrip {
   metal: boolean;
 }
 
+/** A room a kit can bring: a mono send in, a stereo room added to the two outputs. */
+export interface KitRoom {
+  readonly active: boolean;
+  process(input: Float64Array | null, left: Float64Array, right: Float64Array, count: number, level: number): void;
+  settle(fed: boolean): void;
+  sleep(): void;
+  forEachState(visit: (value: number) => void): void;
+}
+
 export interface DrumKit {
   readonly id: DrumKitId;
   readonly strips: readonly KitStrip[];
   /** How long the kit's room rings, in seconds, and its level at Room 1. */
   readonly roomSeconds: number;
   readonly roomLevel: number;
+  /** A room of the kit's own. Without one the kit plays in the synth's small room, set to `roomSeconds`. */
+  readonly room?: KitRoom;
+  /** A compressor and clipper across the whole kit, room included. Without one the kit's sum goes straight out. */
+  readonly bus?: GlueBus;
   /** True while any voice or extra is sounding. */
   readonly busy: boolean;
   configure(params: DrumParams): void;
@@ -59,7 +74,7 @@ export interface DrumKit {
 }
 
 /** A strip from a level and a pan position: -1 is hard left, 1 hard right, at equal power. */
-function strip(voice: DrumVoice, level: number, pan: number, send: number, metal = false): KitStrip {
+export function strip(voice: DrumVoice, level: number, pan: number, send: number, metal = false): KitStrip {
   const angle = ((pan + 1) * Math.PI) / 4;
   return { voice, left: level * Math.cos(angle) * Math.SQRT2, right: level * Math.sin(angle) * Math.SQRT2, send: level * send, metal };
 }
@@ -370,6 +385,7 @@ export class MachineKit implements DrumKit {
 }
 
 export function createKit(id: DrumKitId, sampleRate: number, params: DrumParams, random: Random): DrumKit {
+  if (isStudioKitId(id)) return new StudioKit(id, sampleRate, params, random);
   if (id === 'machine') return new MachineKit(sampleRate, params, random);
   return new AcousticKit(sampleRate, params, random, id === 'brushes');
 }

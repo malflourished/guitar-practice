@@ -2,6 +2,7 @@ import * as Tone from 'tone';
 import processorCode from './drumProcessor.ts?worklet';
 import { DRUM_PROCESSOR_NAME, type DrumMessage, type DrumProcessorOptions } from './drumMessages';
 import type { DrumKitId, DrumParams, DrumPiece } from './drumParams';
+import { prepareKitMetal } from './studioKits';
 
 const loading = new WeakMap<object, Promise<void>>();
 
@@ -47,10 +48,14 @@ export interface DrumKitOptions {
 export class DrumKitVoice {
   private readonly node: AudioWorkletNode;
   private readonly out: Tone.Gain;
+  private readonly sampleRate: number;
   private disposed = false;
 
   private constructor(context: Tone.BaseContext, destination: Tone.InputNode, options: DrumKitOptions) {
-    const processorOptions: DrumProcessorOptions = { kit: options.kit, params: options.params, seed: options.seed };
+    this.sampleRate = context.sampleRate;
+    // The S2.1 kits' cymbals are tables of partials. They are built here, on the page, and travel with the options.
+    const metal = prepareKitMetal(options.kit ?? 'acoustic', this.sampleRate);
+    const processorOptions: DrumProcessorOptions = { kit: options.kit, params: options.params, seed: options.seed, metal };
     this.out = new Tone.Gain(Tone.dbToGain(options.trimDb ?? 0)).connect(destination);
     this.node = context.createAudioWorkletNode(DRUM_PROCESSOR_NAME, {
       numberOfInputs: 0,
@@ -82,7 +87,7 @@ export class DrumKitVoice {
 
   /** Change kit, with that kit's controls. What is sounding fades out first. */
   setKit(kit: DrumKitId, params: Partial<DrumParams> = {}): void {
-    this.post({ type: 'kit', kit, params });
+    this.post({ type: 'kit', kit, params, metal: prepareKitMetal(kit, this.sampleRate) });
   }
 
   /** Change some of the kit's controls. They apply from the next stroke. */

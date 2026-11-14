@@ -8,7 +8,7 @@ describe('saved drum settings', () => {
     expect(parseDrumSettings(null)).toEqual(DEFAULT_DRUM_SETTINGS);
     expect(DEFAULT_DRUM_SETTINGS.kit).toBe('acoustic');
     expect(DEFAULT_DRUM_SETTINGS.params).toEqual(DEFAULT_DRUM_PARAMS);
-    expect(DEFAULT_DRUM_SETTINGS.trimDb).toEqual({ acoustic: 0, machine: 0, brushes: 0 });
+    expect(DEFAULT_DRUM_SETTINGS.trimDb).toEqual({ acoustic: 0, machine: 0, brushes: 0, rock: 0, neon: 0, garage: 0 });
     expect(DEFAULT_DRUM_SETTINGS.humanize).toBe(DEFAULT_HUMANIZE);
   });
 
@@ -28,7 +28,7 @@ describe('saved drum settings', () => {
     expect(parsed.kit).toBe('brushes');
     expect(parsed.params.machine).toEqual({ ...DEFAULT_DRUM_PARAMS.machine, kickHz: 44, snareHz: 280 });
     expect(parsed.params.acoustic).toEqual(DEFAULT_DRUM_PARAMS.acoustic);
-    expect(parsed.trimDb).toEqual({ acoustic: -3, machine: 24, brushes: 0 });
+    expect(parsed.trimDb).toEqual({ acoustic: -3, machine: 24, brushes: 0, rock: 0, neon: 0, garage: 0 });
     expect(parsed.humanize).toBe(1);
     expect(parseDrumSettings(JSON.stringify({ kit: 'cowbell' })).kit).toBe('acoustic');
   });
