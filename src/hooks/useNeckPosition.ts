@@ -10,13 +10,23 @@ import {
   getProgressionStepPositionScope,
   getQualityLabel,
 } from '../lib/music';
-import type { HarmonyLayer, StudyMode } from '../types/music';
+import type { HarmonyLayer, ScaleQuality, ScaleSystem, StudyMode } from '../types/music';
 import type { ChordsState } from '../modes/chords/useChordsState';
 import type { ProgressionsState } from '../modes/progressions/useProgressionsState';
 import type { ScalesState } from '../modes/scales/useScalesState';
 import type { TheoryState } from '../modes/theory/useTheoryState';
 import type { KeyState } from './useKeyState';
 import { useNeckView } from './useNeckView';
+
+/** Pentatonic and blues scales are drawn as the five boxes, whatever the System switch says. */
+function buildsBoxes(quality: ScaleQuality): boolean {
+  return (
+    quality === 'majorPentatonic' ||
+    quality === 'minorPentatonic' ||
+    quality === 'majorBlues' ||
+    quality === 'minorBlues'
+  );
+}
 
 interface NeckPositionInput {
   studyMode: StudyMode;
@@ -85,6 +95,14 @@ export function useNeckPosition({
     (studyMode === 'theory' &&
       theoryShowFretboard &&
       (theoryScaleQuality === 'major' || theoryScaleQuality === 'minor'));
+
+  // The layout a scale is drawn in: major and minor follow the System switch,
+  // pentatonics and blues are always the five boxes, the rest 3 per string.
+  const shownScaleSystem: ScaleSystem = supportsSystemToggle
+    ? scaleSystem
+    : buildsBoxes(studyMode === 'theory' ? theoryScaleQuality : scaleQuality)
+      ? 'caged'
+      : '3nps';
 
   const positionScope = `${studyMode}-${qualityKey}-${
     supportsSystemToggle ? scaleSystem : 'fixed'
@@ -203,6 +221,7 @@ export function useNeckPosition({
   return {
     qualityLabel,
     supportsSystemToggle,
+    shownScaleSystem,
     positionRegions,
     displayRegions,
     neckViewEnabled,

@@ -31,6 +31,8 @@ export interface PlayControlProps {
   onToggle: () => void;
   /** The tempo readout opens Settings at Tempo. */
   onOpenTempo: () => void;
+  /** The menu opens downward (Play sits above the neck), not up from the deck. */
+  menuBelow?: boolean;
 }
 
 interface Choice<T extends string> {
@@ -303,6 +305,7 @@ export function PlayControl({
   canCrossNeck,
   onToggle,
   onOpenTempo,
+  menuBelow = false,
 }: PlayControlProps) {
   const label = playing ? 'Stop' : loading ? 'Loading…' : 'Play';
 
@@ -328,12 +331,11 @@ export function PlayControl({
         buttonLabel="Play options"
         buttonClassName={styles.menuButton}
         align="start"
-        above
+        above={!menuBelow}
         button={
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-            <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
-            <circle cx="15" cy="7" r="2" />
-            <circle cx="9" cy="17" r="2" />
+          // A chevron toward where the menu opens: Play's own options, not Settings' sliders.
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" data-play-options-icon={menuBelow ? 'down' : 'up'}>
+            <path d={menuBelow ? 'M5 9l7 7 7-7' : 'M5 15l7-7 7 7'} />
           </svg>
         }
       >

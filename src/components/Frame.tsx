@@ -160,12 +160,13 @@ export function Neck({ bar, barEnd, centerBar, className, children }: NeckProps)
 interface DeckProps {
   label?: string;
   className?: string;
+  style?: CSSProperties;
   children: ReactNode;
 }
 
-export function Deck({ label = 'Controls', className, children }: DeckProps) {
+export function Deck({ label = 'Controls', className, style, children }: DeckProps) {
   return (
-    <section className={join(styles.deck, className)} data-region="deck" aria-label={label}>
+    <section className={join(styles.deck, className)} style={style} data-region="deck" aria-label={label}>
       {children}
     </section>
   );

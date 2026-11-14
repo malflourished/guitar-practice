@@ -69,6 +69,10 @@ const STATES = [
   { name: 'scales', store: { ...mode('scales'), 'vibrato:scale-quality': '"minorPentatonic"' } },
   { name: 'scales-major-caged', store: { ...mode('scales'), 'vibrato:scale-quality': '"major"', 'vibrato:scale-system': '"caged"' } },
   { name: 'chords', store: mode('chords') },
+  { name: 'chords-extended', store: { ...mode('chords'), 'vibrato:chord-quality': '"dom11"' } },
+  { name: 'chords-triads', store: { ...mode('chords'), 'vibrato:chord-quality': '"minor"', 'vibrato:chord-voicing': '"triads"', 'vibrato:triad-strings': '"dgb"' } },
+  { name: 'scales-modes', store: { ...mode('scales'), 'vibrato:scale-quality': '"mixolydian"' } },
+  { name: 'notes-chord', store: { ...mode('notes'), 'vibrato:active-notes': '["A","C","E","G"]' } },
   { name: 'progressions', store: mode('progressions') },
   ...['See', 'Shapes', 'Find', 'Ear', 'Shell chords', 'Guide tones'].map((drill) => ({
     name: `intervals-${drill.toLowerCase().replace(' ', '-')}`, store: mode('intervals'),

@@ -225,3 +225,14 @@ export {
   STRING_COUNT,
   STRING_LABELS,
 } from './tuning';
+export {
+  CHORD_GUIDE,
+  CHORD_MENU_GROUPS,
+  SCALE_GUIDE,
+  SCALE_MENU_ROWS,
+  SCALE_SYSTEM_LINE,
+  formulaSemitones,
+  type ChordGuide,
+  type ScaleGuide,
+} from './chordGuide';
+export { describeNoteSet, nameNoteSet, type NoteSetReading } from './noteSets';

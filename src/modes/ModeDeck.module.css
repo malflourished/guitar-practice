@@ -1,0 +1,9 @@
+/* The Notes, Chords and Scales decks: a picker, a caption, a row of switches.
+   The deck may rise into the empty band under the board (--deck-grow, measured
+   by useDeckGrow), so its rule sits close beneath the neck in a tall window.
+   The neck region keeps its size, so the board stays where it is in every mode. */
+.guided {
+  container: deck / inline-size;
+  margin-top: calc(-1 * var(--deck-grow, 0px));
+  gap: clamp(0.4rem, 0.4rem + var(--deck-grow, 0px) / 8, 1.1rem);
+}

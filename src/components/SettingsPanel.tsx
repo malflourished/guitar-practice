@@ -147,15 +147,28 @@ export function SettingsPanel({
             onChange={(event) => audio.setRoom(Number(event.target.value) / 100)}
           />
         </SettingsRow>
-        <SettingsRow label="Mute">
-          <button
-            type="button"
-            className={audio.muted ? glass.pillSelected : glass.pill}
-            aria-pressed={audio.muted}
-            onClick={() => audio.setMuted(!audio.muted)}
-          >
-            {audio.muted ? 'Muted' : 'Sound on'}
-          </button>
+        <SettingsRow label="Sound">
+          {/* Two named states, the current one lit: no guessing what a lone Mute button means. */}
+          <div className={styles.choices} role="radiogroup" aria-label="Sound">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={!audio.muted}
+              className={audio.muted ? glass.pill : glass.pillSelected}
+              onClick={() => audio.setMuted(false)}
+            >
+              On
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={audio.muted}
+              className={audio.muted ? glass.pillSelected : glass.pill}
+              onClick={() => audio.setMuted(true)}
+            >
+              Muted
+            </button>
+          </div>
         </SettingsRow>
         {audio.error && (
           <p className={styles.note} role="alert">
