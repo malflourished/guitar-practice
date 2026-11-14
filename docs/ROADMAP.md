@@ -1,7 +1,7 @@
 # vibrato~ roadmap
 
 **Working branch:** `vibrato-next` (cut from `codex/practice-sessions` at `1a91f7c`)
-**Last updated:** 2026-11-13
+**Last updated:** 2026-11-14
 
 This file is the plan of record. It came out of a full review of the app on 2026-11-10 (teaching, layout, look) that the owner approved. It is written so that anyone, human or AI, can pick up a work package without having seen that conversation.
 
@@ -14,7 +14,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | C | Chord shapes and small triads | Ready | nothing | a strong model, and a guitarist should check the fingerings |
 | D | Discover mode | Folded into M and P on 2026-11-12: no separate mode | – | – |
 | E | Practice that adapts | After O. The jam loop moved to P | O | a capable model |
-| F | Look: analog texture, and Vibrato's panels | Default look done and reviewed, 2026-11-11. Vibrato's panels became outlines on the lava, 2026-11-13. Open: measure the texture's cost on real hardware | nothing | any capable model: the values are decided |
+| F | Look: analog texture, and Vibrato's panels | Default look done and reviewed, 2026-11-11. Vibrato's panels became outlines on the lava, 2026-11-13, with a Fill slider since 2026-11-14. Open: measure the texture's cost on real hardware | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
 | H | Theory figures: one key dial | Done, merged and pushed 2026-11-12. H2 (a vertical neck in the dial's place): the owner approved the mock-up 2026-11-13; spec written, being built | – | the strongest model designs; a capable model builds |
 | I | Quick fixes from the 2026-11-12 walkthrough | Done, merged 2026-11-12 | nothing | a capable model |
@@ -350,10 +350,45 @@ Scholar: clean and Print.
 
 The filled panels (86% dark, 92% light) hid nearly all of the lava. Vibrato now draws each region (top strip, neck and deck, side panel) as a hairline outline with no fill. The drawer and the menus keep their solid surfaces, because they open over the neck.
 
-- **Panels setting:** Theme → Panels, shown only on Vibrato. On (the old filled panels), **Outline (default)**, Lines (a rule under the strip and the deck's own rule, no boxes), Off (no edges). Saved under `guitar-practice-vibrato-panels-choice`, and only when the user picks one, so a later change of default still reaches everyone who never chose.
-- **Legibility without a fill** (every choice except On): the lava is dimmed 30% (lightened 30% on the light canvas), light type gets a soft halo of the canvas colour (`--lava-halo`), and frets, strings, pill borders and secondary text step up in strength. The edges and rules use `--lava-rule`. Practice's muted grey is lifted too, and the pale Start button keeps no halo.
-- **Code:** tokens in `src/styles/tokens.css`; the region rules in `src/components/Frame.module.css` (`data-on-lava` marks "no fill", `data-vibrato-panels` names the choice); the dimming in `AmbientBackground.module.css`; state in `src/hooks/useUiTheme.ts`; the row in `UiThemeSelector.tsx`.
-- **Checked:** screenshots at 1440×900 of Scales, Chords and Practice, dark and light canvas, in a hidden window. The worst case was small grey text over a bright yellow pool, which the halo and the lifted greys fixed. Not checked: every key's palette, or the 960×640 window.
+- **Panels setting:** Theme → Panels, shown only on Vibrato: **Outline (default)** or Off (no edges, no fill). Saved under `guitar-practice-vibrato-panels-choice`, and only when the user picks one, so a later change of default still reaches everyone who never chose.
+- **Fill** (2026-11-14). The owner: "remove 'on' and 'lines', but add an opacity slider so that 'outline' can effectively become 'on' if we raise the opacity up enough". Theme → Fill, 0–100%, default 0, used under Outline only (dimmed under Off). The panel surface is the old one at that strength, so 100% is exactly the old On: the same 86%/92% surface and the same faint edge. Saved under `guitar-practice-vibrato-panel-fill` on choice. A saved On becomes Outline at 100%, and a saved Lines becomes Outline.
+- **Legibility on the lava:** the lava is dimmed 30% (lightened 30% on the light canvas), light type gets a soft halo of the canvas colour (`--lava-halo`), and frets, strings, pill borders and secondary text step up in strength. The edges use `--lava-rule`. Practice's muted grey is lifted too, and the pale Start button keeps no halo. As the fill rises, the extra dimming and the halo fade out and `--lava-rule` moves to the filled panels' own edge, so a full panel neither smudges its type nor darkens the lava twice. The stronger type and neck lines stay at every fill. On a full panel that is the one difference from the old On, and it reads fine.
+- **Code:** one value, `--panel-fill` (0–1), set on `.themeRoot` in `App.tsx` (0 under Off). Tokens in `src/styles/tokens.css`. The region rules in `src/components/Frame.module.css`: `data-on-lava` now marks every Vibrato view, and `data-vibrato-panels` names the choice. The dimming in `AmbientBackground.module.css`. State in `src/hooks/useUiTheme.ts`. The rows in `UiThemeSelector.tsx`. While the slider is dragged, an `html:has(input[data-panel-fill]:active)` rule turns off the 900 ms fade, so the panels follow the thumb.
+- **Checked:** screenshots at 1440×900 of Scales, Chords and Practice, dark and light canvas, in a hidden window. The worst case was small grey text over a bright yellow pool, which the halo and the lifted greys fixed. Fill checked at 0, 50 and 100% on both canvases, with the computed colours at 100% matching the old On exactly. Not checked: every key's palette, the 960×640 window, or how dragging the slider feels by hand.
+
+### The lava's colours per key (2026-11-14)
+
+The owner, on A major: "can we make the reds more vibrant? I don't love this gradient from red to white". They also asked how each key gets its colours.
+
+**How a key gets its colours.** Each of the 12 notes has one colour (`NOTE_COLORS` in `src/lib/colors.ts`; A is red, A♯ crimson). The key's root picks it, and `getKeyBackgroundStyle` in `src/lib/keyPalette.ts` makes three lava colours from it:
+- blob 1: the root colour, 18% more saturated;
+- blob 2: turned 24° round the wheel (one way in major, the other in minor), and a little lighter;
+- blob 3: see below.
+
+The shader in `AmbientBackground.tsx` mixes them into six moving pools, with a pale band where pools meet (`bloom`).
+
+**What was wrong.** Blob 3 was a pale, greyed colour from nearly across the wheel (+140° in major, +125° in minor). Mixed with the other two, it went to beige or grey in about half the keys: red with mint gave khaki, which read as "red to white". It also pulled every key off its own colour. On top of that, the 30% black veil added for the panel-less look (2026-11-13) turned the reds brick.
+
+**The change.**
+- **Blob 3:** turned 30° the other side of the root from blob 2, 6% lighter and 10% more saturated, so the pools centre on the key's colour.
+- **Edges:** the colour where pools meet now ranges from about 0.12 to 0.22 in OKLCh chroma, against 0.04 to 0.14 before. Each key's average colour drifts about half as far from its note as before.
+- **Bloom:** the band takes 10% white instead of 20%.
+- **Dimming:** on the dark canvas the shader dims only the bright pools (`DIM_BRIGHT`, 30% at full brightness, nothing below mid-brightness), instead of a black veil over everything. The light canvas keeps its veil.
+- **Fill:** both fade as the panels' Fill rises.
+
+**Checked:**
+- Before-and-after screenshots in a hidden window of A and A♯ (major and minor), C minor, F minor and D minor.
+- A and A♯ read as red and crimson, with coral and rose edges. Blue and green are richer.
+- C minor is yellow with a touch of lime. Before, it was gold with grey.
+
+**Not checked:** every key by eye, and the light canvas (only the edge colour changed there).
+
+**The grain after the change.** The owner, right after: "I'm not seeing the animated grain any more, but the colors look great".
+
+- **Why.** The moving grain (texture on Vibrato) uses an overlay blend, and overlay fades out at both ends of each colour channel. On the old dimmed, muddy lava everything sat in the mid-tones, so it showed. On a pure red or a yellow pool it barely does.
+- **Measured** in a hidden window as the mean change per channel from frame to frame. On bright pixels the grain moved about 2 levels per frame now and before, but bright, saturated colour hides that much movement about twice as well as the old mid-tones did.
+- **The fix.** A third grain layer, `analog-grain-bright` in `src/lab/AnalogLab.css`: multiply, on the tile doubled in brightness. It darkens in specks in proportion to how bright the colour is, so blacks are untouched and the picture as a whole barely darkens. It follows the Grain dial like the other two.
+- **After the fix.** Bright pixels move about 3.2–3.6 levels per frame (A♯ minor and C minor), mid-tones about 3.0–3.5, and blacks are unchanged. By eye the grain is back on the red, about as strong as before, and the red keeps its saturation.
 
 **Known limits.**
 
@@ -635,3 +670,6 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   
   The build has started on Sonnet.
 - **2026-11-13.** Vibrato's panels are now outlines with no fill, so the lava shows behind every control. The owner compared On, Outline, Lines and Off in the installed app and chose Outline. The other three stay in Theme → Panels. See package F.
+- **2026-11-14.** Panels is now Outline or Off, plus a Fill slider (0–100%, default 0). At 100% Outline is the old On exactly, so On and Lines are gone. See package F.
+- **2026-11-14.** The lava's colours: the third colour of each key now sits beside the root instead of across the wheel, and the dark canvas dims only the bright pools. Reds are red to crimson and coral instead of red to khaki. See package F.
+- **2026-11-14.** The moving grain was hard to see on the new, purer lava. A third grain layer now marks bright colours in proportion to their brightness. See package F.

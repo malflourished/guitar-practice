@@ -37,6 +37,18 @@
   opacity: calc(var(--a-grain) * 0.05);
 }
 
+/* Overlay grain fades out at both ends of each colour channel, so on the bright,
+   saturated lava (a pure red, a yellow pool) it all but vanished. This layer
+   darkens in specks, in proportion to how bright the colour is. The tile is
+   doubled in brightness, so only its darker half marks anything and the
+   picture as a whole barely darkens. Blacks are untouched (the floor does
+   those). */
+.analog[data-medium='tube'] .analog-grain-bright {
+  mix-blend-mode: multiply;
+  filter: brightness(2);
+  opacity: calc(var(--a-grain) * 0.42);
+}
+
 .analog[data-medium='tube'] .analog-fade {
   background: #2a2019;
   mix-blend-mode: screen;

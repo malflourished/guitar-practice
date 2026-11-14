@@ -269,6 +269,7 @@ export default function AnalogLab() {
           <div className="analog-layer analog-raster" />
           <div className="analog-layer analog-grain analog-grain-body" />
           <div className="analog-layer analog-grain analog-grain-floor" />
+          <div className="analog-layer analog-grain analog-grain-bright" />
           <div className="analog-layer analog-fade" />
           <div className="analog-layer analog-warmth" />
           <div className="analog-layer analog-vignette" />

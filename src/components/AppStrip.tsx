@@ -104,6 +104,8 @@ export function AppStrip({
           onCanvasChange={theme.selectCanvas}
           vibratoPanels={theme.vibratoPanels}
           onPanelsChange={theme.selectPanels}
+          panelFill={theme.panelFill}
+          onPanelFillChange={theme.selectPanelFill}
           motion={theme.ambientMotion}
           onMotionChange={theme.setAmbientMotion}
         />

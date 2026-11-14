@@ -28,8 +28,16 @@ export function useAppTheme({
     isAmbientMotion,
   );
   const debug = useDebugSettings();
-  const { uiTheme, vibratoCanvas, vibratoPanels, selectUiTheme, selectCanvas, selectPanels } =
-    useUiTheme();
+  const {
+    uiTheme,
+    vibratoCanvas,
+    vibratoPanels,
+    panelFill,
+    selectUiTheme,
+    selectCanvas,
+    selectPanels,
+    selectPanelFill,
+  } = useUiTheme();
 
   // The ambient background tracks only the top-level key (center + mode), so
   // stepping through chords, positions, or progression steps never recolors it.
@@ -57,9 +65,11 @@ export function useAppTheme({
     uiTheme,
     vibratoCanvas,
     vibratoPanels,
+    panelFill,
     selectUiTheme,
     selectCanvas,
     selectPanels,
+    selectPanelFill,
     ambientMotion,
     setAmbientMotion,
     debug,

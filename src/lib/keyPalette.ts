@@ -181,8 +181,12 @@ export function getKeyBackgroundStyle(
 
   const blob1 = vibrance(base);
   const blob2 = shiftLightness(vibrance(shiftHue(base, isMinor ? -24 : 24)), 0.12);
-  // A cooler or warmer pastel edge gives each key a small chromatic counterpoint.
-  const blob3 = shiftSaturation(shiftLightness(shiftHue(base, isMinor ? 125 : 140), 0.28), -0.3);
+  // Blob 3 sits the other side of the root from blob 2, so the pools centre
+  // on the key's own colour and their edges stay as saturated as their middles.
+  // Until 2026-11-14 it was a pale colour from across the wheel (+125/+140°),
+  // which mixed with the others to beige or grey at the edges in about half
+  // the keys (red to beige was the worst) and pulled each key off its colour.
+  const blob3 = shiftSaturation(shiftLightness(shiftHue(base, isMinor ? 30 : -30), 0.06), 0.1);
 
   return {
     '--blob-1': blob1,

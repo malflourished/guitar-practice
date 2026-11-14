@@ -399,9 +399,7 @@ function App() {
       data-ui-theme={theme.uiTheme}
       data-vibrato-canvas={theme.vibratoCanvas}
       data-vibrato-panels={theme.uiTheme === 'vibrato' ? theme.vibratoPanels : undefined}
-      data-on-lava={
-        theme.uiTheme === 'vibrato' && theme.vibratoPanels !== 'on' ? 'true' : undefined
-      }
+      data-on-lava={theme.uiTheme === 'vibrato' ? 'true' : undefined}
       data-contrast={theme.rootContrastMode}
       data-debug-bg={debug.enabled && debug.whiteBackground ? 'white' : undefined}
       data-debug-text={
@@ -409,7 +407,11 @@ function App() {
       }
       style={
         theme.uiTheme === 'vibrato'
-          ? (theme.ambientStyle as CSSProperties)
+          ? ({
+              ...theme.ambientStyle,
+              // 0 lets the lava show through the panels; 1 fills them.
+              '--panel-fill': theme.vibratoPanels === 'off' ? 0 : theme.panelFill,
+            } as CSSProperties)
           : undefined
       }
     >
@@ -417,6 +419,7 @@ function App() {
         style={theme.ambientStyle as CSSProperties}
         motion={theme.ambientMotion}
         light={theme.vibratoCanvas === 'light'}
+        exposure={theme.vibratoPanels === 'off' ? 1 : 1 - theme.panelFill}
         enabled={theme.uiTheme === 'vibrato'}
       />
       <Frame

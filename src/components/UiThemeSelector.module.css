@@ -27,3 +27,13 @@
   color: var(--text-muted);
   margin-left: 0.25rem;
 }
+
+/* Panel fill: 0% lets the lava through, 100% is a filled panel. */
+.fill {
+  width: 8rem;
+}
+
+.fill:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

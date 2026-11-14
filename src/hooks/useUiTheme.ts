@@ -7,6 +7,7 @@ const CANVAS_STORAGE_KEY = 'guitar-practice-vibrato-canvas';
 // reaches everyone who never chose. (An earlier key saved the default on every
 // launch; it is ignored.)
 const PANELS_STORAGE_KEY = 'guitar-practice-vibrato-panels-choice';
+const PANEL_FILL_STORAGE_KEY = 'guitar-practice-vibrato-panel-fill';
 
 function loadUiTheme(): UiTheme {
   try {
@@ -30,14 +31,25 @@ function loadVibratoCanvas(): VibratoCanvas {
 
 function loadVibratoPanels(): VibratoPanels {
   try {
-    const stored = localStorage.getItem(PANELS_STORAGE_KEY);
-    if (stored === 'on' || stored === 'outline' || stored === 'lines' || stored === 'off') {
-      return stored;
-    }
+    // 'on' and 'lines' were choices until 2026-11-14; both read as Outline now.
+    if (localStorage.getItem(PANELS_STORAGE_KEY) === 'off') return 'off';
   } catch {
     // ignore storage read failures
   }
   return 'outline';
+}
+
+/** How strongly the panels are filled, 0 (the lava shows through) to 1. */
+function loadPanelFill(): number {
+  try {
+    const stored = Number(localStorage.getItem(PANEL_FILL_STORAGE_KEY) ?? NaN);
+    if (Number.isFinite(stored)) return Math.min(1, Math.max(0, stored));
+    // Whoever chose the old Panels: On keeps the panels they chose.
+    if (localStorage.getItem(PANELS_STORAGE_KEY) === 'on') return 1;
+  } catch {
+    // ignore storage read failures
+  }
+  return 0;
 }
 
 export function useUiTheme() {
@@ -46,6 +58,7 @@ export function useUiTheme() {
     useState<VibratoCanvas>(loadVibratoCanvas);
   const [vibratoPanels, setVibratoPanels] =
     useState<VibratoPanels>(loadVibratoPanels);
+  const [panelFill, setPanelFill] = useState<number>(loadPanelFill);
 
   // The canvas has its own control in the theme menu; picking Vibrato again
   // no longer flips it (that was a hidden gesture).
@@ -58,6 +71,14 @@ export function useUiTheme() {
     setVibratoPanels(panels);
     try {
       localStorage.setItem(PANELS_STORAGE_KEY, panels);
+    } catch {
+      // ignore storage write failures
+    }
+  }, []);
+  const selectPanelFill = useCallback((fill: number) => {
+    setPanelFill(fill);
+    try {
+      localStorage.setItem(PANEL_FILL_STORAGE_KEY, String(fill));
     } catch {
       // ignore storage write failures
     }
@@ -76,8 +97,10 @@ export function useUiTheme() {
     uiTheme,
     vibratoCanvas,
     vibratoPanels,
+    panelFill,
     selectUiTheme,
     selectCanvas,
     selectPanels,
+    selectPanelFill,
   };
 }

@@ -8,7 +8,12 @@ interface Props {
   motion: AmbientMotion;
   light: boolean;
   enabled: boolean;
+  /** How bare the lava is behind the controls: 1 with no panel fill, 0 under a full one. */
+  exposure: number;
 }
+
+/** How far the brightest pools sink on the dark canvas when the lava is bare. */
+const DIM_BRIGHT = 0.3;
 const VERTEX = `attribute vec2 position; varying vec2 uv;
 void main() { uv = position * 0.5 + 0.5; gl_Position = vec4(position, 0.0, 1.0); }`;
 const FRAGMENT = `
@@ -21,6 +26,7 @@ varying vec2 uv;
 uniform float time;
 uniform float aspect;
 uniform float light;
+uniform float dim;
 uniform vec3 colorA;
 uniform vec3 colorB;
 uniform vec3 colorC;
@@ -66,9 +72,13 @@ void main() {
   liquid = mix(liquid, mix(color, vec3(1.0), 0.30), light);
   vec3 result = mix(background + color*halo, liquid, body*0.95);
   vec3 edge = mix(colorB, colorC, 0.3+wash*0.5);
-  edge = mix(edge, vec3(0.94,0.96,1.0), 0.20);
+  edge = mix(edge, vec3(0.94,0.96,1.0), 0.10);
   result = mix(result, edge, bloom*0.56);
   result = mix(result, color*0.44, core*0.35*(1.0-light));
+  // Bare lava under light type: sink only the bright pools (yellows, pale
+  // edges). Deep colours such as the reds keep their full strength.
+  float luma = dot(result, vec3(0.2126, 0.7152, 0.0722));
+  result *= 1.0 - dim*(1.0-light)*smoothstep(0.35, 0.85, luma);
   float grain = fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715))))-0.5;
   gl_FragColor = vec4(result+grain*0.05,1.0);
 }`;
@@ -77,15 +87,15 @@ function rgb(value: string): number[] {
 }
 
 /** A single persistent field: key changes recolor the liquid without restarting its motion. */
-export function AmbientBackground({ style, motion, light, enabled }: Props) {
+export function AmbientBackground({ style, motion, light, enabled, exposure }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const settings = useRef({ colors: ['#e4c928', '#ba7618', '#ffe77b'], motion, light, enabled });
+  const settings = useRef({ colors: ['#e4c928', '#ba7618', '#ffe77b'], motion, light, enabled, exposure });
   const wakeRenderer = useRef(() => {});
   useEffect(() => {
     const vars = style as Record<string, string>;
-    settings.current = { colors: [vars['--blob-1'], vars['--blob-2'], vars['--blob-3']], motion, light, enabled };
+    settings.current = { colors: [vars['--blob-1'], vars['--blob-2'], vars['--blob-3']], motion, light, enabled, exposure };
     wakeRenderer.current();
-  }, [style, motion, light, enabled]);
+  }, [style, motion, light, enabled, exposure]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -113,10 +123,11 @@ export function AmbientBackground({ style, motion, light, enabled }: Props) {
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
       const attribute = gl.getAttribLocation(program, 'position');
       gl.enableVertexAttribArray(attribute); gl.vertexAttribPointer(attribute, 2, gl.FLOAT, false, 0, 0);
-      const uniforms = Object.fromEntries(['time', 'aspect', 'light', 'colorA', 'colorB', 'colorC'].map(key => [key, gl.getUniformLocation(program, key)]));
+      const uniforms = Object.fromEntries(['time', 'aspect', 'light', 'dim', 'colorA', 'colorB', 'colorC'].map(key => [key, gl.getUniformLocation(program, key)]));
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
       let colors = settings.current.colors.map(rgb);
       let currentLight = settings.current.light ? 1 : 0;
+      let currentDim = DIM_BRIGHT * settings.current.exposure;
       let elapsed = 18;
       let previous = performance.now();
       let lastDraw = 0;
@@ -137,20 +148,23 @@ export function AmbientBackground({ style, motion, light, enabled }: Props) {
         if (now-lastDraw < 1000/30) { raf = requestAnimationFrame(render); return; }
         const dt = Math.min((now-previous)/1000, 0.1);
         previous = now; lastDraw = now;
-        const { motion: movement, colors: targets, light: lightCanvas } = settings.current;
+        const { motion: movement, colors: targets, light: lightCanvas, exposure: bare } = settings.current;
         const speed = reduced.matches ? 0 : AMBIENT_SPEED[movement];
         elapsed += dt*speed;
         const blend = reduced.matches ? 1 : 1-Math.exp(-dt*1.4);
         const targetColors = targets.map(rgb);
         colors = colors.map((color, i) => color.map((channel, j) => channel + (targetColors[i][j]-channel)*blend));
         currentLight += ((lightCanvas ? 1 : 0)-currentLight)*blend;
+        currentDim += (DIM_BRIGHT*bare-currentDim)*blend;
         gl.uniform1f(uniforms.time, elapsed);
         gl.uniform1f(uniforms.aspect, canvas.width/canvas.height);
         gl.uniform1f(uniforms.light, currentLight);
+        gl.uniform1f(uniforms.dim, currentDim);
         ['colorA','colorB','colorC'].forEach((name, i) => gl.uniform3fv(uniforms[name], colors[i]));
         gl.drawArrays(gl.TRIANGLES, 0, 6);
         const recoloring = colors.some((color, i) => color.some((channel, j) => Math.abs(channel-targetColors[i][j]) > 0.001))
-          || Math.abs(currentLight-(lightCanvas ? 1 : 0)) > 0.001;
+          || Math.abs(currentLight-(lightCanvas ? 1 : 0)) > 0.001
+          || Math.abs(currentDim-DIM_BRIGHT*bare) > 0.001;
         if (speed || recoloring) raf = requestAnimationFrame(render);
       };
       const visibility = () => { if (!document.hidden && !raf) { previous = performance.now(); raf = requestAnimationFrame(render); } };

@@ -399,9 +399,9 @@
   background: rgba(249, 249, 243, 0.98);
 }
 
-/* ---- Vibrato with no panel fill (Panels: Outline, Lines or Off) ---- */
+/* ---- Vibrato: the controls on the lava (Panels: Outline or Off, and Fill) ---- */
 
-/* The panels fade rather than snap when the setting changes. */
+/* The panels fade rather than snap when the canvas or setting changes... */
 :global(.themeRoot[data-ui-theme='vibrato']) .strip,
 :global(.themeRoot[data-ui-theme='vibrato']) .surface,
 :global(.themeRoot[data-ui-theme='vibrato']) .side {
@@ -410,30 +410,48 @@
     border-color var(--duration-theme) var(--ease-calm);
 }
 
-/* The drawer still floats over the neck, so it keeps its surface. */
+/* ...but follow the Fill slider's thumb at once while it is dragged. */
+:global(html:has(input[data-panel-fill]:active)) .strip,
+:global(html:has(input[data-panel-fill]:active)) .surface,
+:global(html:has(input[data-panel-fill]:active)) .side {
+  transition: none;
+}
+
+/* Edges go first; Outline brings them back below. The drawer still floats
+   over the neck, so it keeps its surface. */
 :global(.themeRoot[data-ui-theme='vibrato'][data-on-lava]) .strip,
 :global(.themeRoot[data-ui-theme='vibrato'][data-on-lava]) .surface,
 :global(.themeRoot[data-ui-theme='vibrato'][data-on-lava]) .side:not([data-side='drawer']) {
-  background-color: transparent;
   border-color: transparent;
 }
 
-/* Outline: each panel keeps its edge as a hairline on the lava. */
+/* Fill: the panel surface above at --panel-fill of its strength. 0, the
+   default, lets the lava through; 1 is the filled panels of the old
+   Panels: On. */
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava][data-vibrato-canvas='dark']) .strip,
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava][data-vibrato-canvas='dark']) .surface,
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava][data-vibrato-canvas='dark'])
+  .side:not([data-side='drawer']) {
+  background-color: rgba(10, 16, 23, calc(0.86 * var(--panel-fill, 0)));
+}
+
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava][data-vibrato-canvas='light']) .strip,
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava][data-vibrato-canvas='light']) .surface,
+:global(.themeRoot[data-ui-theme='vibrato'][data-on-lava][data-vibrato-canvas='light'])
+  .side:not([data-side='drawer']) {
+  background-color: rgba(249, 249, 243, calc(0.92 * var(--panel-fill, 0)));
+}
+
+/* Outline: each panel keeps its edge as a hairline, and the deck its rule
+   between the neck and the controls. --lava-rule moves from a hairline on the
+   lava to the filled panels' own edge as the fill rises (tokens.css). */
 :global(.themeRoot[data-on-lava][data-vibrato-panels='outline']) .strip,
 :global(.themeRoot[data-on-lava][data-vibrato-panels='outline']) .surface,
 :global(.themeRoot[data-on-lava][data-vibrato-panels='outline']) .side:not([data-side='drawer']) {
   border-color: var(--lava-rule);
 }
 
-/* Lines: no boxes, only horizontal rules: one under the strip, and the deck's
-   own rule between the neck and the controls. */
-:global(.themeRoot[data-on-lava][data-vibrato-panels='lines']) .strip {
-  border-bottom-color: var(--lava-rule);
-  border-radius: 0;
-}
-
-:global(.themeRoot[data-on-lava][data-vibrato-panels='outline']) .deck,
-:global(.themeRoot[data-on-lava][data-vibrato-panels='lines']) .deck {
+:global(.themeRoot[data-on-lava][data-vibrato-panels='outline']) .deck {
   border-top-color: var(--lava-rule);
 }
 

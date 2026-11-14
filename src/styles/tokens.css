@@ -189,21 +189,29 @@
   --fretboard-focus-outline: rgba(18, 14, 28, 0.45);
 }
 
-/* Vibrato with the panels' fill gone (Panels: Outline, Lines or Off): the
-   controls sit straight on the lava, so lines and type step up a little and
-   carry a soft halo of the canvas colour. --lava-rule draws the panel edges
-   and dividing rules. These come
+/* Vibrato, where the controls sit on the lava (data-on-lava): lines and type
+   step up a little and carry a soft halo of the canvas colour. The halo fades
+   as the panels fill (--panel-fill, 0 to 1, set on the root); on a full panel
+   it would only smudge the type. --lava-rule draws the panel edges: a hairline
+   on the bare lava, the filled panels' own faint edge at full fill. These come
    after the canvas rules above and are more specific than the contrast rules
    below, so they win on both. */
 .themeRoot[data-ui-theme='vibrato'][data-on-lava][data-vibrato-canvas='dark'] {
-  --lava-halo: 0 0 3px rgba(0, 0, 0, 0.55), 0 0 14px rgba(0, 0, 0, 0.6);
+  --lava-clear: calc(1 - var(--panel-fill, 0));
+  --lava-halo:
+    0 0 3px rgba(0, 0, 0, calc(0.55 * var(--lava-clear))),
+    0 0 14px rgba(0, 0, 0, calc(0.6 * var(--lava-clear)));
   --foreground-secondary: rgba(255, 255, 255, 0.76);
   --foreground-muted: rgba(255, 255, 255, 0.62);
   --glass-bg-hover: rgba(255, 255, 255, 0.18);
   --glass-border: rgba(255, 255, 255, 0.8);
   --glass-border-subtle: rgba(255, 255, 255, 0.52);
   --glass-divider: rgba(255, 255, 255, 0.24);
-  --lava-rule: rgba(255, 255, 255, 0.3);
+  --lava-rule: color-mix(
+    in srgb,
+    rgba(230, 239, 250, 0.16) calc(var(--panel-fill, 0) * 100%),
+    rgba(255, 255, 255, 0.3)
+  );
 
   --fret-line: rgba(255, 255, 255, 0.72);
   --string-line: rgba(255, 255, 255, 0.86);
@@ -217,13 +225,20 @@
 }
 
 .themeRoot[data-ui-theme='vibrato'][data-on-lava][data-vibrato-canvas='light'] {
-  --lava-halo: 0 0 3px rgba(255, 255, 255, 0.7), 0 0 14px rgba(255, 255, 255, 0.75);
+  --lava-clear: calc(1 - var(--panel-fill, 0));
+  --lava-halo:
+    0 0 3px rgba(255, 255, 255, calc(0.7 * var(--lava-clear))),
+    0 0 14px rgba(255, 255, 255, calc(0.75 * var(--lava-clear)));
   --foreground-secondary: rgba(18, 14, 28, 0.76);
   --foreground-muted: rgba(18, 14, 28, 0.6);
   --glass-border: rgba(18, 14, 28, 0.5);
   --glass-border-subtle: rgba(18, 14, 28, 0.3);
   --glass-divider: rgba(18, 14, 28, 0.18);
-  --lava-rule: rgba(18, 14, 28, 0.24);
+  --lava-rule: color-mix(
+    in srgb,
+    rgba(25, 35, 45, 0.16) calc(var(--panel-fill, 0) * 100%),
+    rgba(18, 14, 28, 0.24)
+  );
 
   --fret-line: rgba(18, 14, 28, 0.56);
   --string-line: rgba(18, 14, 28, 0.72);
