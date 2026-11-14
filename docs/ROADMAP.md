@@ -11,22 +11,22 @@ This file is the plan of record. It came out of a full review of the app on 2026
 |---|---|---|---|---|
 | A | Single-screen layout | Done. Owner walked through it on 2026-11-12; follow-ups are I to Q | nothing | the strongest model, or an experienced front-end developer: it needs design judgment |
 | B | Teaching fixes (five small ones) | Done and reviewed, 2026-11-11 | nothing | any capable model: fully specified and test-backed |
-| C | Chord shapes and small triads | Ready | nothing | a strong model, and a guitarist should check the fingerings |
+| C | Chord shapes and small triads | Started 2026-11-14 in the same session as M, on Fable 5.2 | nothing | a strong model, and a guitarist should check the fingerings |
 | D | Discover mode | Folded into M and P on 2026-11-12: no separate mode | – | – |
-| E | Practice that adapts | After O. The jam loop moved to P | O | a capable model |
-| F | Look: analog texture, and Vibrato's panels | Default look done and reviewed, 2026-11-11. Vibrato's panels became outlines on the lava, 2026-11-13, with a Fill slider since 2026-11-14. Open: measure the texture's cost on real hardware | nothing | any capable model: the values are decided |
+| E | Practice that adapts | Started 2026-11-14 on Fable 5.2. The jam loop moved to P | O | a capable model |
+| F | Look: analog texture, and Vibrato's panels | Default look done and reviewed, 2026-11-11. Vibrato's panels became outlines on the lava, 2026-11-13, with a Fill slider since 2026-11-14. The owner approved the new colours, the panels and Fill as they are (2026-11-14). Open: measure the texture's cost on real hardware, once the parallel builds are done and the machine is quiet | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
-| H | Theory figures: one key dial | Done, merged and pushed 2026-11-12. H2 (a vertical neck in the dial's place): the owner approved the mock-up 2026-11-13; spec written, being built | – | the strongest model designs; a capable model builds |
+| H | Theory figures: one key dial | Done, merged and pushed 2026-11-12. H2 (a vertical neck in the dial's place): the owner approved the mock-up 2026-11-13; built on `claude/theory-neck-h2-4284b2`, which the owner is reviewing (2026-11-14). H's two open items wait for that merge | – | the strongest model designs; a capable model builds |
 | I | Quick fixes from the 2026-11-12 walkthrough | Done, merged 2026-11-12 | nothing | a capable model |
 | J | Split `App.tsx` into mode components | Done, merged 2026-11-12 (`App.tsx` 1,529 → 428 lines) | I | a capable model, carefully: no change in behaviour or look |
 | K | Settings page in the side panel | Done, merged 2026-11-12 | J | a capable model |
 | L | One Play control for every mode | Done, merged 2026-11-12 | J, K | a capable model |
-| M | Mode controls: Notes, Chords, Scales | After J, K and L | J, K, L | a capable model; the owner approves screenshots |
+| M | Mode controls: Notes, Chords, Scales | Started 2026-11-14 with C, on Fable 5.2 | J, K, L | a capable model; the owner approves screenshots |
 | N | Intervals: clear drills, black and white | Done, merged 2026-11-12 | nothing (K adds the colour switch later) | a capable model |
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
-| P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) and P2.2 (mix faders, the form strip) 2026-11-13. P3 and P4 next, detailed specs first | J, L | the strongest model writes specs and reviews; a capable model builds |
-| Q | Home screen and resizable panel | After K | J, K (both edit the frame) | a capable model |
-| S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) merged 2026-11-13 and is now the jam loop's default. S2 (drums: three kits, four grooves, fills, a Drums fader) merged 2026-11-13; the owner still has to compare the kits in the lab. More bass presets and organ later | P2.1 | Fable 5.2, at the owner's request |
+| P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) and P2.2 (mix faders, the form strip) 2026-11-13. P3 (targets on the neck) and P4 (one prompt per pass): spec and build started 2026-11-14 on Fable 5.2 | J, L | the strongest model writes specs and reviews; a capable model builds |
+| Q | Home screen and resizable panel | Started 2026-11-14 on Sonnet 5.5 | J, K (both edit the frame) | a capable model |
+| S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) merged 2026-11-13 and is now the jam loop's default. S2 (drums: three kits, four grooves, fills, a Drums fader) merged 2026-11-13. The owner compared the kits on 2026-11-14: a great first pass, but no kit impressed yet. S2.1 (better kits) started 2026-11-14 on Fable 5.2. More bass presets and organ later | P2.1 | Fable 5.2, at the owner's request |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
 
@@ -381,7 +381,7 @@ The shader in `AmbientBackground.tsx` mixes them into six moving pools, with a p
 - A and A♯ read as red and crimson, with coral and rose edges. Blue and green are richer.
 - C minor is yellow with a touch of lime. Before, it was gold with grey.
 
-**Not checked:** every key by eye, and the light canvas (only the edge colour changed there).
+**Not checked by me:** every key by eye, and the light canvas (only the edge colour changed there). The owner looked on 2026-11-14 and approved the look as it is ("looks good, so you don't have to check"), so no further check is planned.
 
 **The grain after the change.** The owner, right after: "I'm not seeing the animated grain any more, but the colors look great".
 
@@ -673,3 +673,14 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
 - **2026-11-14.** Panels is now Outline or Off, plus a Fill slider (0–100%, default 0). At 100% Outline is the old On exactly, so On and Lines are gone. See package F.
 - **2026-11-14.** The lava's colours: the third colour of each key now sits beside the root instead of across the wheel, and the dark canvas dims only the bright pools. Reds are red to crimson and coral instead of red to khaki. See package F.
 - **2026-11-14.** The moving grain was hard to see on the new, purer lava. A third grain layer now marks bright colours in proportion to their brightness. See package F.
+- **2026-11-14.** The owner approved the lava colours, panels and Fill as they are. On the drums: "I don't love any of them yet, it's a great first pass, but I wasn't blown away with any of the presets". The owner asked for the rest of the open work to start, with Fable 5.2 for anything that needs research or care. Sessions started, each on its own branch from `vibrato-next`:
+  - S2.1, better drum kits (Fable 5.2);
+  - P3 and P4, targets on the neck and one prompt per pass (Fable 5.2);
+  - M with C, mode controls, chord shapes and triads (Fable 5.2);
+  - E, practice that adapts (Fable 5.2);
+  - Q, Home and a resizable panel (Sonnet 5.5).
+
+  Waiting:
+  - H's two small items wait for H2, which the owner is reviewing.
+  - Measuring the texture's cost waits until the builds are done, so the machine is quiet.
+  - G and the later instruments stay later.
