@@ -1,5 +1,6 @@
-/* The sound lab's panel. See SoundLab.tsx and docs/specs/S1-modelled-bass.md.
-   It keeps the texture lab's look, and sits on the left so both can be open. */
+/* The sound lab's panel. See SoundLab.tsx, docs/specs/S1-modelled-bass.md and
+   docs/specs/S2-drums.md. It keeps the texture lab's look, and sits on the
+   left so both can be open. */
 
 .sound-panel {
   position: fixed;
@@ -206,4 +207,53 @@
   background: rgb(255 255 255 / 0.06);
   color: rgb(236 235 230 / 0.8);
   font-size: 12px;
+}
+
+/* The pages: one for each instrument. */
+.sound-pages {
+  display: flex;
+  gap: 4px;
+}
+
+.sound-panel header .sound-pages button {
+  border: 1px solid rgb(255 255 255 / 0.2);
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #ecebe6;
+}
+
+.sound-panel header .sound-pages button[aria-pressed='true'] {
+  color: #101012;
+}
+
+/* Three kits side by side. */
+.sound-abc {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.sound-abc button {
+  padding: 9px 4px;
+  white-space: nowrap;
+}
+
+.sound-wrap {
+  flex-wrap: wrap;
+}
+
+/* One stroke at a time: a small pad for each piece of the kit. */
+.sound-strokes {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.sound-strokes button {
+  padding: 5px 0;
+  font-size: 11px;
+}
+
+.sound-presets .sound-label {
+  align-self: center;
+  color: rgb(236 235 230 / 0.7);
 }

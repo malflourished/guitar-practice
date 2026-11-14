@@ -71,7 +71,7 @@ vi.mock('./cymbalVoice', () => ({
   },
 }));
 
-import { GuitarAudioEngine, type JamBar, type JamPlayOptions } from './engine';
+import { GuitarAudioEngine, JAM_HEADROOM, JAM_HEADROOM_DB, type JamBar, type JamPlayOptions } from './engine';
 import type { JamEvent } from './jamSchedule';
 import { faderGain, jamGains } from './jamMix';
 
@@ -132,15 +132,20 @@ describe('the jam mix: three gain nodes feeding the existing chain', () => {
     expect(jamPad.target).toBe(reverb);
   });
 
-  it('at the default mix the guitar node carries the 0.6 the jam strums had, and the others 1', async () => {
+  it('the jam has 3 dB of headroom: every layer’s node carries it on top of its fader', () => {
+    expect(JAM_HEADROOM_DB).toBe(-3);
+    expect(JAM_HEADROOM).toBeCloseTo(0.708, 3);
+  });
+
+  it('at the default mix the guitar node carries the 0.6 the jam strums had, and the others 1, each under the jam’s headroom', async () => {
     const engine = new GuitarAudioEngine();
     const ready = engine.ensureLoaded();
     await load(); await ready;
     const { jamGuitar, jamBass, jamPad } = inside(engine);
     const valueOf = (node: unknown) => fake.gains.find((g) => g.node === node)?.value;
-    expect(valueOf(jamGuitar)).toBeCloseTo(0.6);
-    expect(valueOf(jamBass)).toBe(1);
-    expect(valueOf(jamPad)).toBe(1);
+    expect(valueOf(jamGuitar)).toBeCloseTo(0.6 * JAM_HEADROOM);
+    expect(valueOf(jamBass)).toBe(JAM_HEADROOM);
+    expect(valueOf(jamPad)).toBe(JAM_HEADROOM);
   });
 
   it('a mix set before the sound starts is remembered, and the nodes are built with it', async () => {
@@ -150,9 +155,9 @@ describe('the jam mix: three gain nodes feeding the existing chain', () => {
     await load(); await ready;
     const { jamGuitar, jamBass, jamPad } = inside(engine);
     const valueOf = (node: unknown) => fake.gains.find((g) => g.node === node)?.value as number;
-    expect(valueOf(jamGuitar)).toBeCloseTo(0.6 * faderGain(-6));
+    expect(valueOf(jamGuitar)).toBeCloseTo(0.6 * faderGain(-6) * JAM_HEADROOM);
     expect(valueOf(jamBass)).toBe(0);
-    expect(valueOf(jamPad)).toBeCloseTo(faderGain(3));
+    expect(valueOf(jamPad)).toBeCloseTo(faderGain(3) * JAM_HEADROOM);
   });
 
   it('a fader move ramps each node over 30 ms, so it lands at once with no restart', async () => {
@@ -161,8 +166,8 @@ describe('the jam mix: three gain nodes feeding the existing chain', () => {
     await load(); await ready;
     const { jamGuitar, jamBass, jamPad } = inside(engine);
     engine.setJamMix({ guitar: 0.5, bass: 2, pad: 0 });
-    expect(jamGuitar.gain.rampTo).toHaveBeenCalledWith(0.6 * 0.5, 0.03);
-    expect(jamBass.gain.rampTo).toHaveBeenCalledWith(2, 0.03);
+    expect(jamGuitar.gain.rampTo).toHaveBeenCalledWith(expect.closeTo(0.6 * 0.5 * JAM_HEADROOM, 10), 0.03);
+    expect(jamBass.gain.rampTo).toHaveBeenCalledWith(expect.closeTo(2 * JAM_HEADROOM, 10), 0.03);
     expect(jamPad.gain.rampTo).toHaveBeenCalledWith(0, 0.03);
     expect(fake.transport.stop).not.toHaveBeenCalled();
     expect(fake.transport.start).not.toHaveBeenCalled();
@@ -249,11 +254,12 @@ describe('a layer with its fader at off schedules nothing', () => {
 });
 
 describe('the cymbal at the top of the form', () => {
-  it('plays when the bar asks for it, at that beat’s time, and into the output', async () => {
+  it('plays when the bar asks for it, at that beat’s time, and into the output, under the jam’s headroom', async () => {
     const engine = new GuitarAudioEngine();
     await soundOneBar(engine, [{ kind: 'cymbal', beat: 0 }]);
     expect(fake.cymbal.play).toHaveBeenCalledTimes(1);
-    expect(fake.cymbal.play).toHaveBeenCalledWith(102);
+    // it has no gain node of its own, so the headroom is a softer stroke
+    expect(fake.cymbal.play).toHaveBeenCalledWith(102, JAM_HEADROOM);
     expect(fake.cymbal.built).toEqual([{ destination: inside(engine).output }]);
   });
 

@@ -36,6 +36,21 @@ export class Biquad {
     return this;
   }
 
+  /**
+   * Band-pass centred on `frequency`, with a gain of 1 there. The band is
+   * `frequency / q` wide, so a higher `q` is a narrower band.
+   */
+  setBandpass(frequency: number, q: number, sampleRate: number): this {
+    const { cos, alpha } = prototype(frequency, q, sampleRate);
+    const a0 = 1 + alpha;
+    this.b0 = alpha / a0;
+    this.b1 = 0;
+    this.b2 = -alpha / a0;
+    this.a1 = (-2 * cos) / a0;
+    this.a2 = (1 - alpha) / a0;
+    return this;
+  }
+
   /** One sample through the filter (transposed direct form II). */
   process(x: number): number {
     const y = this.b0 * x + this.z1;
@@ -79,6 +94,11 @@ export class Biquad {
   /** The filter's memory, for checks that nothing has decayed into denormal numbers. */
   state(): [number, number] {
     return [this.z1, this.z2];
+  }
+
+  /** How much the filter still holds, as one number: for deciding when a voice has rung out. Allocates nothing. */
+  magnitude(): number {
+    return (this.z1 < 0 ? -this.z1 : this.z1) + (this.z2 < 0 ? -this.z2 : this.z2);
   }
 }
 

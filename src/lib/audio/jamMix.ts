@@ -1,10 +1,14 @@
 /**
- * The jam's mix: what each of the three faders (Guitar, Bass, Pad) means.
+ * The jam's mix: what each of the four faders (Guitar, Bass, Pad, Drums) means.
  *
- * A fader sets a layer's level in decibels around today's default, where 0 dB
- * is the level the jam had before the faders existed. The track runs from off,
+ * A fader sets a layer's level in decibels around its default, where 0 dB is
+ * the level the layer was measured and balanced at. The track runs from off,
  * then -24 dB, up to +6 dB. All of it is pure; the engine only turns a gain
  * into a gain node's value.
+ *
+ * The drums came later than the other three (package S2) and start at off.
+ * They are optional in a mix: a mix that does not mention them has no drums,
+ * so everything written for three layers still holds.
  */
 
 export const FADER_MIN_DB = -24;
@@ -15,15 +19,19 @@ export const FADER_STEPS = FADER_MAX_DB - FADER_MIN_DB + 1;
 /** A fader's setting: decibels around the default level, or off. */
 export type FaderLevel = number | 'off';
 
-export type JamLayer = 'guitar' | 'bass' | 'pad';
-export const JAM_LAYERS: readonly JamLayer[] = ['guitar', 'bass', 'pad'];
+export type JamLayer = 'guitar' | 'bass' | 'pad' | 'drums';
+export const JAM_LAYERS: readonly JamLayer[] = ['guitar', 'bass', 'pad', 'drums'];
+/** The three layers the jam has had from the start. */
+type BandLayer = Exclude<JamLayer, 'drums'>;
 
-/** Where each fader stands. */
-export type JamMix = Record<JamLayer, FaderLevel>;
-/** What each layer's gain node is set to: 1 at 0 dB, 0 when off. */
-export type JamGains = Record<JamLayer, number>;
+/** Where each fader stands. Left out, the drums are off. */
+export type JamMix = Record<BandLayer, FaderLevel> & { drums?: FaderLevel };
+/** What each layer's gain node is set to: 1 at 0 dB, 0 when off. Left out, the drums are at 0. */
+export type JamGains = Record<BandLayer, number> & { drums?: number };
 
 export const DEFAULT_JAM_MIX: JamMix = { guitar: 0, bass: 0, pad: 0 };
+/** The Drums fader starts at off: the owner turns it up after listening in the sound lab. */
+export const DEFAULT_DRUMS_LEVEL: FaderLevel = 'off';
 
 const clampDb = (db: number) => Math.min(FADER_MAX_DB, Math.max(FADER_MIN_DB, db));
 
@@ -43,9 +51,11 @@ export function faderGain(level: FaderLevel): number {
   return clamped === 'off' ? 0 : 10 ** (clamped / 20);
 }
 
-/** The three gains for a mix. */
+/** The gains for a mix: the three layers, and the drums when the mix says where they stand. */
 export function jamGains(mix: JamMix): JamGains {
-  return { guitar: faderGain(mix.guitar), bass: faderGain(mix.bass), pad: faderGain(mix.pad) };
+  const gains: JamGains = { guitar: faderGain(mix.guitar), bass: faderGain(mix.bass), pad: faderGain(mix.pad) };
+  if (mix.drums !== undefined) gains.drums = faderGain(mix.drums);
+  return gains;
 }
 
 /** Where a level sits on the track: 0 is off, `FADER_STEPS` is the top. */

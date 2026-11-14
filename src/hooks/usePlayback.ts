@@ -13,6 +13,7 @@ import {
   getProgressionLibraryEntry,
   getProgressionStepPositionScope,
   progressionFeel,
+  progressionGroove,
   noteToSemitone,
   type ProgressionLadderDirection,
 } from '../lib/music';
@@ -98,6 +99,8 @@ export function usePlayback({
     id: progressionId,
     feel: progressionFeel(getProgressionLibraryEntry(progressionId)),
   });
+  // The drummer follows the Feel menu: the entry's own groove, or the plain one of the other feel.
+  const groove = progressionGroove(getProgressionLibraryEntry(progressionId), playOptions.feel);
   const jam = useJamLoop({
     audio,
     steps: resolvedProgressionSteps,
@@ -105,6 +108,7 @@ export function usePlayback({
     guitar: playOptions.guitar,
     mix,
     feel: playOptions.feel,
+    groove,
     click: playOptions.click,
     loop: playOptions.jamLoop,
     tempo,

@@ -32,6 +32,13 @@ export type ProgressionLibraryGroup =
 
 export type ProgressionFeel = 'straight' | 'swing';
 
+/**
+ * What the jam loop's drummer plays under an entry (the same names as
+ * `DrumGroove` in `src/lib/audio/drumGrooves.ts`): straight eighths, a blues
+ * shuffle, jazz swing on the ride, or sixteenths.
+ */
+export type ProgressionGroove = 'rock8' | 'shuffle' | 'swing' | 'pop16';
+
 export interface ProgressionLibraryEntry {
   id: string;
   /** What it is called. */
@@ -51,6 +58,11 @@ export interface ProgressionLibraryEntry {
   heard?: string;
   /** How the jam loop strums it by default; straight when left out. */
   feel?: ProgressionFeel;
+  /**
+   * The drum groove that suits it, in its own feel. Left out, it is the plain
+   * groove of the feel: straight eighths, or a shuffle when swung.
+   */
+  groove?: ProgressionGroove;
   /** Longer reading, for entries that had it before the library existed. */
   theory?: TheoryContent;
 }
@@ -74,6 +86,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   {
     id: 'blues-12',
     feel: 'swing',
+    groove: 'shuffle',
     title: '12-bar blues',
     name: 'I7 – IV7 – V7',
     group: 'Hear the changes',
@@ -88,6 +101,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   {
     id: 'blues-minor',
     feel: 'swing',
+    groove: 'shuffle',
     title: 'Minor blues',
     name: 'i7 – iv7 – ♭VI7 – V7',
     group: 'Hear the changes',
@@ -106,6 +120,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   {
     id: 'jazz-251',
     feel: 'swing',
+    groove: 'swing',
     title: 'ii–V–I',
     name: 'ii7 – V7 – Imaj7',
     group: 'Hear the changes',
@@ -135,6 +150,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   {
     id: 'turnaround-1625',
     feel: 'swing',
+    groove: 'swing',
     title: 'The turnaround',
     name: 'Imaj7 – vi7 – ii7 – V7',
     group: 'Hear the changes',
@@ -333,6 +349,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   },
   {
     id: 'vamp-dorian',
+    groove: 'pop16',
     title: 'Dorian vamp',
     name: 'i7 – IV7',
     group: 'One scale, changing colour',
@@ -521,6 +538,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   {
     id: 'backdoor',
     feel: 'swing',
+    groove: 'swing',
     title: 'Backdoor',
     name: 'Imaj7 – iv7 – ♭VII7 – Imaj7',
     group: 'Further out',
@@ -539,6 +557,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   {
     id: 'tritone-sub',
     feel: 'swing',
+    groove: 'swing',
     title: 'Tritone sub',
     name: 'ii7 – ♭II7 – Imaj7',
     group: 'Further out',
@@ -556,6 +575,7 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
   },
   {
     id: 'city-pop',
+    groove: 'pop16',
     title: 'City pop',
     name: 'IVmaj7 – III7 – vi7 – v7 – I7',
     group: 'Further out',
@@ -576,6 +596,21 @@ export const PROGRESSION_LIBRARY: ProgressionLibraryEntry[] = [
 /** How an entry swings: straight unless it says otherwise. */
 export function progressionFeel(entry: ProgressionLibraryEntry | undefined): ProgressionFeel {
   return entry?.feel ?? 'straight';
+}
+
+/**
+ * The drum groove for an entry played in `feel`: the entry's own groove when
+ * it has that feel, and otherwise the plain groove of the feel, so the Feel
+ * menu can swing a rock entry (a shuffle) or straighten a blues (eighths).
+ */
+export function progressionGroove(
+  entry: ProgressionLibraryEntry | undefined,
+  feel: ProgressionFeel = progressionFeel(entry),
+): ProgressionGroove {
+  const own = entry?.groove ?? (progressionFeel(entry) === 'swing' ? 'shuffle' : 'rock8');
+  const ownIsSwung = own === 'shuffle' || own === 'swing';
+  if (ownIsSwung === (feel === 'swing')) return own;
+  return feel === 'swing' ? 'shuffle' : 'rock8';
 }
 
 export function getProgressionLibraryEntry(

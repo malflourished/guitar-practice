@@ -41,7 +41,7 @@ The plan, in one table. Details are in "The plan for vibrato~" below.
 | Guitar | Keep the recordings the owner likes. Later: the same string model, six strings, for a clean electric | After the bass is judged |
 | Electric piano | A few decaying partials per note, then a pickup distortion that makes harder notes bark | Next keyboard sound |
 | Organ | 91 always-running sine generators mixed by drawbars, then a rotating-speaker effect | Best fit for a blues backing |
-| Drums | Synthesized kick and snare. Cymbals are the hard case | With song form (P5) |
+| Drums | Modal drums, cymbals as tones plus noise, and a drum-machine kit. Cymbals are the hard case. See [drums.md](drums.md) | Built (S2) |
 | Pads | Several detuned, alias-free sawtooths, slow filter movement, stereo chorus | When the pad is revisited |
 
 ## Why today's bass sounds cheap
@@ -219,7 +219,7 @@ Notes for whoever builds each one:
 - **Guitar.** Do nothing until asked. The first use for a model would be something recordings do badly: long sustained notes, bends and vibrato for ear training.
 - **Electric piano.** The pickup nonlinearity is the instrument. Get the bark right before anything else, and loudness-match against a reference at three velocities.
 - **Organ.** The best next instrument for a blues or jazz backing. It is cheap, it suits synthesis, and it can replace the pad. The rotating speaker is half the sound. Build it as a reusable effect.
-- **Drums.** Feel matters more than timbre: swing, accents and ghost notes. Start with kick, snare and a ride pattern for the blues. P2.2's cymbal is filtered noise. A set of inharmonic partials under it would be the first upgrade.
+- **Drums.** Researched in full in [drums.md](drums.md) (package S2). Feel matters more than timbre: swing, accents and ghost notes. Start with kick, snare and a ride pattern for the blues. P2.2's cymbal is filtered noise. A set of inharmonic partials under it would be the first upgrade.
 - **Pads.** Today's `PadVoice` is one sawtooth per note into a chorus. Detuned pairs with random phases, a filter that drifts slowly, and true stereo would lift it for little work.
 
 ### What every instrument should reuse
