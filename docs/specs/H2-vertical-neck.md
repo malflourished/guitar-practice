@@ -1,7 +1,7 @@
 # H2: a vertical neck in the key dial's place
 
 **Package:** H2 in `docs/ROADMAP.md`, a follow-up to H (the key dial).
-**Status:** spec written 2026-11-13. The owner approved the mock-up ("build the vertical neck for Theory").
+**Status:** spec written 2026-11-13. The owner approved the mock-up ("build the vertical neck for Theory"). Built, and merged into `vibrato-next` on 2026-11-14. The owner's last check is open.
 **Mock-up:** [design/theory-neck/mock-neck.jpg](../design/theory-neck/mock-neck.jpg), drawn into the running app by `mock-neck.js` in the same folder.
 
 ## Why

@@ -16,7 +16,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | E | Practice that adapts | Started 2026-11-14 on Fable 5.2. The jam loop moved to P | O | a capable model |
 | F | Look: analog texture, and Vibrato's panels | Default look done and reviewed, 2026-11-11. Vibrato's panels became outlines on the lava, 2026-11-13, with a Fill slider since 2026-11-14. The owner approved the new colours, the panels and Fill as they are (2026-11-14). Open: measure the texture's cost on real hardware, once the parallel builds are done and the machine is quiet | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
-| H | Theory figures: one key dial | Done, merged and pushed 2026-11-12. H2 (a vertical neck in the dial's place): the owner approved the mock-up 2026-11-13; built on `claude/theory-neck-h2-4284b2`, which the owner is reviewing (2026-11-14). H's two open items wait for that merge | – | the strongest model designs; a capable model builds |
+| H | Theory figures: one key dial | Done, merged and pushed 2026-11-12. H2 (a vertical neck in the dial's place) merged 2026-11-14; the owner's last check (Dial and Neck feel elegant) is open. H's two open items can start | – | the strongest model designs; a capable model builds |
 | I | Quick fixes from the 2026-11-12 walkthrough | Done, merged 2026-11-12 | nothing | a capable model |
 | J | Split `App.tsx` into mode components | Done, merged 2026-11-12 (`App.tsx` 1,529 → 428 lines) | I | a capable model, carefully: no change in behaviour or look |
 | K | Settings page in the side panel | Done, merged 2026-11-12 | J | a capable model |
@@ -409,7 +409,7 @@ The shader in `AmbientBackground.tsx` mixes them into six moving pools, with a p
 
 ## H. Theory figures: one key dial
 
-**Built on branch `claude/key-dial-f10673`, not yet merged.** The owner approved the mock-up ("Yes, build it"); the dial replaced both figures in Theory. See [design/key-wheel](design/key-wheel/README.md) for the design rules.
+**Merged into `vibrato-next` on 2026-11-12.** The owner approved the mock-up ("Yes, build it"); the dial replaced both figures in Theory. See [design/key-wheel](design/key-wheel/README.md) for the design rules.
 
 The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifths "is closer to what I'm looking for"; "both could use an overhaul for overall design cleanup". One dial: the circle of fifths with the key's seven chords in a turning window, plus Borrowed and Dominants views.
 
@@ -424,13 +424,16 @@ The owner (2026-11-11): "the chord wheel needs an overhaul"; the circle of fifth
 - [ ] Pass the notation preference (sharps or flats) from `App.tsx` to `KeyDial` (`notation` prop). Until then F♯/G♭ and D♯m/E♭m follow "sharps" unless the user clicks the cell twice.
 - [ ] Clicking a chord plays it, as elsewhere in the app.
 
-**H2. A vertical neck in the dial's place** (the owner approved the mock-up on 2026-11-13: "build the vertical neck for Theory". Spec: [specs/H2-vertical-neck.md](specs/H2-vertical-neck.md). Being built). The owner (2026-11-13) finds the dial "really pretty". But clicking Neck "just takes you to the neck, and everything kind of disappears". The suggestion: "maybe the neck shows vertically in that space", so the information stays where it is.
-- **Neck** draws a vertical fretboard in the dial's square, oriented like a chord chart: low E on the left, the nut at the top, frets 0–12. Every note of the key wears its chord's numeral in the dial's colours: I solid, major filled, minor ringed, diminished dashed. The words, the view pills and the side panel stay where they are. Mock-up: [design/theory-neck/mock-neck.jpg](design/theory-neck/mock-neck.jpg), drawn into the running app by `mock-neck.js` in the same folder.
-- The caption follows the view: "The same seven chords, by root, across the whole neck. Find any I: IV and V are always one string away."
-- Borrowed and Dominants mark their roots the same way. To be specified.
-- **Motion:** the dial turns a little and shrinks away (about 180 ms), then the neck rises into its place (about 220 ms). The two overlap only briefly, never both at full strength, and nothing else on the page moves.
-- The horizontal neck leaves Theory. "Practice this across the neck →" stays as the way to the full neck.
-- Open question: at 960×640 the stage is about 480 px tall, too short for 12 frets at this marker size. Options are frets 0–7 there, or a five-fret window that follows the position.
+**H2. A vertical neck in the dial's place** (the owner approved the mock-up on 2026-11-13: "build the vertical neck for Theory". Spec: [specs/H2-vertical-neck.md](specs/H2-vertical-neck.md). Merged 2026-11-14). The owner (2026-11-13) finds the dial "really pretty". But clicking Neck "just takes you to the neck, and everything kind of disappears". The suggestion: "maybe the neck shows vertically in that space", so the information stays where it is.
+- [x] **Neck** draws a vertical fretboard in the dial's square, oriented like a chord chart: low E on the left, the nut at the top, frets 0–12 at every window size. Every root of the view's chords wears its numeral in the dial's colours: I solid, major filled, minor ringed, diminished dashed. Mock-up: [design/theory-neck/mock-neck.jpg](design/theory-neck/mock-neck.jpg).
+- [x] The markers come from `describeKeyDial` through `neckChordMap` (`src/lib/music/neckChordMap.ts`), so the dial and the neck cannot disagree. Sizes come from `verticalNeckLayout` (`src/lib/verticalNeckLayout.ts`): graduated frets like a real neck, no fret space under 1.15 marker diameters, and where the stage is short the markers shrink from 27 to 20 px and then the spacing evens out.
+- [x] Borrowed marks only the chords songs usually borrow, over the dimmed key: ♭III, iv, ♭VI and ♭VII in a major key, IV and V in a minor key. Dominants marks the dial's secondary dominants by root.
+- [x] The caption follows the view, and every claim in it was checked on the neck.
+- [x] **Motion:** the dial turns a little and shrinks away (about 180 ms), then the neck rises into its place (about 220 ms), and back again. Reduced motion gets a plain crossfade. Nothing else on the page moves.
+- [x] The horizontal neck has left Theory. "Practice this across the neck →" stays as the way to the full neck.
+- [ ] The owner switches between Dial and Neck and finds it elegant.
+
+Next for both figures: clicking a chord or marker plays it (H's open item above).
 
 ---
 
@@ -684,3 +687,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   - H's two small items wait for H2, which the owner is reviewing.
   - Measuring the texture's cost waits until the builds are done, so the machine is quiet.
   - G and the later instruments stay later.
+- **2026-11-14.** H2 merged, 613 tests. In Theory, Neck now draws the key's chords on a vertical neck where the dial was, while the words, the view pills and the side panel stay still. Review found one mistake in the spec: Borrowed marked the whole parallel window, which relabelled C major as C minor. It now marks only the chords songs usually borrow (♭III, iv, ♭VI and ♭VII in major; IV and V in minor). H's two small items can start. `npm run lint` now skips `.claude/`, because unfinished work in the sessions' worktrees made the main checkout's lint fail.
