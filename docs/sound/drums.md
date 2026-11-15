@@ -251,12 +251,12 @@ Everything is in one AudioWorklet, built on S1's pattern: a pure TypeScript core
 
 The owner compared kits A, B and C: "a great first pass, but I wasn't blown away with any of the presets". Asked what they want to hear, they named The Midnight, Jasper Tygner and Thrice.
 
-Every piece of every kit was rendered off-line and measured with `scripts/measure-drums.ts` (run it with `./node_modules/.bin/vite-node scripts/measure-drums.ts`). **Nobody has listened to the result yet**: the session that did this cannot hear. The "real kit" column is working figures from the sources above and from mixing practice, not measurements made here.
+Every piece of every kit was rendered off-line and measured with `scripts/measure-drums.ts` (run it with `./node_modules/.bin/vite-node scripts/measure-drums.ts`). **Nobody has listened to the result yet**: the session that did this cannot hear. The kits were played in the running app and metered, which shows that they work, not that they please. The "real kit" column is working figures from the sources above and from mixing practice, not measurements made here.
 
 | Measured | First kits | A real, mixed kit | S2.1 kits (D rock, E neon, F garage) |
 |---|---|---|---|
 | Peak to loudness on the reference groove | 17.8, 17.2, 17.2 LU: all tick, no body | about 10 to 14 | 12.9, 10.9, 14.5 |
-| Peak at the same loudness (-23.4 LKFS) | -5.6 dBFS | | -10.5, -12.5, -8.9: 3 to 7 dB more room in the jam |
+| Peak at the same loudness (-23.4 LKFS) | -5.6 dBFS | | -10.5, -12.5, -8.9 on their own. In the jam's full mix the peak moves by +0.7, -0.1 and +0.4 dB against kit A: a kit that holds its level meets the guitar's and bass's peaks more often (see the spec) |
 | Left against right (1 is mono) | 0.96 to 0.98. A crash alone: 1.00 | overheads and room differ in each ear | groove 0.92, 0.58, 0.94; a crash alone under 0.75 |
 | Cymbal partials | 30 to 42. Half of a band's power sits in 0.4 to 2.2% of its frequency bins | a mode every 12 Hz; a plate like that reads about 4% | over 1,000 partials each; open hat and crash read 2.8 to 5.7% |
 | Crash over time (where its weight is) | brightest at the stroke, 8.1 kHz, falling to 4.0 kHz: no bloom | starts low, climbs within tens of milliseconds, loses its top first [5, 26] | 3.1 kHz at the stroke, 7.3 kHz by 150 ms, 5.5 kHz after a second |

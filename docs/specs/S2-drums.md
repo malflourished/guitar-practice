@@ -4,6 +4,7 @@
 **Status:** built 2026-11-13 on `claude/sound-s2-drums-e3cf00`, not merged. The Drums fader starts at off, so the drums change nothing until the owner has listened in the sound lab and turned it up. One thing does change for everyone at merge: the whole jam is 3 dB quieter, to give the mix the headroom it had lost (see "Levels").
 **First listen:** the owner played the 12-bar blues with the drums up on 2026-11-13: "The sounds, they sound great. So success." The lab's comparison of the three kits is still to do.
 **Research behind it:** [docs/sound/drums.md](../sound/drums.md).
+**S2.1 (2026-11-14):** three more kits, D, E and F, built after the owner compared A, B and C. They are described in [S2.1](#s21-three-more-kits) at the end of this note; everything before it describes S2 as it was built.
 
 ## Why
 
@@ -335,4 +336,193 @@ Each of these went beyond the brief, read it loosely, or could not be met. Say i
 - [x] Guitar, bass and pad play what they played, 3 dB lower. Every existing test passes; three expectations were updated for the trim.
 - [x] The lab plays each groove on each kit at matched loudness with the dials exposed, and its keys are documented.
 - [x] `npm test`, `npx tsc -b` and `npm run lint` pass. No page scrolls at the three sizes. A CPU budget in tests.
+- [x] The owner has compared the three kits in the lab (2026-11-14): "I don't love any of them yet, it's a great first pass, but I wasn't blown away with any of the presets". That started S2.1, below.
 - [ ] The owner has listened, in the lab and in the jam, on speakers and headphones, and has chosen. (So far: the jam, on the 12-bar blues, 2026-11-13: "they sound great". Not yet: the three kits side by side in the lab.)
+
+## S2.1: three more kits
+
+**Status:** built 2026-11-14 on `claude/drums-s21-3e68a6`, not merged. The jam loop's default kit is still A. **Nobody has heard these kits yet**: the session that built them cannot listen, so every claim below is a measurement or a reason, and the owner's ears decide.
+
+### Why
+
+The owner compared A, B and C in the lab on 2026-11-14: "I don't love any of them yet, it's a great first pass, but I wasn't blown away with any of the presets". Asked what they want to hear, they named **The Midnight**, **Jasper Tygner** and **Thrice**: produced 1980s-style drums, tight UK electronic drums, and a hard-hit rock kit in a room.
+
+The first kits were then measured piece by piece. The findings are in [docs/sound/drums.md](../sound/drums.md), "Why the first kits fell short". In short: they were nearly mono, about 18 dB from peak to loudness (all tick, no body), their cymbals were a few dozen partials where metal has a thousand, the crash did not bloom, the kick had no beater, the snare was a tom with hiss on top, and the room's first echoes were sparse.
+
+### How to hear it
+
+1. Run the app and press **\\** (backslash). The sound lab opens on its **Drums** page.
+2. Press a groove, or a key from **1** to **4**: Straight 8ths, Shuffle, Swing, 16ths. **0** stops.
+3. Switch kits with the six buttons, or step through them with **[** and **]**. A, B and C are the first kits; **D Rock room**, **E Neon** and **F Garage** are the new ones. All six play all the time and only the switch moves, so there is no gap.
+4. Tick **Bass and pad** to hear a kit under a 12-bar blues.
+5. The kit chosen in the lab is the kit the jam loop plays, once the Drums fader in Progressions is up.
+
+What to listen for:
+
+| Kit | Try it on | Listen for |
+|---|---|---|
+| D Rock room | Straight 8ths, Shuffle | The backbeat: a rimshot with a ring to it, and a room behind it. The kick's beater. The crash at the top of bar 1: does it swell and spread, or is it a splash? Compare with A's crash. Turn **Room** down to hear the kit dry |
+| E Neon | Straight 8ths, 16ths | The snare: a big bright room that is cut off after a fifth of a second. A ghost note stays dry. The toms in the fill fall in pitch. The hats are short and bright |
+| F Garage | 16ths, Shuffle | The snare has a clap on it. The kick is short, with a hard start. The hats are very tight. Almost no room |
+| All three | any groove | Is the kit one thing, or separate sounds? Do the cymbals sit around you (headphones), where A's sit at one point? Is anything harsh, fizzy or too loud: the hats, the wires, the clap? |
+
+If one is close, its dials are the same thirteen as before, and **Copy settings** puts them on the clipboard.
+
+### What was built
+
+| Piece | Where | Role |
+|---|---|---|
+| Measuring | `scripts/measure-drums.ts` | Renders every piece of every kit, the room and the grooves, and prints the numbers the findings rest on |
+| Fourier transform | `src/lib/audio/synth/dsp/fft.ts` | Builds the cymbal tables, and measures |
+| Cymbal tables | `.../drums/metalTable.ts` | Over a thousand partials for each cymbal, added up once into looping tables, one for each of six bands |
+| Metal | `.../drums/bandedMetal.ts` | Hi-hat, ride and crash: the energy in each band, how it climbs, trades and dies. Stereo |
+| Drums | `.../drums/shells.ts` | Kick, snare (with rimshot and clap), toms, rim |
+| Room | `src/lib/audio/synth/dsp/drumRoom.ts` | A denser room, which can be gated |
+| Bus | `.../drums/drumBus.ts` | A compressor and a clipper across the whole kit |
+| The kits | `.../drums/studioKits.ts` | Each kit as data, and `StudioKit`, which plays any of them |
+
+Changed: `drumParams.ts` (three kit names and their dials), `kits.ts` (a kit may bring its own room and bus), `drumSynth.ts` (stereo voices, the kit's room and bus, each kit's output gain), `membranes.ts` (`NoiseBurst` is exported; `MembraneModes.flush`), `drumSettings.ts`, `drumMessages.ts`, `drumProcessor.ts` and `drumKitVoice.ts` (the tables travel from the page to the audio thread), and the lab (`DrumLab.tsx`: six kits). Kits A, B and C run the same code as before and their tests are unchanged.
+
+### One engine
+
+```
+drums (kick, snare, toms, rim, brush) ─► soft clipper ─┐
+metal (hi-hats, ride, crash), stereo ──────────────────┼─► 30 Hz high-pass ─► compressor ─► clipper ─► kit gain ─► ceiling ─► out
+every voice's send ─► the kit's room ──────────────────┘
+```
+
+- **Metal.** A cymbal has a mode every dozen hertz. Each cymbal here is 1,000 to 1,300 partials, added up once by an inverse Fourier transform into six tables that loop without a seam (1.4 s for the hi-hats, 2.7 s for the ride and crash). What plays is the energy in each band:
+  - a stroke puts energy in, mostly low and in the middle;
+  - while the cymbal is loud, energy climbs from band to band. That is the crash's bloom, and it is why a hard stroke is brighter and not only louder;
+  - each band dies at its own rate, the top first;
+  - the bands trade a little energy at random, so the sound never sits still.
+
+  A cymbal is one object that keeps ringing. The hi-hat's foot is its damping. The tables play on between strokes, so no two strokes start alike. The two ears read the same partials from two places in the table, which gives the width of overhead microphones.
+- **Kick.** The drumhead model of S2, with fewer and shorter upper modes, plus a beater: a cluster of very short modes between 1 and 6 kHz and a breath of noise. The drum goes through its own gentle saturation, which adds harmonics at two and three times its pitch for small speakers. **Kick punch** is the beater and the pitch drop together.
+- **Snare.** The head's modes fill the middle of the spectrum. The wires are collisions: thousands of tiny impulses a second at the stroke (with a short, louder snap first), then fewer as the head calms down, so the tail turns from hiss into a rattle. They are coloured by two resonances and timed by the head's own swing.
+- **Room.** The stroke is split eight ways, delayed and mixed three times over (512 echoes in about 40 ms), then fed to eight longer delay lines. E's room is gated: a snare or tom stroke of at least 0.45 opens it for 0.16 s.
+- **Bus.** A 4:1 compressor that takes about a hundredth of a second to react, with part of the kit going round it, and a soft clipper after it. The 30 Hz high-pass sits in front of the clipper.
+
+### The three kits
+
+| Piece | D Rock room | E Neon | F Garage |
+|---|---|---|---|
+| Kick | 56 Hz, four modes, starts 33% sharp, a firm beater | 52 Hz, starts at about twice its pitch and falls back in a few hundredths of a second, a bright click | 50 Hz, starts at about two and a half times its pitch and falls faster still, 0.24 s long |
+| Snare | 190 Hz, seven head modes, long wires. From velocity 0.78 up it is a rimshot: the shell rings at 480 Hz to 2.2 kHz | 172 Hz, fat and bright, wires up to 13 kHz that stay smooth | 215 Hz, short (0.14 s), with a three-hand clap around 1.5 kHz |
+| Toms | Six modes at 172, 128 and 88 Hz, with a stick | Two modes at 190, 140 and 98 Hz that start 55% sharp and fall over 90 ms | One short mode at 205, 150 and 105 Hz |
+| Rim | A cross-stick | A high tick at 1.7 kHz | A woody knock at 860 Hz |
+| Hi-hats | Medium, 0.9 s open | Short and bright, 0.5 s open | Very tight, 0.3 s open |
+| Ride | A ping over a wash that builds | Lighter and higher | Thin and bright |
+| Crash | Blooms to about 7 kHz in 150 ms, rings about 2.3 s | The same, wider | Shorter (Cymbal ring 1.5 s) |
+| Room | 0.85 s, large, damped | 1.6 s, bright, gated | 0.32 s, small and bright |
+| Compressor on the reference groove | up to 6.2 dB | up to 7.4 dB | up to 4.3 dB |
+
+A brush tap and a sweep play on all three (the snare struck softly, and S2's sweep), so every groove plays on every kit.
+
+Default dials:
+
+| Control | D | E | F |
+|---|---|---|---|
+| Kick tune | 56 Hz | 52 Hz | 50 Hz |
+| Kick decay | 0.34 s | 0.30 s | 0.24 s |
+| Kick punch | 60 | 65 | 60 |
+| Snare tune | 190 Hz | 172 Hz | 215 Hz |
+| Snares | 60 | 65 | 55 |
+| Snare decay | 0.30 s | 0.22 s | 0.14 s |
+| Hat tone | 50 | 55 | 60 |
+| Hat length | 50 | 40 | 30 |
+| Cymbal tone | 50 | 55 | 60 |
+| Cymbal ring | 2.4 s | 2.6 s | 1.5 s |
+| Room | 45 | 55 | 30 |
+| Drive | 35 | 45 | 50 |
+| Variation | 60 | 30 | 35 |
+
+On these kits **Hat tone** and **Cymbal tone** lean the cymbal's voicing towards its top or its bottom, and the ride rings longer than the crash for the same **Cymbal ring**.
+
+### Levels
+
+On the reference part (four bars of straight eighths at 100 BPM, 48 kHz, before the master volume). Every kit's output gain is set so it measures the same loudness as A.
+
+| Kit | RMS | Peak | Loudness | Peak to loudness |
+|---|---|---|---|---|
+| A, acoustic | −24.9 dBFS | −5.6 dBFS | −23.4 LKFS | 17.8 LU |
+| B, machine | −24.5 | −6.2 | −23.4 | 17.2 |
+| C, brushes | −25.3 | −6.2 | −23.4 | 17.2 |
+| **D, rock room** | −25.3 | **−10.5** | −23.4 | **12.9** |
+| **E, neon** | −26.6 | **−12.5** | −23.4 | **10.9** |
+| **F, garage** | −25.3 | **−8.9** | −23.4 | **14.5** |
+
+- At the same loudness the new kits' own peaks are 3 to 7 dB lower than A's.
+- No stroke or pile of strokes can pass a new kit's own ceiling: −10.5 dBFS for D, −12.5 for E, −8.9 for F (the bus's clipper times the kit's gain). The reference groove reaches it. A's ceiling is −2 dBFS.
+- Swing is quieter than the other grooves on every kit: by 1.1 LU on D (its ride washes), 4.3 on E and 2.7 on F.
+
+**In the running app** (a hidden window, the meter on the app's output, master volume at its default 0.75):
+
+| | A | B | C | D | E | F |
+|---|---|---|---|---|---|---|
+| Lab, Straight 8ths, two bars: peak | −9.1 | −8.1 | −8.8 | −13.0 | −15.2 | −11.7 |
+| Lab: RMS | −28.4 | −27.3 | −27.4 | −28.6 | −30.1 | −28.5 |
+| Jam, Progressions as it opens, all four faders at 0 dB, count-in and about four bars: peak | −2.5 | | | −1.8 | −2.6 | −2.1 |
+| Jam: RMS | −17.6 | | | −17.5 | −17.6 | −17.6 |
+
+(dBFS. The jam figures were the same to 0.1 dB on three runs.) The jam's 3 dB of headroom is untouched and every kit stays under full scale. See "Decisions to check", item 2, for D's 0.7 dB.
+
+### Cost
+
+Node 22, Apple M4 Max, 48 kHz, eight bars at 110 BPM with a crash and a fill; best of five.
+
+| Kit | Sixteenths | Swing |
+|---|---|---|
+| A | 137 ns a sample, 0.66% of one core | 178 ns, 0.85% |
+| D | 200 ns, 0.96% | 193 ns, 0.92% |
+| E | 174 ns, 0.84% | 183 ns, 0.88% |
+| F | 163 ns, 0.78% | 177 ns, 0.85% |
+
+- About half of a new kit's cost is its room (95 to 105 ns a sample). The metal is cheap: a ringing cymbal is twelve table reads a sample.
+- A kit's tables take about 32 ms to build at 48 kHz (68 ms at 96 kHz). The page builds them and sends them with the kit, so the audio thread does not stop. They take 8 MB for each kit, held once on the page and once on the audio thread.
+- The lab runs all six kits at once: about 4% of one core.
+
+### Tests
+
+`npm test`: 619 tests in all, 59 of them from S2.1: fifty new ones (`studioKits.test.ts`), and nine because S2's per-kit tests now run on six kits.
+
+- **S2's tests on the new kits:** a stroke starts on the exact sample; every piece dies to exact silence with only zeros left in memory; louder with velocity; kick and snare in the middle, hi-hat left, ride right; identical however the caller slices its blocks; the same seed repeats; Stop and a change of kit; no invalid or denormal numbers under random strokes at every extreme of every dial at 44.1, 48 and 96 kHz, and never more than ten voices; every kit as loud as A within 0.5 LU; every piece at once stays under full scale at any Drive; ten seconds of the busiest groove in under a second.
+- **Tables:** over a thousand partials, each band inside its range and at the same level; no seam; the same cymbal at any sample rate; tables built elsewhere are accepted, wrong ones refused.
+- **Metal:** denser than A's by the measure in the research note; the crash blooms upwards and then loses its top; a harder crash is brighter; ride strokes build a wash and no two strokes are alike; closed, open, choke and foot; the four cymbal dials; a cymbal differs between the ears where A's is one sound panned.
+- **Drums:** the kick rests at Kick tune within 3%; it has a beater, which Kick punch controls; Kick decay; the wires, their length with velocity, and ghost notes 13 to 32 dB under a backbeat; D's snare fills the middle that A's lacks; D's rimshot; F's clap, hand by hand; E's gate holds, shuts, and stays shut for a ghost note; ten voices, one for each piece; the dials' defaults are in range.
+- **Room:** denser sooner than S2's room and more even; no gap between its first echoes and its tail; the decay time asked; different in each ear; sleeps holding zeros; the gate.
+- **Bus:** leaves a quiet kit alone, turns a loud one down slowly, never passes its ceiling; peak to loudness at least 2.5 LU under A's at the same loudness, and peaks at least 3 dB lower; works on the backbeats (2 to 11 dB).
+- **In the jam:** every groove with every stroke at full strength stays 6 dB under full scale; each voice alone costs a small part of real time.
+
+Checked in the running app on 2026-11-14, not by the test suite (a hidden Electron window on the dev server, sound muted):
+
+- The lab opens with backslash and shows six kits. Each plays through the audio worklet at the levels above. **[** and **]** step through them. Stop is silent. No errors in the console.
+- A kit changed while a voice is running (as the jam does when the lab's choice moves) plays on the new kit, with its tables sent from the page.
+- The jam loop plays with each new kit. The only console message is the Tone timing warning that S1 recorded.
+- `npm run lint` and `npx tsc -b` pass. The app's layout was not touched: the lab is its own floating panel, and its kit buttons are now two rows of three.
+
+### Decisions to check
+
+1. **Three kits aimed at three names.** The owner named artists, not sounds, so "rock room", "neon" and "garage" are readings of Thrice, The Midnight and Jasper Tygner. If a reading is wrong, say what is missing and the kit's data can be moved a long way without new code.
+2. **D raises the jam's peak by 0.7 dB over A** (−1.8 against −2.5 dBFS with all four faders at 0 dB), although D's own peaks are 5 dB lower. A compressed kit holds its level for longer, so it meets the guitar's and the bass's peaks more often. The mix stays under full scale, and D cannot add more than its ceiling, where A's rare worst case is higher. F adds 0.4 dB; E adds none. Lowering the kick's level did not change it (tried, and put back). Not yet tried: a lower ceiling on D's bus.
+3. **Nobody has heard them.** Levels, spectra, lengths and density were measured; taste was not. The most likely faults are in what cannot be measured: the wires' rattle as they settle (too grainy?), the clap on F, the brightness of E's hats, how much room D has by default.
+4. **The kick still repeats closely** (0.99 correlation over its first 40 ms from stroke to stroke), as a pedal does. Its variation is in the beater and in the groove's velocities.
+5. **The jam's default kit is unchanged**, and the kit is still one choice for the whole app. Once the owner has a favourite, a kit for each groove (D for the blues, E or F for the 16ths) is a small step.
+6. **The lab's page now holds six kits.** Its trims stay at 0 dB with the default dials.
+7. **Shared files touched:** none outside the drum synthesis and the lab. `engine.ts`, the jam's scheduling and Progressions were not changed.
+
+### Not in S2.1
+
+- A better machine kit in B's own analogue style, or better brushes. B and C are as they were.
+- Changes to the grooves, the fills or the humanizing: the jam loop's scheduling belongs to another package.
+- Half-open hats, the ride's bell, flams and rolls, as before.
+- Recorded cymbals.
+
+### Done when
+
+- [x] The first kits measured piece by piece, and the findings written down.
+- [x] Three candidates in the lab beside A, B and C, at matched loudness.
+- [x] Tests for what is deterministic: ranges, voices, no clipping at full velocity, cost.
+- [x] Levels and cost measured, in Node and in the running app.
+- [x] The jam's default kit unchanged; the jam's headroom untouched.
+- [ ] The owner has compared D, E and F with A, B and C, and chosen.

@@ -497,7 +497,7 @@ describe('the drum bus', () => {
       const levels = measure(kit);
       expect(Math.abs(levels.loudness - first.loudness), kit).toBeLessThan(0.5);
       expect(levels.peakDb - levels.loudness, kit).toBeLessThan(first.peakDb - first.loudness - 2.5);
-      // so its peaks are lower in the jam's mix: at least 3 dB more room than the first acoustic kit
+      // and its own peaks are at least 3 dB lower than the first acoustic kit's
       expect(levels.peakDb, kit).toBeLessThan(first.peakDb - 3);
     }
   });

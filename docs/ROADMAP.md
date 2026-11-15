@@ -625,6 +625,12 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   - drums in the sound lab.
   
   The spec will be `docs/specs/S2-drums.md`.
+- **S2.1** (built 2026-11-14 on `claude/drums-s21-3e68a6`, Fable 5.2; not merged): better kits. Spec: [specs/S2-drums.md](specs/S2-drums.md), "S2.1". Findings: [sound/drums.md](sound/drums.md), "Why the first kits fell short".
+  - [x] Ask the owner what they want to hear: The Midnight, Jasper Tygner, Thrice.
+  - [x] Measure why kits A, B and C fall short.
+  - [x] Three candidates in the sound lab beside them: D rock room, E neon, F garage.
+  - [x] Tests, levels and cost; the jam's default kit and its 3 dB of headroom unchanged.
+  - [ ] The owner compares the six kits in the lab (**\\** opens it; **[** and **]** switch kits) and picks.
 - **Later, from the research:** more bass presets, then guitar, electric piano, organ and pads. The owner's earlier wish for "legitimate guitar/bass sounds, and drum kits" lands here.
 
 ---
@@ -684,4 +690,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   - H's two small items wait for H2, which the owner is reviewing.
   - Measuring the texture's cost waits until the builds are done, so the machine is quiet.
   - G and the later instruments stay later.
-- **2026-11-14.** S2.1: the first kits were measured piece by piece (`scripts/measure-drums.ts`; findings in `docs/sound/drums.md`, "Why the first kits fell short"). The owner named The Midnight, Jasper Tygner and Thrice, so the three candidates are a rock kit in a big room (D), gated 1980s drums (E) and tight garage drums (F), on a second engine: cymbals of over a thousand partials, a kick with a beater, snare wires as collisions, a denser room and a compressor on the bus. 619 tests. Not done: the S2.1 section of `docs/specs/S2-drums.md`, a screenshot of the lab with six kits, and a check in the running app (worklet and lab were only type-checked and unit-tested). The owner has not compared them yet.
+- **2026-11-14.** S2.1: the first kits were measured piece by piece (`scripts/measure-drums.ts`; findings in `docs/sound/drums.md`, "Why the first kits fell short"). The owner named The Midnight, Jasper Tygner and Thrice, so the three candidates are a rock kit in a big room (D), gated 1980s drums (E) and tight garage drums (F), on a second engine: cymbals of over a thousand partials, a kick with a beater, snare wires as collisions, a denser room and a compressor on the bus. Written up in `docs/specs/S2-drums.md`, "S2.1". 619 tests. Played and metered in the running app, in the lab and in the jam. Found there: kit D raises the jam's peak by 0.7 dB over kit A (−1.8 against −2.5 dBFS) although its own peaks are 5 dB lower; the mix stays under full scale. Nobody has heard the kits yet: the owner's comparison in the lab is the next step, and the jam's default kit stays A until then.
