@@ -10,6 +10,7 @@ import { FormStrip } from './FormStrip';
 import { MixFaders } from './MixFaders';
 import { ProgressionsControls } from './ProgressionsControls';
 import { jamChordsOf } from './jamChords';
+import type { CoachPrompt } from './useJamCoach';
 import type { JamLoopState } from './useJamLoop';
 import styles from './ProgressionsDeck.module.css';
 
@@ -19,6 +20,10 @@ interface ProgressionsDeckProps {
   jam: JamLoopState;
   /** While "Move along the neck" plays: the region the pass is in and what comes next. */
   climb: ClimbNow | null;
+  /** The prompt of the pass, over the form strip; null when prompts are off. */
+  prompt: CoachPrompt | null;
+  /** The targets on the neck in words, as the next change's tooltip. */
+  targetsLabel?: string;
   /** Beats a minute, for the form strip's playhead. */
   tempo: number;
   play: PlayControlProps;
@@ -39,6 +44,8 @@ export function ProgressionsDeck({
   progressions,
   jam,
   climb,
+  prompt,
+  targetsLabel,
   tempo,
   play,
   display,
@@ -71,6 +78,7 @@ export function ProgressionsDeck({
               onProgressionStepChange={setProgressionStepIndex}
               jam={jam}
               climbText={climbText}
+              targetsText={targetsLabel}
               loop={play.options.jamLoop}
             />
             <div className={styles.playRow}>
@@ -91,6 +99,7 @@ export function ProgressionsDeck({
           jam={jam}
           tempo={tempo}
           caption={climbText}
+          prompt={prompt}
           onSelect={setProgressionStepIndex}
         />
         <MixFaders mix={mix} onChange={onMixChange} />

@@ -5,6 +5,8 @@ import {
   buildSavedProgressionChordViews,
   climbShapesAt,
   describeClimb,
+  reachWindow,
+  type FretWindow,
   type NotationPreference,
 } from '../../lib/music';
 import type { FretPosition, StudyMode } from '../../types/music';
@@ -118,6 +120,22 @@ export function useProgressionViews({
     [climbPlan, savedProgressionChordViews],
   );
 
+  /**
+   * Where the hand is for each step of a pass: the frets of the shape the chord
+   * is shown in and one more each side (null for a chord with no shape). The
+   * targets for the next chord are looked for there. Asked by pass, like the
+   * strum, because the change into bar 1 belongs to the next pass.
+   */
+  const windowsForPass = useCallback(
+    (pass: number): (FretWindow | null)[] => {
+      const shapes = climbPlan ? climbShapesAt(climbPlan, pass) : savedProgressionChordViews;
+      return shapes.map((shape) =>
+        shape && shape.positions.length > 0 ? reachWindow(shape.startFret, shape.endFret) : null,
+      );
+    },
+    [climbPlan, savedProgressionChordViews],
+  );
+
   return {
     savedProgressionChordViews,
     displayProgressionChordViews,
@@ -126,6 +144,7 @@ export function useProgressionViews({
     climbRegion,
     climbNow,
     positionsForPass,
+    windowsForPass,
   };
 }
 

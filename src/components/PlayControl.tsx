@@ -9,6 +9,7 @@ import {
   type PlayMode,
   type PlayOptionId,
   type PlayOptions,
+  type PlayPrompts,
   type PlayReach,
 } from '../lib/audio/playOptions';
 import glass from '../styles/glass.module.css';
@@ -57,6 +58,7 @@ const REACHES: Choice<PlayReach>[] = [
   { id: 'position', label: 'This position' },
   { id: 'neck', label: 'Whole neck', title: 'Every position in turn, up or down the neck' },
 ];
+const LADDER_NOTE = 'Each pass stays in one stretch of the neck, then moves on.';
 const LADDER_HINT =
   'Each pass of the form is played in one stretch of the neck, and the stretch moves between passes. The same chord higher up is nearly the same notes, so the point is where your hand goes.';
 const LADDERS: Choice<PlayLadder>[] = [
@@ -76,6 +78,20 @@ const FEELS: Choice<JamFeel>[] = [
   { id: 'swing', label: 'Swing', title: SWING_HINT },
 ];
 
+const TARGETS_HINT = 'Rings on the neck show where to land on the next chord.';
+const PROMPTS_HINT = 'One thing to try each time round the form.';
+const PROMPTS: Choice<PlayPrompts>[] = [
+  { id: 'off', label: 'Off' },
+  { id: 'rotate', label: 'Rotate', title: 'A new prompt when the last has had eight bars or more' },
+  { id: 'hold', label: 'Hold', title: 'Keep the prompt shown. Click the prompt for the next one' },
+];
+
+/** Short groups that share a row, so the Progressions menu is no taller for having them. */
+const ROW_PAIRS: Partial<Record<PlayOptionId, PlayOptionId>> = {
+  click: 'jamLoop',
+  targets: 'prompts',
+};
+
 const TITLES: Record<PlayOptionId, string> = {
   guitar: 'Guitar',
   feel: 'Feel',
@@ -87,17 +103,22 @@ const TITLES: Record<PlayOptionId, string> = {
   reach: 'Reach',
   ladder: 'Move along the neck',
   loop: 'Loop',
+  targets: 'Targets',
+  prompts: 'Prompts',
 };
 
 function Choices<T extends string>({
   title,
   hint,
+  note,
   choices,
   value,
   onChange,
 }: {
   title: string;
   hint?: string;
+  /** One line under the title that says what the group does. */
+  note?: string;
   choices: Choice<T>[];
   value: T;
   onChange: (value: T) => void;
@@ -105,6 +126,7 @@ function Choices<T extends string>({
   return (
     <div className={styles.group} role="radiogroup" aria-label={title} title={hint}>
       <span className={styles.groupTitle}>{title}</span>
+      {note && <span className={styles.groupNote}>{note}</span>}
       <div className={styles.choices}>
         {choices.map((choice) => (
           <button
@@ -174,9 +196,7 @@ export function PlayMenu({
     articulation: options.articulation,
     canCrossNeck,
   });
-  return (
-    <div className={styles.menu}>
-      {menu.map((id) => {
+  const renderOption = (id: PlayOptionId) => {
         switch (id) {
           case 'direction':
             return (
@@ -224,6 +244,7 @@ export function PlayMenu({
                 key={id}
                 title={TITLES[id]}
                 hint={LADDER_HINT}
+                note={LADDER_NOTE}
                 choices={LADDERS}
                 value={options.ladder}
                 onChange={(ladder) => onOptionsChange({ ladder })}
@@ -279,7 +300,45 @@ export function PlayMenu({
                 onChange={(loop) => onOptionsChange({ loop })}
               />
             );
+          case 'targets':
+            return (
+              <Toggle
+                key={id}
+                title={TITLES[id]}
+                hint={TARGETS_HINT}
+                on={options.targets}
+                onChange={(targets) => onOptionsChange({ targets })}
+              />
+            );
+          case 'prompts':
+            return (
+              <Choices
+                key={id}
+                title={TITLES[id]}
+                hint={PROMPTS_HINT}
+                choices={PROMPTS}
+                value={options.prompts}
+                onChange={(prompts) => onOptionsChange({ prompts })}
+              />
+            );
         }
+  };
+  // the second of each pair is drawn beside the first, not on its own row
+  const second = new Set(menu.flatMap((id) => (ROW_PAIRS[id] ? [ROW_PAIRS[id]] : [])));
+  return (
+    <div className={styles.menu}>
+      {menu.map((id) => {
+        if (second.has(id)) return null;
+        const partner = ROW_PAIRS[id];
+        if (partner && menu.includes(partner)) {
+          return (
+            <div key={id} className={styles.pair}>
+              {renderOption(id)}
+              {renderOption(partner)}
+            </div>
+          );
+        }
+        return renderOption(id);
       })}
     </div>
   );

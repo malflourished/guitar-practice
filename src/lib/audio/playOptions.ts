@@ -19,6 +19,11 @@ export type PlayReach = 'position' | 'neck';
  * back down; Down from the top region, then back up. See `buildClimbPlan`.
  */
 export type PlayLadder = 'off' | 'up' | 'down';
+/**
+ * Progressions, the prompt of the pass: a new one when the last has had its
+ * bars, the one shown kept, or none. See `jamPrompts.ts`.
+ */
+export type PlayPrompts = 'off' | 'rotate' | 'hold';
 
 export interface PlayOptions {
   direction: PlayDirection;
@@ -37,6 +42,10 @@ export interface PlayOptions {
   click: boolean;
   /** Progressions: round and round (the other modes' Loop starts off). */
   jamLoop: boolean;
+  /** Progressions: rings on the neck show where to land on the next chord. */
+  targets: boolean;
+  /** Progressions: one thing to try each time round the form. */
+  prompts: PlayPrompts;
 }
 
 export const DEFAULT_PLAY_OPTIONS: PlayOptions = {
@@ -49,6 +58,8 @@ export const DEFAULT_PLAY_OPTIONS: PlayOptions = {
   feel: 'straight',
   click: false,
   jamLoop: true,
+  targets: true,
+  prompts: 'rotate',
 };
 
 /** The modes that use the Play control. Theory with the neck counts as scales. */
@@ -64,7 +75,9 @@ export type PlayOptionId =
   | 'guitar'
   | 'feel'
   | 'click'
-  | 'jamLoop';
+  | 'jamLoop'
+  | 'targets'
+  | 'prompts';
 
 export interface PlayMenuContext {
   articulation: Articulation;
@@ -98,7 +111,7 @@ export function playMenuOptions(
         'loop',
       ];
     case 'progressions':
-      return ['guitar', 'feel', 'click', 'jamLoop', 'ladder'];
+      return ['guitar', 'feel', 'click', 'jamLoop', 'ladder', 'targets', 'prompts'];
   }
 }
 

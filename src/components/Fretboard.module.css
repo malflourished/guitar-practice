@@ -154,6 +154,62 @@
   pointer-events: none;
 }
 
+/* Where to land on the next chord (Progressions, P3). Outlines, because the
+   filled dots are the chord now: a solid ring for a note that is new, a
+   dashed one (the dash of a note two boxes share) for a note the chord now
+   already has. Quiet while the change is coming, full on its last beat. */
+.targets {
+  pointer-events: none;
+  opacity: 0.78;
+  transition: opacity 120ms ease-out;
+  animation: targetIn 150ms ease-out;
+}
+
+.targetsArriving {
+  composes: targets;
+  opacity: 1;
+}
+
+.targetRing {
+  fill: none;
+  stroke: var(--active-ring-stroke);
+  stroke-width: 1.5;
+}
+
+.targetsArriving .targetRing {
+  stroke-width: 2;
+}
+
+.targetRingHeld {
+  composes: targetRing;
+  stroke-dasharray: 3 3;
+}
+
+.targetLabel {
+  font-size: calc(13px * var(--neck-text, 1));
+  font-weight: 600;
+  fill: var(--active-ring-stroke);
+  font-family: var(--font-sans);
+}
+
+.targetLabelSmall {
+  composes: targetLabel;
+  font-size: calc(10px * var(--neck-text, 1));
+}
+
+@keyframes targetIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .targets {
+    animation: none;
+    transition: none;
+  }
+}
+
 .regionBadge {
   font-size: calc(12px * var(--neck-text, 1));
   font-weight: 600;

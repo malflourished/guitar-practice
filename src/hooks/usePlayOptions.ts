@@ -110,6 +110,12 @@ export function usePlayOptions(entry?: { id: string; feel: JamFeel }) {
   );
   const [click, setClick] = usePersistentState('play-click', DEFAULT_PLAY_OPTIONS.click, isBoolean);
   const [jamLoop, setJamLoop] = usePersistentState('play-jam-loop', DEFAULT_PLAY_OPTIONS.jamLoop, isBoolean);
+  const [targets, setTargets] = usePersistentState('play-targets', DEFAULT_PLAY_OPTIONS.targets, isBoolean);
+  const [prompts, setPrompts] = usePersistentState(
+    'play-prompts',
+    DEFAULT_PLAY_OPTIONS.prompts,
+    oneOf(['off', 'rotate', 'hold'] as const),
+  );
   const [feelByEntry, setFeelByEntry] = usePersistentState<Record<string, JamFeel>>('play-feel', {}, isFeelMap);
   const [guitarLevel, setGuitarLevel] = usePersistentState<FaderLevel>('play-guitar-level', DEFAULT_JAM_MIX.guitar, isFaderLevel);
   const [bassLevel, setBassLevel] = usePersistentState<FaderLevel>('play-bass-level', DEFAULT_JAM_MIX.bass, isFaderLevel);
@@ -117,7 +123,7 @@ export function usePlayOptions(entry?: { id: string; feel: JamFeel }) {
   const [drumsLevel, setDrumsLevel] = usePersistentState<FaderLevel>('play-drums-level', DEFAULT_DRUMS_LEVEL, isFaderLevel);
   const entryId = entry?.id;
   const feel: JamFeel = (entryId !== undefined ? feelByEntry[entryId] : undefined) ?? entry?.feel ?? DEFAULT_PLAY_OPTIONS.feel;
-  const options: PlayOptions = { direction, articulation, loop, reach, ladder, guitar, feel, click, jamLoop };
+  const options: PlayOptions = { direction, articulation, loop, reach, ladder, guitar, feel, click, jamLoop, targets, prompts };
   const setOptions = useCallback(
     (patch: Partial<PlayOptions>) => {
       if (patch.direction !== undefined) setDirection(patch.direction);
@@ -128,12 +134,14 @@ export function usePlayOptions(entry?: { id: string; feel: JamFeel }) {
       if (patch.guitar !== undefined) setGuitar(patch.guitar);
       if (patch.click !== undefined) setClick(patch.click);
       if (patch.jamLoop !== undefined) setJamLoop(patch.jamLoop);
+      if (patch.targets !== undefined) setTargets(patch.targets);
+      if (patch.prompts !== undefined) setPrompts(patch.prompts);
       const nextFeel = patch.feel;
       if (nextFeel !== undefined && entryId !== undefined) {
         setFeelByEntry((previous) => ({ ...previous, [entryId]: nextFeel }));
       }
     },
-    [setDirection, setArticulation, setLoop, setReach, setLadder, setGuitar, setClick, setJamLoop, setFeelByEntry, entryId],
+    [setDirection, setArticulation, setLoop, setReach, setLadder, setGuitar, setClick, setJamLoop, setTargets, setPrompts, setFeelByEntry, entryId],
   );
   // Saved levels are clamped onto the track (a hand-edited -40 is -24, not off).
   const mix = useMemo<JamMix>(

@@ -20,6 +20,8 @@ interface ProgressionsControlsProps {
    * comes next, for the beat row's spoken label. The form strip shows it.
    */
   climbText: string;
+  /** The targets ringed on the neck, in words: the next change's tooltip. */
+  targetsText?: string;
   /** The loop goes round and round (Loop is on), so the next change may be round the top. */
   loop: boolean;
 }
@@ -40,6 +42,7 @@ export function ProgressionsControls({
   onProgressionStepChange,
   jam,
   climbText,
+  targetsText,
   loop,
 }: ProgressionsControlsProps) {
   const activeStep = resolvedSteps[progressionStepIndex];
@@ -109,6 +112,7 @@ export function ProgressionsControls({
               <span
                 className={arriving ? styles.nextChangeArriving : styles.nextChange}
                 data-arriving={arriving ? 'true' : undefined}
+                title={targetsText}
               >
                 <span aria-hidden="true">→ </span>
                 {formatNextChange(nextStep.chordName, next.bars)}

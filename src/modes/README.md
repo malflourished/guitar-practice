@@ -32,6 +32,13 @@ no deck in either figure. A Theory topic with no dial keeps Show on fretboard:
 the horizontal neck and the deck, which the board hooks read as
 `theoryShowFretboard` (true only for such a topic).
 
+While the loop plays, `useJamCoach` (called from `App.tsx`) works out two
+things from the loop's clock: the rings on the neck that show where to land
+on the next chord (`Fretboard`'s `targets`; the picking is
+`src/lib/music/landingTargets.ts`), and the prompt of the pass, the line over
+the form strip (`progressions/jamPrompts.ts`), which also decides what the
+rings show. Spec: `docs/specs/P3-targets.md`.
+
 Shared across modes:
 
 - `src/hooks/`: `useKeyState` (key, notation), `useDisplaySettings` (Labels choice,
