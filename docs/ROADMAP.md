@@ -13,7 +13,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | B | Teaching fixes (five small ones) | Done and reviewed, 2026-11-11 | nothing | any capable model: fully specified and test-backed |
 | C | Chord shapes and small triads | Started 2026-11-14 in the same session as M, on Fable 5.2 | nothing | a strong model, and a guitarist should check the fingerings |
 | D | Discover mode | Folded into M and P on 2026-11-12: no separate mode | – | – |
-| E | Practice that adapts | Started 2026-11-14 on Fable 5.2. The jam loop moved to P | O | a capable model |
+| E | Practice that adapts | Built 2026-11-14 on `claude/practice-e-63ba7d` (Fable 5.2), not merged: spec in `docs/specs/E-adaptive-practice.md`, with ten decisions for the owner to check. The jam loop moved to P | O | a capable model |
 | F | Look: analog texture, and Vibrato's panels | Default look done and reviewed, 2026-11-11. Vibrato's panels became outlines on the lava, 2026-11-13, with a Fill slider since 2026-11-14. The owner approved the new colours, the panels and Fill as they are (2026-11-14). Open: measure the texture's cost on real hardware, once the parallel builds are done and the machine is quiet | nothing | any capable model: the values are decided |
 | G | Later: hands-free, listening, tunings | Not started | A | to be decided |
 | H | Theory figures: one key dial | Done, merged and pushed 2026-11-12. H2 (a vertical neck in the dial's place) merged 2026-11-14; the owner's last check (Dial and Neck feel elegant) is open. H's two open items can start | – | the strongest model designs; a capable model builds |
@@ -273,12 +273,16 @@ Four parts:
 
 **Today.** The session is the same four blocks every day (Roots 2 min, Scale 3, Ear 2, Changes 3), always minor, always the lowest pentatonic box, always the same three ear intervals and i–iv–V. Ratings are saved and never used. See `src/components/PracticeSession.tsx` and `src/lib/practice/`.
 
-- [ ] Rotate the scale box (1 to 5) and the ear intervals from day to day.
-- [ ] Use the ratings: a block marked hard comes back tomorrow, one marked easy moves on.
-- [ ] Changes block: keep one position window for all three chords.
-- [ ] Jam loop: any progression, any tempo, chord tones highlighted in one position. Shares the pad voice from package D.
+- [x] Rotate the scale box (1 to 5) and the ear intervals from day to day. One box a day for Roots, Scale and Changes; three ear intervals a day from a ladder that grows (♭3, 5, ♭7, then 3, ♭5, 4, 6, 2, 7).
+- [x] Use the ratings: a block marked hard comes back tomorrow, one marked easy moves on. For the Ear block the score decides and the rating can only hold it back.
+- [x] Changes block: keep one position window for all three chords.
+- [x] Vary the key and quality: five boxes in one key make a lap; then the relative major, then up a fourth.
+- [x] The plan explains today's choices in one line, and the finished screen says what comes next.
+- ~~Jam loop: any progression, any tempo, chord tones highlighted in one position.~~ Obsolete here: P2 built it in Progressions.
 
-Research on musicians is small but points toward mixing material within a session over repeating one block (Carter and Grahn, 2016).
+**Built 2026-11-14** on `claude/practice-e-63ba7d`. The rules, the evidence behind them and the decisions to check are in `docs/specs/E-adaptive-practice.md`.
+
+Research on musicians is small but points toward mixing material within a session over repeating one block (Carter and Grahn, 2016). The spec's evidence note covers interleaving, spacing, difficulty and why a rating alone should not promote anything.
 
 ---
 
@@ -688,3 +692,4 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
   - Measuring the texture's cost waits until the builds are done, so the machine is quiet.
   - G and the later instruments stay later.
 - **2026-11-14.** H2 merged, 613 tests. In Theory, Neck now draws the key's chords on a vertical neck where the dial was, while the words, the view pills and the side panel stay still. Review found one mistake in the spec: Borrowed marked the whole parallel window, which relabelled C major as C minor. It now marks only the chords songs usually borrow (♭III, iv, ♭VI and ♭VII in major; IV and V in minor). H's two small items can start. `npm run lint` now skips `.claude/`, because unfinished work in the sessions' worktrees made the main checkout's lint fail.
+- **2026-11-14.** Package E built on `claude/practice-e-63ba7d` (not merged). Decided, for the owner to check: the cycle counts practice days, not calendar days; a key lasts a lap of five boxes, then its relative major, then up a fourth; Practice follows the plan's key instead of the app's; only "Revisit this" brings a box back, three days at most; the Ear block is promoted by score (90%), never by rating. Each session saves where the cycles stood, because history keeps only 100 sessions. Fixed in passing: the ear drill never repeated an interval, so every answer after the first was one of two. `scripts/check-layout.cjs` gained five Practice states.

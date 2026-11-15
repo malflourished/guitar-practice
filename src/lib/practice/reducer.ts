@@ -1,10 +1,11 @@
 import { advanceTime, finishSession, newSession, PRACTICE_BLOCKS, type PracticeSessionData, type Rating, type EarAttempt } from './session';
 import type { NoteName } from '../../types/music';
+import type { PlanChoice } from './plan';
 
 export type SessionStatus = 'ready' | 'paused' | 'loading' | 'counting' | 'running' | 'review' | 'finished';
 export interface SessionState { data: PracticeSessionData | null; status: SessionStatus }
 export type SessionAction =
-  | { type: 'start'; root: NoteName; bpm: number; id: string; now: string }
+  | { type: 'start'; root: NoteName; bpm: number; id: string; now: string; plan?: PlanChoice }
   | { type: 'resume' | 'counting' | 'running' | 'pause' | 'next' | 'reset' }
   | { type: 'tick'; seconds: number }
   | { type: 'rate'; rating: Rating }
@@ -13,7 +14,7 @@ export type SessionAction =
 
 export function sessionReducer(state: SessionState, action: SessionAction): SessionState {
   if (action.type === 'reset') return { data: null, status: 'ready' };
-  if (action.type === 'start') return { data: newSession(action.root, action.bpm, action.id, action.now), status: 'loading' };
+  if (action.type === 'start') return { data: newSession(action.root, action.bpm, action.id, action.now, action.plan), status: 'loading' };
   const data = state.data;
   if (!data || state.status === 'finished') return state;
   switch (action.type) {
