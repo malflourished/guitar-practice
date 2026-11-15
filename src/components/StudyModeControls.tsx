@@ -12,7 +12,8 @@ const STUDY_MODES: { id: StudyMode; label: string }[] = [
 ];
 
 interface StudyModeSelectorProps {
-  studyMode: StudyMode;
+  /** The mode shown; null on Home, where none is. */
+  studyMode: StudyMode | null;
   onStudyModeChange: (mode: StudyMode) => void;
 }
 

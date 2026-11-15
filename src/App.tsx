@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import './styleOrder'; // first: it fixes the order the stylesheets load in
 import { Fretboard } from './components/Fretboard';
 import { PositionSlider } from './components/PositionSlider';
@@ -7,6 +7,7 @@ import { DebugPanel } from './components/DebugPanel';
 import { AmbientBackground } from './components/AmbientBackground';
 import { AppStrip } from './components/AppStrip';
 import { Frame, Neck, SidePanel } from './components/Frame';
+import { Home } from './components/Home';
 import { IntervalTrainer } from './components/IntervalTrainer';
 import { PracticeSession } from './components/PracticeSession';
 import { TheoryStage } from './components/TheoryStage';
@@ -14,6 +15,7 @@ import { useAppTheme } from './hooks/useAppTheme';
 import { useBoardData } from './hooks/useBoardData';
 import { useDisplaySettings } from './hooks/useDisplaySettings';
 import { useFrameState } from './hooks/useFrameState';
+import { useHome } from './hooks/useHome';
 import { useInstrument } from './hooks/useInstrument';
 import { useKeyState } from './hooks/useKeyState';
 import { useNeckPosition } from './hooks/useNeckPosition';
@@ -145,14 +147,25 @@ function App() {
     effectiveKeyMode,
     noteColors: display.noteColors,
   });
-  const hasSide = studyMode !== 'notes';
+  // Home is a place in the frame, not a mode: the app opens on the last mode.
+  const [onHome, setOnHome] = useState(false);
+  const hasSide = studyMode !== 'notes' && !onHome;
   const frame = useFrameState(hasSide);
   const switchMode = useStudyModeSwitch(modes, audio);
+  const homeNav = useHome({
+    home: onHome,
+    setHome: setOnHome,
+    switchMode,
+    progressions,
+    stopAll: audio.stopAll,
+    frame,
+  });
   const theoryMoves = useTheoryActions(modes, audio, neck.neckView);
 
   // Space plays and stops wherever the deck has a Play control.
   usePlaySpace(
-    studyMode !== 'practice' &&
+    !onHome &&
+      studyMode !== 'practice' &&
       studyMode !== 'intervals' &&
       (studyMode !== 'theory' || theory.theoryShowFretboard),
     () => {
@@ -177,10 +190,12 @@ function App() {
   const strip = (
     <AppStrip
       studyMode={studyMode}
-      onStudyModeChange={switchMode}
+      home={onHome}
+      onHome={homeNav.goHome}
+      onStudyModeChange={homeNav.openMode}
       theoryReturn={theory.theoryReturn}
       onBackToTheory={theoryMoves.handleBackToTheory}
-      showKey={singleRootMode && studyMode !== 'practice'}
+      showKey={singleRootMode && studyMode !== 'practice' && !onHome}
       keyLabel={formatNoteDisplay(rootNote, notation)}
       activeNotes={activeNotes}
       notation={notation}
@@ -425,14 +440,26 @@ function App() {
       <Frame
         side={frame.sideState}
         focus={frame.focusMode}
-        practice={studyMode === 'practice'}
-        noDeck={theoryDialShown}
+        practice={studyMode === 'practice' && !onHome}
+        noDeck={theoryDialShown && !onHome}
         onCloseSide={frame.closeDrawer}
         strip={strip}
-        neck={ownsRegions ? undefined : neckRegion}
-        deck={ownsRegions || theoryDialShown ? undefined : deck}
-        body={body}
-        panel={panel}
+        home={
+          onHome ? (
+            <Home
+              lastMode={studyMode}
+              explore={homeNav.explore}
+              onContinue={() => homeNav.openMode(studyMode)}
+              onChoose={homeNav.choose}
+            />
+          ) : undefined
+        }
+        neck={onHome || ownsRegions ? undefined : neckRegion}
+        deck={onHome || ownsRegions || theoryDialShown ? undefined : deck}
+        body={onHome ? undefined : body}
+        panel={onHome ? undefined : panel}
+        sideWidth={frame.sideWidth}
+        onSideWidthChange={frame.setSideWidth}
         settings={
           <SettingsPanel
             audio={audio}

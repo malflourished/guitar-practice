@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { SideState } from '../components/frameContext';
+import { isSideWidth } from '../lib/sideWidth';
 import { isBoolean, usePersistentState } from './usePersistentState';
 import { useMediaQuery } from './useMediaQuery';
 
@@ -24,6 +25,12 @@ export function useFrameState(hasSide: boolean) {
     'side-panel-open',
     true,
     isBoolean,
+  );
+  // The docked panel's width in px once the player has dragged it; null until then.
+  const [sideWidth, setSideWidth] = usePersistentState<number | null>(
+    'side-width',
+    null,
+    isSideWidth,
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [settings, setSettings] = useState<{
@@ -88,6 +95,8 @@ export function useFrameState(hasSide: boolean) {
     setFocusMode,
     sideState,
     sideShown,
+    sideWidth,
+    setSideWidth,
     toggleSide,
     closeDrawer: () => {
       setDrawerOpen(false);
