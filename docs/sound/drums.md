@@ -247,6 +247,31 @@ Everything is in one AudioWorklet, built on S1's pattern: a pure TypeScript core
 2. **Short forms.** A drummer marks a 4-, 8- or 12-bar form, not every second bar. On the two- and three-bar vamps the drums fill and crash every second pass. P2.2's noise cymbal, which the drums replace only while they are up, still marks every pass.
 3. **Cymbals.** If the acoustic kit's crash and ride are the part that does not convince, recording a dozen cymbal one-shots of our own would close most of the gap, and would stay inside the "no sample packs" rule.
 
+## Why the first kits fell short (S2.1, 2026-11-14)
+
+The owner compared kits A, B and C: "a great first pass, but I wasn't blown away with any of the presets". Asked what they want to hear, they named The Midnight, Jasper Tygner and Thrice.
+
+Every piece of every kit was rendered off-line and measured with `scripts/measure-drums.ts` (run it with `./node_modules/.bin/vite-node scripts/measure-drums.ts`). **Nobody has listened to the result yet**: the session that did this cannot hear. The kits were played in the running app and metered, which shows that they work, not that they please. The "real kit" column is working figures from the sources above and from mixing practice, not measurements made here.
+
+| Measured | First kits | A real, mixed kit | S2.1 kits (D rock, E neon, F garage) |
+|---|---|---|---|
+| Peak to loudness on the reference groove | 17.8, 17.2, 17.2 LU: all tick, no body | about 10 to 14 | 12.9, 10.9, 14.5 |
+| Peak at the same loudness (-23.4 LKFS) | -5.6 dBFS | | -10.5, -12.5, -8.9 on their own. In the jam's full mix the peak moves by +0.7, -0.1 and +0.4 dB against kit A: a kit that holds its level meets the guitar's and bass's peaks more often (see the spec) |
+| Left against right (1 is mono) | 0.96 to 0.98. A crash alone: 1.00 | overheads and room differ in each ear | groove 0.92, 0.58, 0.94; a crash alone under 0.75 |
+| Cymbal partials | 30 to 42. Half of a band's power sits in 0.4 to 2.2% of its frequency bins | a mode every 12 Hz; a plate like that reads about 4% | over 1,000 partials each; open hat and crash read 2.8 to 5.7% |
+| Crash over time (where its weight is) | brightest at the stroke, 8.1 kHz, falling to 4.0 kHz: no bloom | starts low, climbs within tens of milliseconds, loses its top first [5, 26] | 3.1 kHz at the stroke, 7.3 kHz by 150 ms, 5.5 kHz after a second |
+| A soft crash against a hard one | 14% darker | a different sound | half as bright |
+| Kick: 1 to 8 kHz in its first 20 ms, by octave | -25, -28, -28 dB: no beater. More at 500 Hz to 1 kHz than below it: boxy | a click at 2 to 5 kHz, a dip at 300 to 500 Hz | rock -16, -17, -21 dB; the boxy band 10 dB lower |
+| Snare: share of energy under 600 Hz / 600 Hz to 2 kHz / above | -1 / -13 / -7 dB: a tom with hiss. The wires are plain white noise | body, crack and wires about level | rock -4 / -6 / -5 dB; wires as collisions that thin into a rattle |
+| Room: echo density at 40 / 60 ms (1 is as dense as noise), and how unevenly the tail rings | 0.40 / 0.73, 8.2 dB | dense by 30 to 50 ms; 5.6 dB | 0.67 / 0.93 (rock), 0.88 / 0.98 (garage); 6.3 dB |
+| The 30 Hz filter after the clipper | put back 3 to 4 dB of the peak it had taken off | | moved in front of the clipper |
+
+What measured fine and was kept: the hi-hat's tick and choke, ghost notes 15 to 18 dB under the backbeat, and velocity changing the hats' and snare's tone. Groove timing and humanizing were not re-measured: S2's tests hold them to the research above, and the jam loop's scheduling is being changed by another package.
+
+Stroke-to-stroke variation: the new metal never repeats (the tables play on between strokes), and the snare's wires are fresh each time. The kick's first 40 ms still correlate at 0.99 from stroke to stroke, as a pedal does; its variation is in the knock.
+
+What was built from this is in `src/lib/audio/synth/drums/`: `metalTable.ts` and `bandedMetal.ts` (cymbals), `shells.ts` (kick, snare with rimshot and clap, toms), `dsp/drumRoom.ts` (the room, and the gated room for E), `drumBus.ts` (compressor and clipper) and `studioKits.ts` (the three kits as data). Cost: 0.8 to 1.0% of one core for a groove (A: 0.7%).
+
 ## Sources
 
 Acoustics of drums and cymbals:

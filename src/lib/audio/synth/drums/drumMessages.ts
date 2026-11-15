@@ -4,6 +4,7 @@
  * pulls audio-thread code into the page.
  */
 import type { DrumKitId, DrumParams, DrumPiece } from './drumParams';
+import type { PreparedMetal } from './studioKits';
 
 /** The name the processor registers under. */
 export const DRUM_PROCESSOR_NAME = 'vibrato-drum-kit';
@@ -13,8 +14,8 @@ export type DrumMessage =
   | { type: 'hit'; piece: DrumPiece; time: number; velocity: number; duration: number }
   /** Silence everything and forget strokes not yet played. */
   | { type: 'stop' }
-  /** Change kit, with that kit's controls. */
-  | { type: 'kit'; kit: DrumKitId; params: Partial<DrumParams> }
+  /** Change kit, with that kit's controls, and its cymbals' tables if the page has built them. */
+  | { type: 'kit'; kit: DrumKitId; params: Partial<DrumParams>; metal?: PreparedMetal[] }
   | { type: 'params'; params: Partial<DrumParams> }
   /** The voice is gone: let the processor be collected. */
   | { type: 'dispose' };
@@ -23,4 +24,6 @@ export interface DrumProcessorOptions {
   kit?: DrumKitId;
   params?: Partial<DrumParams>;
   seed?: number;
+  /** The kit's cymbal tables, built by the page so the audio thread does not have to stop and build them. */
+  metal?: PreparedMetal[];
 }

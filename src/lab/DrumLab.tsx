@@ -17,7 +17,7 @@ import { measureKit, type StereoLevels } from '../lib/audio/synth/drums/drumPatt
 import { getDrumSettings, setDrumSettings, subscribeDrumSettings } from '../lib/audio/synth/drums/drumSettings';
 import { DrumLabAudio, drumKitTrim, type DrumMatchMode } from './drumLabAudio';
 
-const KIT_LETTERS: Record<DrumKitId, string> = { acoustic: 'A', machine: 'B', brushes: 'C' };
+const KIT_LETTERS: Record<DrumKitId, string> = { acoustic: 'A', machine: 'B', brushes: 'C', rock: 'D', neon: 'E', garage: 'F' };
 
 /** Single strokes to try a kit piece by piece: the piece, how hard, and what the button says. */
 const STROKES: { piece: DrumPiece; velocity: number; label: string; seconds?: number }[] = [
@@ -73,10 +73,11 @@ function useKitLevels(kit: DrumKitId, params: DrumParams, sampleRate: number): S
 }
 
 /**
- * The drums page of the sound lab (docs/specs/S2-drums.md): the acoustic kit
- * (A), the machine kit (B) and the brushes kit (C) at matched loudness, on
- * each of the jam loop's grooves, with each kit's main controls. The kit
- * chosen here is the kit the jam loop plays.
+ * The drums page of the sound lab (docs/specs/S2-drums.md): the first three
+ * kits (A acoustic, B machine, C brushes) beside the three S2.1 candidates
+ * (D rock room, E neon, F garage), all at matched loudness, on each of the
+ * jam loop's grooves, with each kit's main controls. The kit chosen here is
+ * the kit the jam loop plays.
  */
 export default function DrumLab() {
   const settings = useSyncExternalStore(subscribeDrumSettings, getDrumSettings);
@@ -98,31 +99,36 @@ export default function DrumLab() {
     acoustic: useKitLevels('acoustic', settings.params.acoustic, sampleRate),
     machine: useKitLevels('machine', settings.params.machine, sampleRate),
     brushes: useKitLevels('brushes', settings.params.brushes, sampleRate),
+    rock: useKitLevels('rock', settings.params.rock, sampleRate),
+    neon: useKitLevels('neon', settings.params.neon, sampleRate),
+    garage: useKitLevels('garage', settings.params.garage, sampleRate),
   };
   const trims = {} as Record<DrumKitId, { trimDb: number; shortBy: number }>;
   for (const id of DRUM_KIT_IDS) {
     const measured = levels[id];
     trims[id] = measured ? drumKitTrim(measured, sampleRate, matchMode) : { trimDb: settings.trimDb[id], shortBy: 0 };
   }
-  const { acoustic: trimA, machine: trimB, brushes: trimC } = { acoustic: trims.acoustic.trimDb, machine: trims.machine.trimDb, brushes: trims.brushes.trimDb };
+  // One piece of text for all the trims, so the effect below runs only when one of them moves.
+  const trimList = DRUM_KIT_IDS.map((id) => trims[id].trimDb).join(' ');
 
   // The match is saved with the settings, so the jam loop plays each kit at the level found here.
   useEffect(() => {
-    const found = { acoustic: trimA, machine: trimB, brushes: trimC };
+    const values = trimList.split(' ').map(Number);
+    const found = {} as Record<DrumKitId, number>;
+    DRUM_KIT_IDS.forEach((id, index) => (found[id] = values[index]));
     for (const id of DRUM_KIT_IDS) audioRef.current?.setTrim(id, found[id]);
     setDrumSettings((saved) => (DRUM_KIT_IDS.every((id) => saved.trimDb[id] === found[id]) ? saved : { ...saved, trimDb: found }));
-  }, [trimA, trimB, trimC]);
+  }, [trimList]);
 
-  const { acoustic: paramsA, machine: paramsB, brushes: paramsC } = settings.params;
+  // A kit whose dials did not move keeps the very same object (see drumSettings.ts), so only the kit that moved is told.
+  const kitParams = settings.params;
+  const sentParamsRef = useRef(kitParams);
   useEffect(() => {
-    audioRef.current?.setParams('acoustic', paramsA);
-  }, [paramsA]);
-  useEffect(() => {
-    audioRef.current?.setParams('machine', paramsB);
-  }, [paramsB]);
-  useEffect(() => {
-    audioRef.current?.setParams('brushes', paramsC);
-  }, [paramsC]);
+    for (const id of DRUM_KIT_IDS) {
+      if (sentParamsRef.current[id] !== kitParams[id]) audioRef.current?.setParams(id, kitParams[id]);
+    }
+    sentParamsRef.current = kitParams;
+  }, [kitParams]);
 
   useEffect(() => {
     audioRef.current?.setKit(kit);

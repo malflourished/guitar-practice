@@ -37,7 +37,7 @@ const TRIM_LIMIT_DB = 24;
 export const DEFAULT_DRUM_SETTINGS: DrumSettings = {
   kit: 'acoustic',
   params: DEFAULT_DRUM_PARAMS,
-  trimDb: { acoustic: 0, machine: 0, brushes: 0 },
+  trimDb: { acoustic: 0, machine: 0, brushes: 0, rock: 0, neon: 0, garage: 0 },
   humanize: DEFAULT_HUMANIZE,
 };
 

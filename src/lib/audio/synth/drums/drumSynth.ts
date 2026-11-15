@@ -11,8 +11,12 @@
  * The signal path:
  *
  *   drums (kick, snare, toms, rim, brush) ─► soft clipper ─┐
- *   metal (hi-hats, ride, crash) ──────────────────────────┼─► 30 Hz high-pass ─► ceiling ─► out
+ *   metal (hi-hats, ride, crash) ──────────────────────────┼─► [glue] ─► 30 Hz high-pass ─► ceiling ─► out
  *   every voice's send ─► room ────────────────────────────┘
+ *
+ * The S2.1 kits bring a room of their own, and a "glue" stage (a compressor
+ * and a clipper across everything, `drumBus.ts`); their cymbals are stereo.
+ * The first three kits have neither, and sound exactly as they did.
  *
  * The clipper is why the drums fit in the jam's mix: it trims the first
  * millisecond of a kick or a snare, which costs little punch and several
@@ -32,7 +36,8 @@ import {
   type DrumParams,
   type DrumPiece,
 } from './drumParams';
-import { createKit, type DrumKit } from './kits';
+import { createKit, type DrumKit, type KitRoom } from './kits';
+import type { StereoDrumVoice } from './bandedMetal';
 import { softClip } from './machine';
 
 /**
@@ -75,6 +80,10 @@ export const KIT_OUTPUT_GAIN: Readonly<Record<DrumKitId, number>> = {
   acoustic: 0.5,
   machine: 0.456,
   brushes: 0.456,
+  // S2.1, measured on 2026-11-14 (docs/specs/S2-drums.md, "S2.1")
+  rock: 0.428,
+  neon: 0.297,
+  garage: 0.449,
 };
 
 interface SynthEvent {
@@ -91,9 +100,12 @@ export class DrumSynth {
   private params: DrumParams;
   private kit: DrumKit;
   private readonly random: Random;
-  private readonly room: SmallRoom;
+  /** The room of the first three kits; a kit with a room of its own plays in that instead. */
+  private readonly smallRoom: SmallRoom;
+  private room: KitRoom;
   private readonly events: SynthEvent[] = [];
   private readonly scratch = new Float64Array(GRID);
+  private readonly scratchRight = new Float64Array(GRID);
   private readonly drumLeft = new Float64Array(GRID);
   private readonly drumRight = new Float64Array(GRID);
   private readonly metalLeft = new Float64Array(GRID);
@@ -121,7 +133,8 @@ export class DrumSynth {
     this.params = sanitizeDrumParams(params, DEFAULT_DRUM_PARAMS[this.kitId]);
     this.random = new Random(seed);
     this.kit = createKit(this.kitId, sampleRate, this.params, this.random);
-    this.room = new SmallRoom(sampleRate, this.kit.roomSeconds);
+    this.smallRoom = new SmallRoom(sampleRate, this.kit.roomSeconds);
+    this.room = this.kit.room ?? this.smallRoom;
     this.highpassLeft.setHighpass(HIGHPASS_HZ, 0.707, sampleRate);
     this.highpassRight.setHighpass(HIGHPASS_HZ, 0.707, sampleRate);
     this.applyBus();
@@ -201,6 +214,14 @@ export class DrumSynth {
   }
 
   /**
+   * The most the kit's compressor has turned it down since the last call, in
+   * decibels: 0 for a kit with none. For measuring and for the sound lab.
+   */
+  takeGlueReduction(): number {
+    return this.kit.bus?.takeReduction() ?? 0;
+  }
+
+  /**
    * Render `left[from..to)` and `right[from..to)`. `startFrame` is the clock
    * position of index `from`; successive calls must follow on from each other.
    */
@@ -237,7 +258,8 @@ export class DrumSynth {
     this.room.forEachState(visit);
     this.highpassLeft.state().forEach(visit);
     this.highpassRight.state().forEach(visit);
-    for (const buffer of [this.scratch, this.drumLeft, this.drumRight, this.metalLeft, this.metalRight, this.send]) {
+    this.kit.bus?.forEachState(visit);
+    for (const buffer of [this.scratch, this.scratchRight, this.drumLeft, this.drumRight, this.metalLeft, this.metalRight, this.send]) {
       buffer.forEach(visit);
     }
   }
@@ -268,6 +290,7 @@ export class DrumSynth {
   private finishFade(): void {
     this.kit.sleep();
     this.room.sleep();
+    this.kit.bus?.reset();
     this.highpassLeft.reset();
     this.highpassRight.reset();
     this.clearBuffers();
@@ -282,7 +305,8 @@ export class DrumSynth {
     this.kitId = this.pendingKit;
     this.pendingKit = null;
     this.kit = createKit(this.kitId, this.sampleRate, this.params, this.random);
-    this.room.setDecay(this.kit.roomSeconds);
+    this.smallRoom.setDecay(this.kit.roomSeconds);
+    this.room = this.kit.room ?? this.smallRoom;
     this.applyBus();
   }
 
@@ -295,7 +319,7 @@ export class DrumSynth {
       if (this.fadeLeft > 0) this.fadeLeft -= count;
       return;
     }
-    const { scratch, drumLeft, drumRight, metalLeft, metalRight, send } = this;
+    const { scratch, scratchRight, drumLeft, drumRight, metalLeft, metalRight, send } = this;
     drumLeft.fill(0, 0, count);
     drumRight.fill(0, 0, count);
     metalLeft.fill(0, 0, count);
@@ -306,10 +330,22 @@ export class DrumSynth {
     for (const strip of kit.strips) {
       if (!strip.voice.active) continue;
       scratch.fill(0, 0, count);
-      strip.voice.render(scratch, count);
       const toLeft = strip.metal ? metalLeft : drumLeft;
       const toRight = strip.metal ? metalRight : drumRight;
       const { left: gainLeft, right: gainRight, send: gainSend } = strip;
+      const stereo = (strip.voice as Partial<StereoDrumVoice>).renderStereo;
+      if (stereo) {
+        // a voice with two ears: each keeps its own side, and the room hears the two together
+        scratchRight.fill(0, 0, count);
+        stereo.call(strip.voice, scratch, scratchRight, count);
+        for (let i = 0; i < count; i++) {
+          toLeft[i] += scratch[i] * gainLeft;
+          toRight[i] += scratchRight[i] * gainRight;
+          send[i] += 0.5 * (scratch[i] + scratchRight[i]) * gainSend;
+        }
+        continue;
+      }
+      strip.voice.render(scratch, count);
       for (let i = 0; i < count; i++) {
         const sample = scratch[i];
         toLeft[i] += sample * gainLeft;
@@ -326,13 +362,22 @@ export class DrumSynth {
     }
     kit.extras(drumLeft, drumRight, count);
     if (this.roomLevel > 0 || room.active) room.process(busy ? send : null, drumLeft, drumRight, count, this.roomLevel);
+    kit.bus?.process(drumLeft, drumRight, count);
 
     const { highpassLeft, highpassRight, outputGain, fadeTotal } = this;
+    // A kit with a bus has its high-pass in front of the bus's clipper, where it cannot undo the clipping.
+    const filtered = kit.bus === undefined;
     let fadeLeft = this.fadeLeft;
     let loudest = this.cellPeak;
     for (let i = 0; i < count; i++) {
-      let l = ceiling(highpassLeft.process(drumLeft[i] * outputGain));
-      let r = ceiling(highpassRight.process(drumRight[i] * outputGain));
+      let l = drumLeft[i] * outputGain;
+      let r = drumRight[i] * outputGain;
+      if (filtered) {
+        l = highpassLeft.process(l);
+        r = highpassRight.process(r);
+      }
+      l = ceiling(l);
+      r = ceiling(r);
       if (fadeLeft > 0) {
         const gain = fadeLeft / fadeTotal;
         l *= gain;
@@ -362,6 +407,7 @@ export class DrumSynth {
     }
     this.quietSamples += GRID;
     if (this.quietSamples >= TAIL_SECONDS * this.sampleRate) {
+      this.kit.bus?.reset();
       this.highpassLeft.reset();
       this.highpassRight.reset();
       this.clearBuffers();
@@ -372,6 +418,7 @@ export class DrumSynth {
 
   private clearBuffers(): void {
     this.scratch.fill(0);
+    this.scratchRight.fill(0);
     this.drumLeft.fill(0);
     this.drumRight.fill(0);
     this.metalLeft.fill(0);
