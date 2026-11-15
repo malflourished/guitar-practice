@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import './styleOrder'; // first: it fixes the order the stylesheets load in
 import { Fretboard } from './components/Fretboard';
+import { PlayControl } from './components/PlayControl';
 import { PositionSlider } from './components/PositionSlider';
 import { SettingsPanel } from './components/SettingsPanel';
 import { DebugPanel } from './components/DebugPanel';
@@ -14,6 +15,7 @@ import { TheoryStage } from './components/TheoryStage';
 import { useAppTheme } from './hooks/useAppTheme';
 import { useBoardData } from './hooks/useBoardData';
 import { useDisplaySettings } from './hooks/useDisplaySettings';
+import { useDrone } from './hooks/useDrone';
 import { useFrameState } from './hooks/useFrameState';
 import { useHome } from './hooks/useHome';
 import { useInstrument } from './hooks/useInstrument';
@@ -25,7 +27,7 @@ import { usePlaySpace } from './hooks/usePlaySpace';
 import { NOTE_COLORS } from './lib/colors';
 import { formatNoteDisplay } from './lib/music';
 import type { StudyMode } from './types/music';
-import { ChordsControls } from './modes/chords/ChordsControls';
+import { ChordsControls, ChordsOptions } from './modes/chords/ChordsControls';
 import { ChordsPanel } from './modes/chords/ChordsPanel';
 import {
   useChordPositionViews,
@@ -34,13 +36,18 @@ import {
 import { IntervalsPanel } from './modes/intervals/IntervalsPanel';
 import { KeyContextSection } from './modes/KeyContextSection';
 import { ModeDeck } from './modes/ModeDeck';
+import { NeckBar } from './modes/ModePicker';
 import { NotesControls } from './modes/notes/NotesControls';
 import { ProgressionsDeck } from './modes/progressions/ProgressionsDeck';
 import { ProgressionsPanel } from './modes/progressions/ProgressionsPanel';
 import { useJamCoach } from './modes/progressions/useJamCoach';
 import { useProgressionViews } from './modes/progressions/useProgressionViews';
 import { useProgressionsState } from './modes/progressions/useProgressionsState';
-import { ScalesControls } from './modes/scales/ScalesControls';
+import {
+  ScalesControls,
+  ScalesFootnote,
+  ScalesOptions,
+} from './modes/scales/ScalesControls';
 import { ScalesPanel } from './modes/scales/ScalesPanel';
 import { useScalesState } from './modes/scales/useScalesState';
 import {
@@ -53,6 +60,7 @@ import { TheoryPanel } from './modes/theory/TheoryPanel';
 import { useTheoryActions } from './modes/theory/useTheoryActions';
 import { useTheoryState } from './modes/theory/useTheoryState';
 import type { ModeStates } from './modes/types';
+import { useDeckGrow } from './modes/useDeckGrow';
 import { useStudyModeSwitch } from './modes/useStudyModeSwitch';
 import glass from './styles/glass.module.css';
 import './App.css';
@@ -110,7 +118,7 @@ function App() {
   const chordPositionViews = useChordPositionViews(
     studyMode,
     rootNote,
-    chords.chordQuality,
+    chords,
     notation,
   );
   const board = useBoardData({
@@ -188,6 +196,17 @@ function App() {
   );
 
   const singleRootMode = isSingleRootMode(studyMode);
+  // Notes, Chords and Scales: Play sits above the neck, the deck holds the
+  // mode's menu and may rise into the empty band under the board.
+  const guidedDeck =
+    studyMode === 'notes' || studyMode === 'chords' || studyMode === 'scales';
+  const deckGrow = useDeckGrow(guidedDeck);
+  const drone = useDrone({
+    available: studyMode === 'scales',
+    root: rootNote,
+    volume: audio.volume,
+    muted: audio.muted,
+  });
   const showPositionSlider =
     singleRootMode &&
     neck.positionRegions.length > 0 &&
@@ -261,21 +280,30 @@ function App() {
     />
   );
 
+  const playControl = { ...playProps, onOpenTempo: () => frame.openSettings('tempo') };
+  const positionSlider = showPositionSlider ? (
+    <PositionSlider
+      regions={neck.displayRegions}
+      selectedIndex={neck.positionIndex}
+      onChange={neck.setPositionIndex}
+      spanEndIndex={neck.neckView.spanEndIndex}
+      onSpanEndChange={neck.setSpanEndIndex}
+      allowRange={neck.neckViewEnabled}
+      disabled={progressionViews.climbActive || traversalActive}
+    />
+  ) : null;
+
   const neckRegion = (
     <Neck
       centerBar
       bar={
-        showPositionSlider ? (
-          <PositionSlider
-            regions={neck.displayRegions}
-            selectedIndex={neck.positionIndex}
-            onChange={neck.setPositionIndex}
-            spanEndIndex={neck.neckView.spanEndIndex}
-            onSpanEndChange={neck.setSpanEndIndex}
-            allowRange={neck.neckViewEnabled}
-            disabled={progressionViews.climbActive || traversalActive}
-          />
-        ) : null
+        guidedDeck ? (
+          <NeckBar play={<PlayControl {...playControl} menuBelow />}>
+            {positionSlider}
+          </NeckBar>
+        ) : (
+          positionSlider
+        )
       }
       barEnd={focusButton}
     >
@@ -329,20 +357,34 @@ function App() {
       theoryControls
     ) : studyMode === 'chords' ? (
       <ChordsControls
+        rootNote={rootNote}
+        notation={notation}
         chordQuality={chords.chordQuality}
         onChordQualityChange={chords.setChordQuality}
       />
     ) : studyMode === 'scales' ? (
       <ScalesControls
+        rootNote={rootNote}
+        notation={notation}
         scaleQuality={scales.scaleQuality}
-        scaleSystem={scales.scaleSystem}
-        showSystemToggle={neck.supportsSystemToggle}
         onScaleQualityChange={scales.setScaleQuality}
-        onScaleSystemChange={scales.setScaleSystem}
       />
     ) : null;
+  const deckOptions =
+    studyMode === 'chords' ? (
+      <ChordsOptions {...chords} />
+    ) : studyMode === 'scales' ? (
+      <ScalesOptions
+        scaleSystem={scales.scaleSystem}
+        shownSystem={neck.shownScaleSystem}
+        canSwitchSystem={neck.supportsSystemToggle}
+        onScaleSystemChange={scales.setScaleSystem}
+        rootLabel={formatNoteDisplay(rootNote, notation)}
+        droneOn={drone.on}
+        onDroneToggle={drone.toggle}
+      />
+    ) : undefined;
 
-  const playControl = { ...playProps, onOpenTempo: () => frame.openSettings('tempo') };
   // Progressions lays out its own deck: the form strip and the mix faders need its whole height.
   const deck =
     studyMode === 'progressions' ? (
@@ -362,6 +404,11 @@ function App() {
     ) : (
       <ModeDeck
         controls={controls}
+        ownRows={guidedDeck}
+        options={deckOptions}
+        footnote={studyMode === 'scales' ? <ScalesFootnote /> : undefined}
+        playInBar={guidedDeck}
+        grow={deckGrow}
         showFretboard={showFretboard}
         showDisplayToggles={showPositionSlider}
         play={playControl}

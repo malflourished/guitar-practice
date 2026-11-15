@@ -1,74 +1,121 @@
-import { SettingsRow } from '../../components/SettingsList';
-import styles from '../../components/StudyModeControls.module.css';
-import { SCALE_QUALITY_GROUPS, getQualityLabel } from '../../lib/music';
-import type { ScaleQuality, ScaleSystem } from '../../types/music';
+import {
+  SCALE_GUIDE,
+  SCALE_MENU_ROWS,
+  SCALE_SYSTEM_LINE,
+  getQualityLabel,
+  type NotationPreference,
+} from '../../lib/music';
+import displayStyles from '../../components/DisplayToggles.module.css';
+import type { NoteName, ScaleQuality, ScaleSystem } from '../../types/music';
+import { scaleCaption } from '../captions';
+import {
+  DeckFootnote,
+  ModeCaption,
+  ModePicker,
+  PillSwitch,
+  type PickerGroup,
+} from '../ModePicker';
 
-const SCALE_SYSTEMS: { id: ScaleSystem; label: string }[] = [
-  { id: '3nps', label: '3 / String' },
-  { id: 'caged', label: 'CAGED' },
-];
+const SCALE_ROWS: PickerGroup<ScaleQuality>[][] = SCALE_MENU_ROWS.map((row) =>
+  row.map((group) => ({
+    label: group.label,
+    labelOptional: group.labelOptional,
+    items: group.qualities.map((quality) => ({
+      id: quality,
+      label: SCALE_GUIDE[quality].short,
+      title: `${getQualityLabel(quality)}: ${SCALE_GUIDE[quality].formula}. ${SCALE_GUIDE[quality].line}`,
+    })),
+  })),
+);
 
 interface ScalesControlsProps {
+  rootNote: NoteName;
+  notation: NotationPreference;
   scaleQuality: ScaleQuality;
-  scaleSystem: ScaleSystem;
-  /** Only major and minor have both a CAGED and a 3-per-string layout. */
-  showSystemToggle: boolean;
   onScaleQualityChange: (quality: ScaleQuality) => void;
-  onScaleSystemChange: (system: ScaleSystem) => void;
 }
 
-/** Scales deck: the scale type and, where offered, the System switch. */
+/** Scales deck: the Scale menu and one line on the scale chosen. */
 export function ScalesControls({
+  rootNote,
+  notation,
   scaleQuality,
-  scaleSystem,
-  showSystemToggle,
   onScaleQualityChange,
-  onScaleSystemChange,
 }: ScalesControlsProps) {
   return (
     <>
-      <SettingsRow label="Type">
-        <select
-          className={styles.select}
-          aria-label="Scale type"
-          value={scaleQuality}
-          onChange={(event) =>
-            onScaleQualityChange(event.target.value as ScaleQuality)
-          }
-        >
-          {SCALE_QUALITY_GROUPS.map((group) => (
-            <optgroup key={group.label} label={group.label}>
-              {group.qualities.map((quality) => (
-                <option key={quality} value={quality}>
-                  {getQualityLabel(quality)}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-      </SettingsRow>
-
-      {showSystemToggle && (
-        <SettingsRow label="System">
-          <div className={styles.modes} role="group" aria-label="Scale system">
-            {SCALE_SYSTEMS.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                className={
-                  scaleSystem === id
-                    ? styles.modeButtonSelected
-                    : styles.modeButton
-                }
-                aria-pressed={scaleSystem === id}
-                onClick={() => onScaleSystemChange(id)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </SettingsRow>
-      )}
+      <ModePicker
+        label="Scale"
+        rows={SCALE_ROWS}
+        value={scaleQuality}
+        onChange={onScaleQualityChange}
+      />
+      <ModeCaption {...scaleCaption(rootNote, scaleQuality, notation)} />
     </>
   );
+}
+
+const ONLY_ONE = 'Only major and minor are laid out both ways';
+
+interface ScalesOptionsProps {
+  scaleSystem: ScaleSystem;
+  /** The layout on the neck now (a mode is always 3 per string, a pentatonic always boxes). */
+  shownSystem: ScaleSystem;
+  /** Major and minor have both layouts. */
+  canSwitchSystem: boolean;
+  onScaleSystemChange: (system: ScaleSystem) => void;
+  rootLabel: string;
+  droneOn: boolean;
+  onDroneToggle: () => void;
+}
+
+/** Scales deck, last row: the System switch (CAGED first) and the drone. */
+export function ScalesOptions({
+  scaleSystem,
+  shownSystem,
+  canSwitchSystem,
+  onScaleSystemChange,
+  rootLabel,
+  droneOn,
+  onDroneToggle,
+}: ScalesOptionsProps) {
+  const shown = canSwitchSystem ? scaleSystem : shownSystem;
+  return (
+    <>
+      <PillSwitch<ScaleSystem>
+        label="System"
+        choices={[
+          {
+            id: 'caged',
+            label: 'CAGED',
+            title: canSwitchSystem ? 'Five shapes tied to the chord shapes' : ONLY_ONE,
+            disabled: !canSwitchSystem && shown !== 'caged',
+          },
+          {
+            id: '3nps',
+            label: '3 per string',
+            title: canSwitchSystem ? 'Three notes on every string: seven positions' : ONLY_ONE,
+            disabled: !canSwitchSystem && shown !== '3nps',
+          },
+        ]}
+        value={shown}
+        onChange={onScaleSystemChange}
+      />
+      <button
+        type="button"
+        className={droneOn ? displayStyles.fingersButtonActive : displayStyles.fingersButton}
+        aria-pressed={droneOn}
+        aria-label={`Drone on ${rootLabel}${droneOn ? ', sounding' : ''}`}
+        title={`Hold ${rootLabel} underneath, so every note of the scale is heard against home`}
+        onClick={onDroneToggle}
+      >
+        Drone {rootLabel}
+      </button>
+    </>
+  );
+}
+
+/** The line under the System switch. */
+export function ScalesFootnote() {
+  return <DeckFootnote>{SCALE_SYSTEM_LINE}</DeckFootnote>;
 }

@@ -11,7 +11,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 |---|---|---|---|---|
 | A | Single-screen layout | Done. Owner walked through it on 2026-11-12; follow-ups are I to Q | nothing | the strongest model, or an experienced front-end developer: it needs design judgment |
 | B | Teaching fixes (five small ones) | Done and reviewed, 2026-11-11 | nothing | any capable model: fully specified and test-backed |
-| C | Chord shapes and small triads | Started 2026-11-14 in the same session as M, on Fable 5.2 | nothing | a strong model, and a guitarist should check the fingerings |
+| C | Chord shapes and small triads | Built 2026-11-14 on `claude/modes-m-c-dc462b` (Fable 5.2), not merged. A guitarist should still play through the fingerings | nothing | a strong model, and a guitarist should check the fingerings |
 | D | Discover mode | Folded into M and P on 2026-11-12: no separate mode | – | – |
 | E | Practice that adapts | Built 2026-11-14 on `claude/practice-e-63ba7d` (Fable 5.2), not merged: spec in `docs/specs/E-adaptive-practice.md`, with ten decisions for the owner to check. The jam loop moved to P | O | a capable model |
 | F | Look: analog texture, and Vibrato's panels | Default look done and reviewed, 2026-11-11. Vibrato's panels became outlines on the lava, 2026-11-13, with a Fill slider since 2026-11-14. The owner approved the new colours, the panels and Fill as they are (2026-11-14). Open: measure the texture's cost on real hardware, once the parallel builds are done and the machine is quiet | nothing | any capable model: the values are decided |
@@ -21,7 +21,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | J | Split `App.tsx` into mode components | Done, merged 2026-11-12 (`App.tsx` 1,529 → 428 lines) | I | a capable model, carefully: no change in behaviour or look |
 | K | Settings page in the side panel | Done, merged 2026-11-12 | J | a capable model |
 | L | One Play control for every mode | Done, merged 2026-11-12 | J, K | a capable model |
-| M | Mode controls: Notes, Chords, Scales | Started 2026-11-14 with C, on Fable 5.2 | J, K, L | a capable model; the owner approves screenshots |
+| M | Mode controls: Notes, Chords, Scales | Built 2026-11-14 on `claude/modes-m-c-dc462b` (Fable 5.2), not merged. Waiting for the owner to approve the screenshots in `docs/design/modes-m/` | J, K, L | a capable model; the owner approves screenshots |
 | N | Intervals: clear drills, black and white | Done, merged 2026-11-12 | nothing (K adds the colour switch later) | a capable model |
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
 | P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) and P2.2 (mix faders, the form strip) 2026-11-13. P3's targets on the neck and P4 (one prompt per pass): spec written and built 2026-11-14 on `claude/progressions-p3-p4-1faf6f` (Fable 5.2), not merged; the owner's play-along and thirteen decisions are open. Not built: the neck showing every tone of the current chord, and the Whole neck, Region and One string lenses as a choice (proposed as P3.2) | J, L | the strongest model writes specs and reviews; a capable model builds |
@@ -223,9 +223,17 @@ Follow-ups from the owner's review, where the original rules were musically wron
 
 **Why.** Chords mode only knows the E-shape and A-shape barre chords plus open chords, repeated an octave up (`CHORD_SHAPES` in `src/lib/music/positions.ts`; the loop adds 12 to the base fret). C major's five "positions" are open, 3, 8, 15 and 20. Theory mode teaches all five CAGED shapes, so the two modes disagree.
 
-- [ ] Add the C, G and D shapes for the main qualities.
+- [x] Add the C, G and D shapes for the main qualities.
   **Done when:** C major shows five positions inside frets 0–13: C shape (open), A shape (3), G shape (5), E shape (8), D shape (10), each labelled with its letter.
-- [ ] Add triads on three adjacent strings: four string sets, three inversions, for major, minor, diminished and augmented. These are what an improviser actually uses.
+  **Built 2026-11-14.** Major, minor, dom7, maj7 and min7 have all five letters in every key, in the forms that are played:
+  - C shape: five strings for major and maj7 (D is x-5-4-2-3-2), four for minor and dom7 (Dm x-5-3-2-3-x, D7 x-5-4-5-3-x), the top four for min7 (Dm7 x-x-3-5-3-5).
+  - G shape: the top four strings for major, dom7 and maj7 (C is x-x-5-5-5-8), the low four for minor (Am 5-3-2-2-x-x). There is no G-shape min7: no form of it can be fingered, so min7 has four shapes.
+  - D shape: the open D chord moved up on the top four strings.
+  - Open chords carry their letter ("Open C shape") and replace that shape at the nut. Open C minor (x-3-1-0-1-x) and G minor (3-1-0-0-3-3) were added for the same reason.
+  - `buildChordPositions` takes a shape set. Chords mode asks for `caged`. Progressions keeps `barre` (E and A shapes and the open chords): its climb is specified on those regions ([specs/P3-climb.md](specs/P3-climb.md)), so moving it to all five is P's decision.
+  - A fingering checker (`fingeringFaults.ts`) runs over every shape in all 12 keys: four frets at most, fingers in order, real barres. It found three old shapes nobody could hold: maj13 and min13 (five fingers, or a five-fret reach) are now the usual root, 7th, 3rd, 13th forms from the low E string, and open Gmaj7 is refingered.
+- [x] Add triads on three adjacent strings: four string sets, three inversions, for major, minor, diminished and augmented. These are what an improviser actually uses.
+  **Built 2026-11-14** (`src/lib/music/triads.ts`, tested in all 12 keys). In the Chords deck, Voicing switches between Shapes and Triads, and Strings picks G B e, D G B, A D G or E A D. The position bar and the side panel name each one by its inversion. A seventh or extended chord has no small triad, so Triads is greyed out there and says why. One shape is wider than four frets: the root-position diminished triad on the two lower string sets (B° on E A D is 7-5-3), fingered 1-2-4 like two whole steps on one string.
 
 ---
 
@@ -517,20 +525,51 @@ Not yet checked by eye: the panel animation, and the click behaviour in the inst
 
 ## M. Mode controls: Notes, Chords, Scales
 
-- **Space:** less dead space above and below the fretboard. The deck may grow when a mode needs room.
-- **Chords:** the position bar sits halfway between the top of the neck area and the fretboard, with Play/Strum to its left. "Type" becomes a Chord menu grouped as triads, sevenths and extended, with one line on the chord's formula and sound. The side panel's "This key" stays as the chords of the key.
-- **Scales:** the Type menu gets a one-line description (formula, character, where it fits). The System switch defaults to CAGED, with one line under it: "CAGED: five shapes tied to the chord shapes, for knowing where you are. 3 per string: longer runs, faster."
-- **Scales drone:** a drone on the root (P2's pad voice), so a scale is heard against its home. This replaces Discover's "Sounds".
-- Package C (all five chord shapes, small triads) lands in this lane too.
+- [x] **Space:** less dead space above and below the fretboard. The deck may grow when a mode needs room.
+- [x] **Chords:** the position bar sits halfway between the top of the neck area and the fretboard, with Play/Strum to its left. "Type" becomes a Chord menu grouped as triads, sevenths and extended, with one line on the chord's formula and sound. The side panel's "This key" stays as the chords of the key.
+- [x] **Scales:** the Type menu gets a one-line description (formula, character, where it fits). The System switch defaults to CAGED, with one line under it: "CAGED: five shapes tied to the chord shapes, for knowing where you are. 3 per string: longer runs, faster."
+- [x] **Scales drone:** a drone on the root (P2's pad voice), so a scale is heard against its home. This replaces Discover's "Sounds".
+- [x] Package C (all five chord shapes, small triads) lands in this lane too.
 - **Follow-ups from K and L (2026-11-12):**
-  - The chord diagrams in the side panel ignore Labels = Intervals. They should show R, 3, 5, ♭7 when it is chosen.
-  - Interval colours only tint the Intervals drills. Decide whether they should reach the neck too.
-  - The Play options button uses the same icon as Settings. Give it its own.
-  - Mute shows "Sound on" as its button label. Say plainly whether sound is muted.
+  - [x] The chord diagrams in the side panel ignore Labels = Intervals. They should show R, 3, 5, ♭7 when it is chosen. (Done 2026-11-14, in Chords and Progressions: `ChordDiagram` takes `showIntervals`.)
+  - Interval colours only tint the Intervals drills. Decide whether they should reach the neck too. **Recommendation below; not built.**
+  - [x] The Play options button uses the same icon as Settings. Give it its own. (A chevron that points where the menu opens.)
+  - [x] Mute shows "Sound on" as its button label. Say plainly whether sound is muted. (Settings now has Sound: On or Muted, the current one lit.)
   - ~~Progressions' Play menu has four groups, and "Move along the neck" needs a one-line explanation.~~ Done with P3/P4, 2026-11-14: the line is "Each pass stays in one stretch of the neck, then moves on.", and the short groups share rows (Click with Loop, Targets with Prompts).
-  - The decks in Notes, Chords and Scales are sparse now. This package fills them.
+  - [x] The decks in Notes, Chords and Scales are sparse now. This package fills them.
 
 **Done when:** the owner approves screenshots of each mode, and no page scrolls at 1440×900, 1280×720 or 960×640.
+
+### What was built (2026-11-14, on `claude/modes-m-c-dc462b`)
+
+Screenshots for the owner are in [design/modes-m](design/modes-m): `notes.jpg`, `chords-shapes.jpg`, `chords-triads.jpg`, `chords-play-menu.jpg`, `scales-caged.jpg`, `scales-dorian-drone.jpg`, `settings-sound.jpg`, all at 1440×900.
+
+- **Play sits above the neck** in Notes, Chords and Scales, at the left end of the band the position bar is centred in. Its menu opens downward over the neck. Theory's neck view and Progressions keep Play in their decks.
+- **The deck is the menu.** Chords shows every chord as a button in three rows (Triads, Sevenths, Extended; the two sixth chords sit with the sevenths, since both are a triad plus one note). Scales shows every scale in two rows: Pentatonic, Blues and Minor (harmonic, melodic), then the major scale and its modes in the order of the degree each starts on, so Major (Ionian) and Minor (Aeolian) sit among them. One click changes the chord or scale, and all of them can be read from playing distance. Chord symbols are not set in capitals (m7 is not M7).
+- **One line each**, under the menu: the name, the formula, the notes in this key, then the line. The text is in `src/lib/music/chordGuide.ts`. Its tests hold every formula to the intervals the neck draws, and check the claims the lines make (C6 has the notes of Am7, dim7 repeats every three frets, m11 holds the whole minor pentatonic, each mode is the major scale from its degree, and so on). Lines are at most 116 characters, one line in the narrowest deck.
+- **Notes** names what is picked: one note gets its octave shape, two their interval both ways, three or more the chord or scale with exactly those notes, under each name it has ("A minor 7, or C major 6"). A Naturals button joins All and Clear.
+- **The deck rises** into the empty band under the board (`useDeckGrow`): the rule now sits just under the neck and the controls have more air in a tall window. The neck region keeps its size, so the board is where it was in every mode (the layout check's `boardTop` is unchanged). At 1440×900 the deck is 281 px instead of 232; at 1280×720 there is no band and it stays 216.
+- **System** shows CAGED first and is always there. Where a scale has one layout (pentatonics and blues are the five boxes, the modes and the two other minors are 3 per string), the other choice is greyed out and says why.
+- **The drone** is a button in the Scales deck ("Drone C"). It holds the root in two octaves on the jam's pad voice (`src/lib/audio/drone.ts`, beside the engine: the jam engine is untouched). It follows the key, the volume and Sound: Muted, stays on while a scale plays over it, and goes off when you leave Scales. It is not saved, so sound never starts by itself.
+
+Measured with `scripts/check-layout.cjs` (which now also loads `chords-extended`, `chords-triads`, `scales-modes` and `notes-chord`): the page equals the window and nothing is clipped at 1440×900, 1280×720 and 960×640, in Vibrato dark and light and in Scholar, and at 1100×700 and 1150×680, the narrowest windows that dock the side panel.
+
+### Decisions for the owner to check
+
+1. **The Chord and Scale "menus" are laid open in the deck, not behind a button.** The roadmap said "menu". With a guitar in your hands a click costs more than a glance, and the decks were empty, so every choice is on show. If it reads as too busy, the fallback is one button per group that opens its row.
+2. **The drone is the root alone, with no fifth.** A root-and-fifth drone is the usual one, but the fifth is wrong under Locrian (its fifth is flat) and colours every other scale a little. If you want the fuller sound for everyday scales, a "Root + 5th" choice is a small addition.
+3. **Sixth chords sit under Sevenths**, and harmonic and melodic minor under a group called Minor.
+4. **The modes have no CAGED layout.** Dorian, Mixolydian and the rest are drawn 3 per string only, so the System switch is greyed out for them. They are the scales you would most want inside the chord shapes; adding CAGED boxes for the modes would be a good next package.
+5. **Notes mode names what you pick.** This was not asked for; it is the piece of Discover ("different ways to think about notes") that fits this deck.
+
+### Interval colours on the neck: recommendation (not built)
+
+**Yes, but only on the chord tones of the Tones view**, in Chords, Scales and Progressions, and only while Settings → Interval colours is on. Mock-ups: [design/modes-m/interval-colours-now.jpg](design/modes-m/interval-colours-now.jpg) (today), [interval-colours-mock.jpg](design/modes-m/interval-colours-mock.jpg) (C major with the root, 3rd and 5th coloured), [interval-colours-mock-chord.jpg](design/modes-m/interval-colours-mock-chord.jpg) (C7).
+
+- Why yes: the app's rule is one colour and one shape per interval, everywhere. Tones already draws the shapes on the neck, so the setting that colours them in Intervals and nowhere else reads as broken. And the coloured 3rd and 7th inside a scale box are the answer to "which notes matter on this chord", which is the point of the app.
+- Why only the chord tones: colouring all seven notes of a scale is a rainbow over the lava and marks nothing. With three or four coloured shapes the other scale notes stay as the neutral dots between them.
+- What to settle first: the root's colour is close to the lava's in a few keys (yellow on C's yellow, as the mock-up shows). It still reads by its filled circle and its label, but the owner should look at it. The default stays black and white.
+- The work: about a day for a capable model. `Fretboard` and `ChordDiagram` already colour markers this way in Intervals (`getIntervalMarker(…, colored)`); the Tones branch needs the same call.
 
 ## N. Intervals: clear drills, black and white
 
@@ -727,3 +766,5 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
 - **2026-11-14.** Package E built on `claude/practice-e-63ba7d` (not merged). Decided, for the owner to check: the cycle counts practice days, not calendar days; a key lasts a lap of five boxes, then its relative major, then up a fourth; Practice follows the plan's key instead of the app's; only "Revisit this" brings a box back, three days at most; the Ear block is promoted by score (90%), never by rating. Each session saves where the cycles stood, because history keeps only 100 sessions. Fixed in passing: the ear drill never repeated an interval, so every answer after the first was one of two. `scripts/check-layout.cjs` gained five Practice states.
 - **2026-11-14.** Q built on `claude/home-q-9e6d7e`: Home (the wordmark or Esc; Continue, Practice, Explore, Learn) and a side panel the player can drag between 280 and 520 px, remembered across reloads. The app still opens on the last mode. See package Q for the decisions to check.
 - **2026-11-14.** P3's targets and P4 built on `claude/progressions-p3-p4-1faf6f`, 597 tests. While the loop plays, rings on the neck show the next chord's 3rd and 7th within the hand's reach, a bar before the change, and one of ten prompts sits above the form strip and sets what the rings show. The spec overrules the roadmap twice: "on the last beat" is too late to use, and "the prompt changes each pass" is too fast on a short loop. The Play menu gained Targets and Prompts and a line under "Move along the neck" (M's follow-up). Left for the owner: whether the neck should show every chord tone instead of the strummed shape (P3.2). Spec: [specs/P3-targets.md](specs/P3-targets.md).
+- **2026-11-14.** C, first half (on `claude/modes-m-c-dc462b`): Chords mode has all five CAGED shapes for major, minor, dom7, maj7 and min7, and the data for small triads. Three rulings, written up under package C: each shape is the form guitarists play, not the full six-string CAGED outline (so the G shape is four strings, and min7 has no G shape); Progressions stays on the E and A shapes until P moves its climb spec; and three older fingerings that could not be held were replaced. The side panel's chord diagrams now follow Labels = Intervals.
+- **2026-11-14.** M and the rest of C built on `claude/modes-m-c-dc462b`, 610 tests. Notes, Chords and Scales have Play above the neck and a deck that is the menu, with one tested line on every chord and scale; Chords has small triads; Scales has CAGED first and a root drone; the deck rises under the board without moving the neck. Shared files touched, each by a few lines: `App.tsx` (Play in the neck bar, the deck's new props, the drone), `Frame.tsx` (`Deck` takes a style), `Frame.module.css` (the centred neck bar no longer clips, so the Play menu can open from it), `PositionSlider.module.css` (the counter gives way in a narrow bar), `ProgressionStrip.tsx` and `ProgressionsPanel.tsx` (Labels = Intervals), `PlayControl.tsx` (its own icon; the menu can open downward), `SettingsPanel.tsx` (Sound: On or Muted). Five decisions and the interval-colour recommendation are written up under package M for the owner.

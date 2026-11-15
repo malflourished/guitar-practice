@@ -10,6 +10,16 @@ One folder per study mode. The pattern is the same everywhere:
 - `use<Mode>State.ts`: the mode's state, with the same saved keys as before.
   (Chords, Scales, Progressions, Theory.)
 
+Notes, Chords and Scales lay out their own deck rows (`ownRows` on `ModeDeck`):
+a grouped picker (`ModePicker`), a caption (`ModeCaption`, built by
+`captions.ts` from the text in `src/lib/music/chordGuide.ts`), then one row of
+small switches (`ChordsOptions`, `ScalesOptions`) beside the Tones and Arpeggio
+views. In these three modes Play sits above the neck (`NeckBar`, to the left of
+the position bar) and the deck rises into the empty band under the board
+(`useDeckGrow`); the neck itself does not move. Chords can show the full CAGED
+shapes or small triads (`chord-voicing`, `triad-strings`), and Scales has a
+root drone (`src/hooks/useDrone.ts`, `src/lib/audio/drone.ts`).
+
 Practice and Intervals draw their own neck and deck inside `PracticeSession`
 and `IntervalTrainer`, so App wires those in whole. Intervals only adds its
 panel here.
@@ -48,7 +58,8 @@ Shared across modes:
   `useFrameState` (focus, side panel), `useAppTheme` (theme, background).
   `usePlayOptions` also keeps the jam's three mix levels (`vibrato:play-*-level`).
 - `ModeDeck` is the deck the other neck modes share (the mode's controls, one
-  `PlayControl`, and the Tones and Arpeggio views). Sound, tempo and labels are
+  `PlayControl` unless it sits above the neck, the mode's switches, and the
+  Tones and Arpeggio views). Sound, tempo and labels are
   not in the decks: they live on the Settings page (`SettingsPanel`), which the
   top strip's Settings button opens in the panel's column.
 - `KeyContextSection` is "This key", and `useStudyModeSwitch` carries the key

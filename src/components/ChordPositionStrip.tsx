@@ -13,6 +13,8 @@ interface ChordPositionStripProps {
   notation: NotationPreference;
   showFingers: boolean;
   showNoteLabels: boolean;
+  /** Labels = Intervals: the dots read R, 3, 5, ♭7 above each chord's root. */
+  showIntervals?: boolean;
   fullDotOpacity: boolean;
   showChordTones: boolean;
   rootNote: NoteName;
@@ -27,6 +29,7 @@ export function ChordPositionStrip({
   notation,
   showFingers,
   showNoteLabels,
+  showIntervals = false,
   fullDotOpacity,
   showChordTones,
   rootNote,
@@ -48,7 +51,7 @@ export function ChordPositionStrip({
                 tabIndex={0}
                 className={isActive ? styles.itemActive : styles.item}
                 aria-pressed={isActive}
-                aria-label={`${position.chordName}, ${position.positionLabel} position, ${position.index + 1} of ${positions.length}`}
+                aria-label={`${position.chordName}, ${position.shapeLabel ?? `${position.positionLabel} position`}, fret ${position.startFret}, ${position.index + 1} of ${positions.length}`}
                 onClick={() => onSelectPosition(position.index)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
@@ -58,7 +61,9 @@ export function ChordPositionStrip({
                 }}
               >
                 <span className={styles.label} style={CHORD_DIAGRAM_LABEL_STYLE}>
-                  <span className={styles.numeral}>{position.positionLabel}</span>
+                  <span className={styles.numeral}>
+                    {position.shapeLabel ?? position.positionLabel}
+                  </span>
                   <span className={styles.chordName}>{position.chordName}</span>
                 </span>
                 <div className={styles.diagram}>
@@ -71,6 +76,7 @@ export function ChordPositionStrip({
                     noteLabels={position.noteLabels}
                     showFingers={showFingers}
                     showNoteLabels={showNoteLabels}
+                    showIntervals={showIntervals}
                     fullDotOpacity={fullDotOpacity}
                     showChordTones={showChordTones}
                     rootNote={rootNote}

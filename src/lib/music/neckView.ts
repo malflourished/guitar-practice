@@ -114,9 +114,11 @@ export function buildRegionBadges(
     badges.push({
       index,
       centerFret: (region.startFret + region.endFret) / 2,
-      label: region.shapeLabel
-        ? region.shapeLabel.replace(' shape', '')
-        : String(region.number),
+      label:
+        region.badge ??
+        (region.shapeLabel
+          ? region.shapeLabel.replace(' shape', '')
+          : String(region.number)),
       isActive: index === activeIndex,
     });
   }

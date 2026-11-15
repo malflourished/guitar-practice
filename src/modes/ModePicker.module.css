@@ -1,0 +1,216 @@
+/* The grouped pickers and captions in the Notes, Chords and Scales decks.
+   Everything here is the existing vocabulary: glass pills, the small tracked
+   label of the Play menu, the deck's body text. */
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pickerRow {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem 1.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* One group to a row (the Chord menu): a column of labels, right-aligned,
+   and the buttons beside them, the whole block centred. */
+.pickerAligned {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem 0.7rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pickerRowAligned,
+.groupAligned {
+  display: contents;
+}
+
+.groupAligned .groupLabel {
+  grid-column: 1;
+  justify-self: end;
+  margin-right: 0;
+}
+
+.groupAligned .items {
+  grid-column: 2;
+}
+
+.items {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.group {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.groupLabel {
+  margin-right: 0.3rem;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.groupLabelOptional {
+  composes: groupLabel;
+}
+
+.pill {
+  composes: pill from '../styles/glass.module.css';
+}
+
+.pillSelected {
+  composes: pillSelected from '../styles/glass.module.css';
+}
+
+/* Doubled class: the glass pill's own rule is copied into every stylesheet
+   that composes it, some loading after this one. */
+.pill.pill,
+.pillSelected.pillSelected {
+  flex: 0 0 auto;
+  padding: 0.38rem 0.75rem;
+  white-space: nowrap;
+}
+
+/* Chord symbols carry meaning in their case (m7 is minor, M7 would be major),
+   so their buttons are not set in capitals. */
+.symbols .pill.pill,
+.symbols .pillSelected.pillSelected {
+  text-transform: none;
+  letter-spacing: 0.03em;
+  font-size: 0.8rem;
+  min-width: 2.6rem;
+}
+
+/* What is chosen, and one line about it. */
+.caption {
+  min-width: 0;
+  max-width: 100%;
+  text-align: center;
+  font-family: var(--font-sans);
+}
+
+.captionHead {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 1.1rem;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.captionName {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.captionFormula {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+.captionLine {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A label and its small switch, inline in the deck's last row. */
+.switch {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.switchLabel {
+  composes: groupLabel;
+}
+
+/* The line under a switch: what its choices mean. */
+.footnote {
+  margin: 0;
+  max-width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--text-muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Play beside the position bar, in the band above the neck. */
+.neckBar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.neckBarPlay {
+  flex: 0 0 auto;
+}
+
+.neckBarSlider {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* The position bar closes up when this is narrow (PositionSlider.module.css). */
+  container-type: inline-size;
+}
+
+/* A narrow deck (the side panel docked in a window about 1100 px wide): the
+   one label the buttons can do without steps aside, and everything closes up. */
+@container deck (max-width: 52rem) {
+  .groupLabelOptional {
+    display: none;
+  }
+
+  .pickerRow {
+    column-gap: 0.9rem;
+  }
+
+  .pill.pill,
+  .pillSelected.pillSelected {
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+  }
+}

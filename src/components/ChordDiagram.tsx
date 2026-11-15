@@ -4,6 +4,7 @@ import {
   STRING_COUNT,
   formatNoteDisplay,
   getChordToneForNote,
+  getIntervalMarker,
   samePitchClass,
   type NotationPreference,
 } from '../lib/music';
@@ -31,6 +32,8 @@ interface ChordDiagramProps {
   noteLabels?: Map<NoteName, string> | null;
   showFingers?: boolean;
   showNoteLabels?: boolean;
+  /** Labels = Intervals: each dot says what it is above `rootNote` (R, 3, 5, ♭7). */
+  showIntervals?: boolean;
   fullDotOpacity?: boolean;
   showChordTones?: boolean;
   rootNote?: NoteName | null;
@@ -173,6 +176,7 @@ export function ChordDiagram({
   noteLabels = null,
   showFingers = false,
   showNoteLabels = true,
+  showIntervals = false,
   fullDotOpacity = false,
   showChordTones = false,
   rootNote = null,
@@ -201,6 +205,9 @@ export function ChordDiagram({
   const dotLabelText = (note: NoteName, finger?: number) => {
     if (showFingers && finger !== undefined && finger > 0) {
       return String(finger);
+    }
+    if (showIntervals && rootNote) {
+      return getIntervalMarker(rootNote, note, 'function').label;
     }
     if (chordToneContext) {
       const tone = getChordToneForNote(

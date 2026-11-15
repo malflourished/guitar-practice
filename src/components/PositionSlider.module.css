@@ -87,7 +87,9 @@
 }
 
 .counter {
-  flex: 0 0 10.5rem;
+  /* Gives way before the bar's buttons run into each other. */
+  flex: 0 1 10.5rem;
+  min-width: 0;
   font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 400;
@@ -124,4 +126,21 @@
 /* Keeps the track the same length when there is no Span button. */
 .spanSpacer {
   flex: 0 0 4.4rem;
+}
+
+/* Beside the Play control in a narrow neck (Notes, Chords and Scales with the
+   side panel docked): the bar closes up so the counter keeps its words. Only
+   matches inside a size container, which that bar's slot is. */
+@container (max-width: 30rem) {
+  .bar {
+    gap: 0.5rem;
+  }
+
+  .track {
+    min-width: 3.5rem;
+  }
+
+  .spanSpacer {
+    flex-basis: 0;
+  }
 }

@@ -20,8 +20,10 @@ export interface Position {
   positions: FretPosition[];
   /** String indices (0 = high e … 5 = low E) that are not played. */
   mutedStrings: number[];
-  /** CAGED (or voicing) shape name, e.g. "G shape" / "Open", when known. */
+  /** CAGED (or voicing) shape name, e.g. "G shape" / "Open C shape", when known. */
   shapeLabel?: string;
+  /** A short form of the label for the letters under the neck ("1st" for "1st inversion"). */
+  badge?: string;
 }
 
 export function ordinalPosition(n: number): string {
@@ -352,27 +354,53 @@ interface ChordShape {
  * every root location up the neck. Offsets may be negative for close voicings
  * (low positions that fall below fret 0 are skipped). At base 0 the major/minor
  * E/A shapes reduce to the open E/A/Em/Am chords.
+ *
+ * The five main qualities carry the CAGED shapes in the forms guitarists play:
+ * - E and A are the full barre chords.
+ * - C is the open C chord moved up: five strings for major and maj7, four
+ *   (no high e) for minor and dom7, and the top four strings for min7, where
+ *   the full form cannot be fingered.
+ * - G is the top four strings for major, dom7 and maj7 (the full six-string
+ *   form is a stretch nobody strums), the low four for minor (the top four of
+ *   a G-shape minor hold no third). There is no practical G-shape min7.
+ * - D is the open D chord moved up, on the top four strings.
+ * The anchor string of a G or C shape may itself be muted: it only places the
+ * shape. Every shape spans at most four frets.
  */
 const CHORD_SHAPES: Record<ChordQuality, ChordShape[]> = {
   major: [
     { offsets: [0, 0, 1, 2, 2, 0], fingers: [1, 1, 2, 4, 3, 1], rootStringIndex: 5, label: 'E shape' },
     { offsets: [0, 2, 2, 2, 0, 'x'], fingers: [1, 4, 3, 2, 1, 0], rootStringIndex: 4, label: 'A shape' },
+    { offsets: [-3, -2, -3, -1, 0, 'x'], fingers: [1, 2, 1, 3, 4, 0], rootStringIndex: 4, label: 'C shape' },
+    { offsets: [0, -3, -3, -3, 'x', 'x'], fingers: [4, 1, 1, 1, 0, 0], rootStringIndex: 5, label: 'G shape' },
+    { offsets: [2, 3, 2, 0, 'x', 'x'], fingers: [3, 4, 2, 1, 0, 0], rootStringIndex: 3, label: 'D shape' },
   ],
   minor: [
     { offsets: [0, 0, 0, 2, 2, 0], fingers: [1, 1, 1, 4, 3, 1], rootStringIndex: 5, label: 'E shape' },
     { offsets: [0, 1, 2, 2, 0, 'x'], fingers: [1, 2, 4, 3, 1, 0], rootStringIndex: 4, label: 'A shape' },
+    { offsets: ['x', -2, -3, -2, 0, 'x'], fingers: [0, 3, 1, 2, 4, 0], rootStringIndex: 4, label: 'C shape' },
+    { offsets: ['x', 'x', -3, -3, -2, 0], fingers: [0, 0, 1, 1, 2, 4], rootStringIndex: 5, label: 'G shape' },
+    { offsets: [1, 3, 2, 0, 'x', 'x'], fingers: [2, 4, 3, 1, 0, 0], rootStringIndex: 3, label: 'D shape' },
   ],
   dom7: [
     { offsets: [0, 0, 1, 0, 2, 0], fingers: [1, 1, 2, 1, 3, 1], rootStringIndex: 5, label: 'E shape' },
     { offsets: [0, 2, 0, 2, 0, 'x'], fingers: [1, 3, 1, 2, 1, 0], rootStringIndex: 4, label: 'A shape' },
+    { offsets: ['x', -2, 0, -1, 0, 'x'], fingers: [0, 1, 4, 2, 3, 0], rootStringIndex: 4, label: 'C shape' },
+    { offsets: [-2, -3, -3, -3, 'x', 'x'], fingers: [2, 1, 1, 1, 0, 0], rootStringIndex: 5, label: 'G shape' },
+    { offsets: [2, 1, 2, 0, 'x', 'x'], fingers: [4, 2, 3, 1, 0, 0], rootStringIndex: 3, label: 'D shape' },
   ],
   maj7: [
     { offsets: [0, 0, 1, 1, 2, 0], fingers: [1, 1, 2, 3, 4, 1], rootStringIndex: 5, label: 'E shape' },
     { offsets: [0, 2, 1, 2, 0, 'x'], fingers: [1, 4, 2, 3, 1, 0], rootStringIndex: 4, label: 'A shape' },
+    { offsets: [-3, -3, -3, -1, 0, 'x'], fingers: [1, 1, 1, 3, 4, 0], rootStringIndex: 4, label: 'C shape' },
+    { offsets: [-1, -3, -3, -3, 'x', 'x'], fingers: [3, 1, 1, 1, 0, 0], rootStringIndex: 5, label: 'G shape' },
+    { offsets: [2, 2, 2, 0, 'x', 'x'], fingers: [3, 3, 3, 1, 0, 0], rootStringIndex: 3, label: 'D shape' },
   ],
   min7: [
     { offsets: [0, 0, 0, 0, 2, 0], fingers: [1, 1, 1, 1, 3, 1], rootStringIndex: 5, label: 'E shape' },
     { offsets: [0, 1, 0, 2, 0, 'x'], fingers: [1, 2, 1, 3, 1, 0], rootStringIndex: 4, label: 'A shape' },
+    { offsets: [0, -2, 0, -2, 'x', 'x'], fingers: [4, 1, 3, 1, 0, 0], rootStringIndex: 4, label: 'C shape' },
+    { offsets: [1, 1, 2, 0, 'x', 'x'], fingers: [2, 2, 3, 1, 0, 0], rootStringIndex: 3, label: 'D shape' },
   ],
   m7b5: [
     { offsets: ['x', 1, 0, 1, 0, 'x'], fingers: [0, 3, 1, 2, 1, 0], rootStringIndex: 4 },
@@ -419,21 +447,28 @@ const CHORD_SHAPES: Record<ChordQuality, ChordShape[]> = {
   dom13: [
     { offsets: [2, 0, 0, -1, 0, 'x'], fingers: [4, 3, 3, 1, 2, 0], rootStringIndex: 4 },
   ],
+  // Root, 7th, 3rd and 13th from the low E string: the 13th chords as they
+  // are played (C maj13 is 8-x-9-9-10-x, C min13 is 8-x-8-8-10-x). The
+  // five-string forms these replace needed five fingers or a five-fret reach.
   maj13: [
-    { offsets: [2, 0, 1, -1, 0, 'x'], fingers: [4, 2, 3, 1, 2, 0], rootStringIndex: 4 },
+    { offsets: ['x', 2, 1, 1, 'x', 0], fingers: [0, 4, 3, 2, 0, 1], rootStringIndex: 5 },
   ],
   min13: [
-    { offsets: [2, 0, 0, -2, 0, 'x'], fingers: [4, 3, 3, 1, 2, 0], rootStringIndex: 4 },
+    { offsets: ['x', 2, 0, 0, 'x', 0], fingers: [0, 4, 1, 1, 0, 1], rootStringIndex: 5 },
   ],
 };
 
 /**
  * Standard open-position voicings (absolute frets, index 0 high e … 5 low E;
- * 'x' = muted) for qualities/roots where a common open chord exists.
+ * 'x' = muted) for qualities/roots where a common open chord exists. Each is
+ * the CAGED shape of its own letter at the nut, so it is labelled with it
+ * ("Open C shape") and stands in for that movable shape there.
  */
 interface OpenChord {
   frets: (number | 'x')[];
   fingers: number[];
+  /** Only offered with the full CAGED set: it replaces a C or G shape at the nut. */
+  cagedOnly?: boolean;
 }
 
 const OPEN_CHORDS: Partial<
@@ -447,7 +482,9 @@ const OPEN_CHORDS: Partial<
     D: { frets: [2, 3, 2, 0, 'x', 'x'], fingers: [2, 3, 1, 0, 0, 0] },
   },
   minor: {
+    C: { frets: ['x', 1, 0, 1, 3, 'x'], fingers: [0, 2, 0, 1, 3, 0], cagedOnly: true },
     A: { frets: [0, 1, 2, 2, 0, 'x'], fingers: [0, 1, 3, 2, 0, 0] },
+    G: { frets: [3, 3, 0, 0, 1, 3], fingers: [4, 3, 0, 0, 1, 2], cagedOnly: true },
     E: { frets: [0, 0, 0, 2, 2, 0], fingers: [0, 0, 0, 3, 2, 0] },
     D: { frets: [1, 3, 2, 0, 'x', 'x'], fingers: [1, 3, 2, 0, 0, 0] },
   },
@@ -461,7 +498,7 @@ const OPEN_CHORDS: Partial<
   maj7: {
     C: { frets: [0, 0, 0, 2, 3, 'x'], fingers: [0, 0, 0, 2, 3, 0] },
     A: { frets: [0, 2, 1, 2, 0, 'x'], fingers: [0, 3, 1, 2, 0, 0] },
-    G: { frets: [2, 0, 0, 0, 2, 3], fingers: [3, 0, 0, 0, 1, 2] },
+    G: { frets: [2, 0, 0, 0, 2, 3], fingers: [2, 0, 0, 0, 1, 3] },
     E: { frets: [0, 0, 1, 1, 2, 0], fingers: [0, 0, 2, 1, 3, 0] },
     D: { frets: [2, 2, 2, 0, 'x', 'x'], fingers: [3, 2, 1, 0, 0, 0] },
   },
@@ -472,7 +509,40 @@ const OPEN_CHORDS: Partial<
   },
 };
 
-function buildOpenPlacement(chord: OpenChord): Omit<Position, 'number'> {
+/**
+ * The fret where each CAGED shape is its open chord: a C shape rooted at the
+ * A string's 3rd fret is open C, a G shape rooted at the low E's 3rd is open G.
+ */
+const SHAPE_HOME_BASE: Record<string, number> = {
+  'C shape': 3,
+  'A shape': 0,
+  'G shape': 3,
+  'E shape': 0,
+  'D shape': 0,
+};
+
+/**
+ * Fingers for a movable shape that has landed on open strings (B minor 7 as
+ * x20202): the open strings take no finger, and the fretted notes are fingered
+ * afresh, lowest fret first and from the low strings up, one finger each and
+ * never fewer than one finger per fret.
+ */
+function refingerAroundOpenStrings(sounded: FretPosition[]): FretPosition[] {
+  const fretted = sounded
+    .filter((p) => p.fret > 0)
+    .sort((a, b) => a.fret - b.fret || b.string - a.string);
+  if (fretted.length === sounded.length) return sounded;
+  const lowest = fretted[0]?.fret ?? 0;
+  const fingers = new Map<FretPosition, number>();
+  let previous = 0;
+  for (const p of fretted) {
+    previous = Math.min(4, Math.max(previous + 1, p.fret - lowest + 1));
+    fingers.set(p, previous);
+  }
+  return sounded.map((p) => ({ ...p, finger: fingers.get(p) ?? 0 }));
+}
+
+function buildOpenPlacement(chord: OpenChord, root: NoteName): Omit<Position, 'number'> {
   const sounded: FretPosition[] = [];
   const mutedStrings: number[] = [];
   let maxFret = 0;
@@ -497,23 +567,38 @@ function buildOpenPlacement(chord: OpenChord): Omit<Position, 'number'> {
     endFret: maxFret,
     positions: sounded,
     mutedStrings,
-    shapeLabel: 'Open',
+    shapeLabel: `Open ${root} shape`,
+    badge: root,
   };
 }
+
+/**
+ * Which movable shapes a chord is offered in.
+ * - `caged`: all five CAGED shapes (Chords mode).
+ * - `barre`: the E and A shapes and the open chords only. Progressions builds
+ *   its regions along the neck from these, and its climb is specified on them
+ *   (docs/specs/P3-climb.md), so it stays on this set until that spec moves.
+ */
+export type ChordShapeSet = 'caged' | 'barre';
+
+const BARRE_SHAPES = new Set(['E shape', 'A shape']);
 
 export function buildChordPositions(
   root: NoteName,
   quality: ChordQuality,
+  shapeSet: ChordShapeSet = 'barre',
 ): Position[] {
   const rootPitch = noteToSemitone(root);
   const placements: Omit<Position, 'number'>[] = [];
 
-  const openVoicing = OPEN_CHORDS[quality]?.[root];
+  const open = OPEN_CHORDS[quality]?.[root];
+  const openVoicing = open && (shapeSet === 'caged' || !open.cagedOnly) ? open : undefined;
   if (openVoicing) {
-    placements.push(buildOpenPlacement(openVoicing));
+    placements.push(buildOpenPlacement(openVoicing, root));
   }
 
   for (const shape of CHORD_SHAPES[quality]) {
+    if (shapeSet === 'barre' && shape.label && !BARRE_SHAPES.has(shape.label)) continue;
     const openPitch = OPEN_STRING_SEMITONES[shape.rootStringIndex];
     const firstFret = ((rootPitch - openPitch) % 12 + 12) % 12;
 
@@ -523,7 +608,6 @@ export function buildChordPositions(
       let valid = true;
       let minFret = Number.POSITIVE_INFINITY;
       let maxFret = 0;
-      let hasOpenVoicingClash = false;
 
       for (let stringIndex = 0; stringIndex < shape.offsets.length; stringIndex++) {
         const offset = shape.offsets[stringIndex];
@@ -550,14 +634,15 @@ export function buildChordPositions(
 
       if (!valid) continue;
 
-      // Skip a movable shape at base 0 when an open voicing already covers it.
-      if (base === 0 && openVoicing) hasOpenVoicingClash = true;
-      if (hasOpenVoicingClash) continue;
+      // Skip a movable shape where the open voicing already covers it: at the
+      // nut, or where a C or G shape is its own open chord.
+      const home = shape.label ? SHAPE_HOME_BASE[shape.label] : 0;
+      if (openVoicing && (base === 0 || base === home)) continue;
 
       placements.push({
         startFret: Number.isFinite(minFret) ? minFret : 0,
         endFret: maxFret,
-        positions: sounded,
+        positions: refingerAroundOpenStrings(sounded),
         mutedStrings,
         shapeLabel: shape.label,
       });

@@ -213,6 +213,8 @@
   position: relative;
   z-index: 2;
   padding-top: 0;
+  /* The Play menu opens from this bar, down over the neck. */
+  overflow: visible;
   transform: translateY(calc(var(--neck-band, 0px) / 2));
 }
 
