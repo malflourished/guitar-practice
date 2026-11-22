@@ -2,6 +2,7 @@ import { useEffect, useRef, type CSSProperties } from 'react';
 import styles from './AmbientBackground.module.css';
 
 import { AMBIENT_SPEED, type AmbientMotion } from '../lib/ambientMotion';
+import { blendHue } from '../lib/keyPalette';
 
 interface Props {
   style: CSSProperties;
@@ -153,7 +154,8 @@ export function AmbientBackground({ style, motion, light, enabled, exposure }: P
         elapsed += dt*speed;
         const blend = reduced.matches ? 1 : 1-Math.exp(-dt*1.4);
         const targetColors = targets.map(rgb);
-        colors = colors.map((color, i) => color.map((channel, j) => channel + (targetColors[i][j]-channel)*blend));
+        // By hue, not channel by channel, so a colour on its way to another never goes muddy.
+        colors = colors.map((color, i) => blendHue(color, targetColors[i], blend));
         currentLight += ((lightCanvas ? 1 : 0)-currentLight)*blend;
         currentDim += (DIM_BRIGHT*bare-currentDim)*blend;
         gl.uniform1f(uniforms.time, elapsed);

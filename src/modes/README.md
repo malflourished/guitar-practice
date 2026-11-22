@@ -69,3 +69,5 @@ Shared across modes:
 
 `App.tsx` builds the states, passes them to these pieces and fills the
 `Frame` slots (strip, neck, deck, body, panel, settings; home is empty).
+
+Not a mode: `src/notes/` is the owner's Notes layer (the pencil in the strip, or N), for commenting and drawing on the running app. See package R in `docs/ROADMAP.md`.

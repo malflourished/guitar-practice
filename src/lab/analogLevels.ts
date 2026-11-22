@@ -20,7 +20,7 @@ export function levelsForTheme(uiTheme: string): Levels {
 }
 
 export interface TextureState {
-  /** The "Texture" setting in the theme dock. */
+  /** Always true since 2026-11-21, when the owner took the Texture switch out of the theme menu. */
   on: boolean;
   /** 'theme' follows the theme; otherwise a preset name or 'custom' (set from the lab panel). */
   preset: string;
@@ -56,7 +56,7 @@ export function parseTexture(raw: string | null): TextureState {
   }
   if (!parsed || typeof parsed !== 'object') return state;
   const stored = parsed as Record<string, unknown>;
-  if (typeof stored.on === 'boolean') state.on = stored.on;
+  // A saved "off" from when there was a switch is ignored: the texture is always on.
   const override = readLevels(stored.override);
   if (override) {
     state.override = override;

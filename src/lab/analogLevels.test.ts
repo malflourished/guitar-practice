@@ -21,7 +21,8 @@ describe('parseTexture', () => {
     expect(parseTexture('7')).toEqual(DEFAULT_TEXTURE);
   });
   it('reads the on/off setting', () => {
-    expect(parseTexture('{"on":false}').on).toBe(false);
+    // The switch is gone: a saved "off" no longer turns the texture off.
+    expect(parseTexture('{"on":false}').on).toBe(true);
     expect(parseTexture('{"on":"no"}').on).toBe(true);
   });
   it('keeps a valid override and drops an invalid one', () => {

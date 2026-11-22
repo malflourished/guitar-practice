@@ -130,6 +130,36 @@ describe('one audio clock for notes and cues', () => {
     fake.draws.filter(draw => draw.time === 105).forEach(draw => draw.callback());
     expect(onEnd).toHaveBeenCalledOnce();
   });
+  it('sounds the notes for the passes asked for, then keeps the count and the click', async () => {
+    const engine = new GuitarAudioEngine();
+    const onEvent = vi.fn();
+    const onBeat = vi.fn();
+    const started = engine.playPattern(pattern, { bpm: 60, loop: true, metronome: true, voicedPasses: 1, startCycle: 3, onEvent, onBeat });
+    await load(); await started;
+    for (let tick = 0; tick < 6; tick++) fake.repeat!(20 + tick * 0.5);
+    fake.draws.forEach(draw => draw.callback());
+    // One note for the first pass; three beats, each with its click, counted on from the loops before.
+    expect(fake.sources).toHaveLength(1);
+    expect(onEvent).toHaveBeenCalledOnce();
+    expect(fake.clicks).toHaveBeenCalledTimes(3);
+    expect(onBeat.mock.calls.map(call => call[2])).toEqual([3, 4, 5]);
+  });
+  it('swaps the pattern while it plays, with no stop and no count-in', async () => {
+    const engine = new GuitarAudioEngine();
+    const note = { string: 0, fret: 0, note: 'E' as const };
+    const onEvent = vi.fn();
+    const started = engine.playPattern(sequencePattern([note, note], 2), { bpm: 60, loop: true, onEvent });
+    await load(); await started;
+    for (let tick = 0; tick < 2; tick++) fake.repeat!(20 + tick * 0.5);
+    // One beat in, the loop becomes three notes a beat apart: the same place in it.
+    engine.swapPattern(sequencePattern([note, note, note]), beat => beat);
+    for (let tick = 2; tick < 6; tick++) fake.repeat!(20 + tick * 0.5);
+    fake.draws.forEach(draw => draw.callback());
+    expect(onEvent.mock.calls.map(call => call[0].index)).toEqual([0, 1, 2]);
+    // The one stop is the clean slate before it started.
+    expect(fake.transport.stop).toHaveBeenCalledOnce();
+    expect(fake.transport.start).toHaveBeenCalledOnce();
+  });
   it('keeps looping and blocks stale visual callbacks after stop', async () => {
     const engine = new GuitarAudioEngine();
     const onEvent = vi.fn();

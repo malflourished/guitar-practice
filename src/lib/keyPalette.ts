@@ -100,6 +100,27 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   ];
 }
 
+/**
+ * A step from one colour toward another that keeps its strength: the hue goes
+ * the short way round the wheel while saturation and lightness move straight.
+ * A straight mix of the channels goes through brown or grey between distant
+ * hues (green to red); this goes through the vivid colours between them.
+ * Channels are 0 to 1; `amount` 0 gives `from`, 1 gives `to`. A grey has no
+ * hue of its own, so it takes the other colour's.
+ */
+export function blendHue(from: number[], to: number[], amount: number): number[] {
+  if (amount >= 1) return [...to];
+  const [fromHue, fromSat, fromLight] = rgbToHsl(from[0] * 255, from[1] * 255, from[2] * 255);
+  const [toHue, toSat, toLight] = rgbToHsl(to[0] * 255, to[1] * 255, to[2] * 255);
+  const GREY = 2;
+  const start = fromSat < GREY ? toHue : fromHue;
+  const end = toSat < GREY ? start : toHue;
+  const turn = ((end - start + 540) % 360) - 180;
+  const hue = (start + turn * amount + 360) % 360;
+  return hslToRgb(hue, fromSat + (toSat - fromSat) * amount, fromLight + (toLight - fromLight) * amount)
+    .map((channel) => channel / 255);
+}
+
 function shiftHue(hex: string, degrees: number): string {
   const [r, g, b] = parseHex(hex);
   const [h, s, l] = rgbToHsl(r, g, b);
@@ -155,16 +176,21 @@ export function isMinorQuality(
   return minorChords.includes(quality as ChordQuality);
 }
 
-/** Which root drives the ambient background for the current mode. */
+/**
+ * Which root drives the ambient background for the current mode. Notes has no
+ * one key: its background takes the selected notes in turn, and `turn` says
+ * how many times it has moved on.
+ */
 export function getBackgroundKeyForMode(
   studyMode: StudyMode,
   activeNotes: Set<NoteName>,
   rootNote: NoteName,
+  turn = 0,
 ): NoteName | null {
   if (studyMode === 'notes') {
     const selected = ALL_NOTES.filter((note) => activeNotes.has(note));
     if (selected.length === 0) return null;
-    return selected[0];
+    return selected[Math.abs(Math.trunc(turn)) % selected.length];
   }
   return rootNote;
 }

@@ -16,8 +16,13 @@
   transition: color var(--duration-theme) var(--ease-calm);
 }
 
-.themeRoot[data-ui-theme='scholar'] .wordmarkWave {
-  animation: none;
+/* Scholar is ink on paper: the wave is drawn, and holds still. */
+.themeRoot[data-ui-theme='scholar'] .wordmarkWaveMoving {
+  display: none;
+}
+
+.themeRoot[data-ui-theme='scholar'] .wordmarkWaveStill {
+  display: inline;
 }
 
 .wordmark {
@@ -31,26 +36,34 @@
   white-space: nowrap;
 }
 
+/* The ~ of the wordmark: a string held at both ends with a wave running
+   along it (components/WordmarkWave). It sits where the glyph sat. */
 .wordmarkWave {
   display: inline-block;
-  margin-left: 0.04em;
+  margin-left: 0.02em;
   color: var(--accent-color);
-  animation: wordmarkWobble 2.8s var(--ease-lava) infinite;
+  line-height: 0;
+  vertical-align: 0.1em;
 }
 
-@keyframes wordmarkWobble {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
+.wordmarkWave svg {
+  display: block;
+  width: 0.7em;
+  height: 0.42em;
+  overflow: visible;
+}
 
-  25% {
-    transform: translateY(-0.08em) rotate(-6deg);
-  }
+.wordmarkWave path {
+  fill: none;
+  stroke: currentColor;
+  /* In the drawing's own units (100 wide): heavy, to sit beside weight 900. */
+  stroke-width: var(--wave-stroke, 17);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 
-  75% {
-    transform: translateY(0.06em) rotate(5deg);
-  }
+.wordmarkWaveStill {
+  display: none;
 }
 
 /* The key menu: twelve notes and the sharp/flat switch in two rows of seven. */
@@ -71,8 +84,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wordmarkWave {
-    animation: none;
+  .wordmarkWaveMoving {
+    display: none;
+  }
+
+  .wordmarkWaveStill {
+    display: inline;
   }
 }
 

@@ -53,3 +53,41 @@ export function changesChords(root: NoteName, quality: KeyQuality, region: Posit
       grip: shapes[nearestRegionIndex(shapes, region)].positions };
   });
 }
+
+/** How long a chord of the Changes block can last, in bars. Whole bars keep the changes on the count. */
+export const BAR_CHOICES = [1, 2, 4];
+export const DEFAULT_BARS = [1, 1, 1];
+
+export const validBars = (value: unknown): value is number[] =>
+  Array.isArray(value) && value.length === DEFAULT_BARS.length && value.every((n) => BAR_CHOICES.includes(n as number));
+
+/** The next length when a chord is clicked: 1, 2, 4, then 1 again. */
+export const nextBars = (bars: number): number =>
+  BAR_CHOICES[(BAR_CHOICES.indexOf(bars) + 1) % BAR_CHOICES.length];
+
+export const barsLabel = (bars: number): string => (bars === 1 ? '1 bar' : `${bars} bars`);
+
+/**
+ * The usual fingering of a pentatonic box, as "string:fret" to finger (0 is
+ * an open string). Two notes a string: three frets apart is 1 and 4 (the
+ * hand shifts if it must); two frets apart is 1 and 3 where the string starts
+ * on the box's lowest fret, and 2 and 4 where it starts higher. In the open position each fret takes
+ * the finger of its number.
+ */
+export function boxFingers(region: Position): Map<string, number> {
+  const fingers = new Map<string, number>();
+  const strings = new Map<number, number[]>();
+  for (const { string, fret } of region.positions) strings.set(string, [...(strings.get(string) ?? []), fret]);
+  for (const [string, frets] of strings) {
+    const sorted = [...new Set(frets)].sort((a, b) => a - b);
+    const low = sorted[0];
+    sorted.forEach((fret, index) => {
+      let finger: number;
+      if (region.startFret === 0) finger = Math.min(fret, 4);
+      else if (index === 0) finger = low === region.startFret || (sorted[1] ?? low) - low >= 3 ? 1 : 2;
+      else finger = fret - low >= 3 || low !== region.startFret ? 4 : 3;
+      fingers.set(`${string}:${fret}`, finger);
+    });
+  }
+  return fingers;
+}

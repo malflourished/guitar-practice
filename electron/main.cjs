@@ -1,5 +1,6 @@
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, nativeImage, shell } = require('electron');
 const path = require('path');
+const { registerNotesIpc } = require('./notesIpc.cjs');
 
 const isDev = !app.isPackaged;
 
@@ -16,6 +17,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      preload: path.join(__dirname, 'preload.cjs'),
     },
   });
 
@@ -37,6 +39,8 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // The owner's notes on the app: ~/Library/Application Support/vibrato/notes.
+  registerNotesIpc({ ipcMain, nativeImage, shell }, () => path.join(app.getPath('userData'), 'notes'));
   createWindow();
 
   app.on('activate', () => {

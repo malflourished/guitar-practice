@@ -228,8 +228,8 @@ function App() {
       onStudyModeChange={homeNav.openMode}
       theoryReturn={theory.theoryReturn}
       onBackToTheory={theoryMoves.handleBackToTheory}
-      showKey={singleRootMode && studyMode !== 'practice' && !onHome}
-      keyLabel={formatNoteDisplay(rootNote, notation)}
+      showKey={singleRootMode || onHome}
+      keyLabel={onHome ? `${formatNoteDisplay(keyCenter, notation)} ${effectiveKeyMode}` : formatNoteDisplay(rootNote, notation)}
       activeNotes={activeNotes}
       notation={notation}
       onApplyKey={keyState.applyKey}
@@ -459,7 +459,11 @@ function App() {
         root={rootNote}
         notation={notation}
         audio={audio}
-        onRootChange={(note) => keyState.applyKey(note, 'set')}
+        keyMode={keyMode}
+        onKeyChange={(note, mode) => {
+          keyState.applyKey(note, 'set');
+          keyState.setKeyMode(mode);
+        }}
       />
     ) : studyMode === 'intervals' ? (
       <IntervalTrainer

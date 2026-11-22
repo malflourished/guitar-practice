@@ -4,11 +4,13 @@ import './index.css'
 import App from './App.tsx'
 import AnalogLab from './lab/AnalogLab.tsx'
 import SoundLab from './lab/SoundLab.tsx'
+import Notes from './notes/Notes.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
     <AnalogLab />
     <SoundLab />
+    <Notes />
   </StrictMode>,
 )

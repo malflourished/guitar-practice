@@ -15,12 +15,22 @@
   text-align: center;
 }
 
-/* The wordmark, as the strip sets it (App.css), only larger and thin. */
+/* The wordmark, as the strip sets it (App.css), only larger and thin. The
+   word itself is centred: the wave hangs off its end without taking room,
+   and the padding balances the letter-spacing after the last letter. */
 .home .mark {
   margin: 0;
+  padding-left: 0.22em;
   font-size: clamp(2.6rem, 7.5vw, 5.2rem);
   font-weight: 300;
   line-height: 1.1;
+  /* A thin line, to sit beside weight 300. */
+  --wave-stroke: 7;
+}
+
+.home .mark :global(.wordmarkWave) {
+  width: 0;
+  margin-left: 0;
 }
 
 /* The one primary action: the strongest pill, larger. */

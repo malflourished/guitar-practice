@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { finishSession, newSession, validSession, type PracticeSessionData, type Rating } from './session';
-import { EAR_LADDER, EAR_NAMES, addDays, earPool, lapKey, localDay, planFor, validChoice } from './plan';
+import { EAR_LADDER, EAR_NAMES, EAR_TOP, addDays, drawEar, earPool, earRound, earWeights, lapKey, localDay, pickedLine, planFor, stepKey, validChoice } from './plan';
 
 const DAY1 = '2026-11-16';
 /** A moment on a local day; midday unless told otherwise. */
@@ -103,14 +103,14 @@ describe('the ratings are used', () => {
     let history = practise([], DAY1, { ratings: { 1: 'clean', 3: 'revisit' } });
     const again = planFor(addDays(DAY1, 1), history);
     expect(again).toMatchObject({ box: 1, boxNote: { kind: 'again', blocks: [3] } });
-    expect(again.line).toContain('Box 1 again: you marked Changes “Revisit this”.');
+    expect(again.line).toContain('Box 1 again: you marked Solo “Revisit this”.');
     history = practise(history, addDays(DAY1, 1), { ratings: { 3: 'clean' } });
     expect(planFor(addDays(DAY1, 2), history).box).toBe(2);
   });
 
   it('names every block marked hard', () => {
     const history = practise([], DAY1, { ratings: { 0: 'revisit', 1: 'revisit', 3: 'revisit' } });
-    expect(planFor(addDays(DAY1, 1), history).line).toContain('you marked Roots, Scale and Changes “Revisit this”');
+    expect(planFor(addDays(DAY1, 1), history).line).toContain('you marked Roots, Scale and Solo “Revisit this”');
   });
 
   it('moves on after "Felt clean", "Getting there" or no rating', () => {
@@ -178,6 +178,26 @@ describe('the plan holds still for the day', () => {
   });
 });
 
+describe('a key other than the plan’s', () => {
+  it('names the picked key in the line, and keeps the box and the ear set', () => {
+    const plan = planFor('2026-11-21', []);
+    expect(plan.line).toBe(`Box 1 opens a lap of the five boxes in A minor. ${plan.earLine}`);
+    expect(pickedLine(plan, 'D minor')).toBe(`Box 1 in D minor. ${plan.earLine}`);
+  });
+});
+
+describe('stepping through the keys', () => {
+  it('goes along the key menu: minor from C, then major, and round again', () => {
+    expect(stepKey('A', 'minor', 1)).toEqual(['A#', 'minor']);
+    expect(stepKey('A', 'minor', -1)).toEqual(['G#', 'minor']);
+    expect(stepKey('B', 'minor', 1)).toEqual(['C', 'major']);
+    expect(stepKey('C', 'major', -1)).toEqual(['B', 'minor']);
+    expect(stepKey('B', 'major', 1)).toEqual(['C', 'minor']);
+    expect(stepKey('C', 'minor', -1)).toEqual(['B', 'major']);
+    expect(stepKey('E', 'major', 24)).toEqual(['E', 'major']);
+  });
+});
+
 describe('key names', () => {
   it('are spelled by the caller: the sixth lap is B♭ major, not A# major', () => {
     const history = run(Array.from({ length: 25 }, () => ({})));
@@ -192,7 +212,7 @@ describe('the finished screen', () => {
   it('says what the ratings and the score did to the next session', () => {
     const next = (outcomes: Outcome[]) => planFor(addDays(DAY1, outcomes.length), run(outcomes)).preview;
     expect(next([{ ear: [11, 12] }])).toBe('Next time: box 2. The major third joins the ear set.');
-    expect(next([{ ratings: { 3: 'revisit' } }])).toBe('Next time: box 1 again, because you marked Changes “Revisit this”. The same three intervals by ear.');
+    expect(next([{ ratings: { 3: 'revisit' } }])).toBe('Next time: box 1 again, because you marked Solo “Revisit this”. The same three intervals by ear.');
     expect(next([{ finished: false, ear: [2, 2] }])).toBe('Next time: box 1 again, to play it through. The same three intervals by ear.');
     expect(next([{}, {}, {}, {}, {}])).toBe('Next time: a new lap, box 1 in C major. The same three intervals by ear.');
     expect(next([{ ear: [12, 12] }, { ear: [10, 12] }])).toBe('Next time: box 3. The ear set moves to 3, 5 and ♭7.');
@@ -333,5 +353,141 @@ describe('120 days of mixed practice', () => {
     }
     expect([...seen].sort()).toEqual([1, 2, 3, 4, 5]);
     expect(planFor(addDays(DAY1, 120), history).lap).toBeGreaterThan(8);
+  });
+});
+
+describe('starting further up the ear ladder', () => {
+  it('opens more intervals on the first day, and says so', () => {
+    const plan = planFor(DAY1, [], undefined, 2);
+    expect(plan.track.stage).toBe(2);
+    expect(earPool(plan.track.stage)).toHaveLength(5);
+    expect(plan.ear).toHaveLength(3);
+    expect(validChoice({ box: plan.box, quality: plan.quality, ear: plan.ear, track: plan.track })).toBe(true);
+    expect(plan.line).toContain('Ear: 5 intervals, most often');
+    expect(planFor(DAY1, [], undefined, EAR_TOP).line).toContain('Ear: 9 intervals');
+  });
+
+  it('never goes past the whole ladder, and ignores nonsense', () => {
+    expect(planFor(DAY1, [], undefined, 99).track.stage).toBe(EAR_TOP);
+    for (const start of [-3, NaN, 0]) expect(planFor(DAY1, [], undefined, start).track.stage).toBe(0);
+  });
+
+  it('only ever raises the stage: a ladder that has climbed further is left alone', () => {
+    // Four days at 12 of 12 unlock four more intervals.
+    const history = run(Array.from({ length: 4 }, () => ({ ear: [12, 12] as [number, number] })));
+    const own = planFor(addDays(DAY1, 4), history);
+    expect(own.track.stage).toBe(4);
+    expect(planFor(addDays(DAY1, 4), history, undefined, 2).track).toEqual(own.track);
+    expect(planFor(addDays(DAY1, 4), history, undefined, 2).line).toBe(own.line);
+  });
+
+  it('carries on from the stage a session was played at', () => {
+    // Day 1 at stage 4 (seven intervals), saved with the session; the setting is then put back.
+    const first = planFor(DAY1, [], undefined, 4);
+    const attempts = Array.from({ length: 10 }, () => ({ interval: first.ear[0], answer: first.ear[0], correct: true }));
+    const base = newSession(first.root, 72, 'raised', at(DAY1), { box: first.box, quality: first.quality, ear: first.ear, track: first.track });
+    const session = finishSession({ ...base, block: 3, elapsed: [120, 180, 120, 180], attempts }, at(DAY1));
+    expect(validSession(session)).toBe(true);
+    const next = planFor(addDays(DAY1, 1), [session]);
+    expect(next.track.stage).toBe(5); // 10 of 10 brought in one more
+    expect(validChoice({ box: next.box, quality: next.quality, ear: next.ear, track: next.track })).toBe(true);
+  });
+});
+
+describe('the questions of an ear round', () => {
+  /** A repeatable stand-in for Math.random. */
+  const seeded = (seed: number) => () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+
+  it('asks the day\'s three twice as often as the rest of the unlocked intervals', () => {
+    const pool = earPool(4);
+    const focus = [pool[2], pool[3], pool[4]];
+    expect(earWeights(pool, focus)).toEqual([1, 1, 2, 2, 2, 1, 1]);
+    expect(earWeights(earPool(0), earPool(0))).toEqual([2, 2, 2]);
+    const weights = earWeights(pool, focus);
+    const random = seeded(7);
+    const counts = pool.map(() => 0);
+    let previous: number | null = null;
+    let run = 0;
+    for (let i = 0; i < 10_000; i++) {
+      const next = drawEar(weights, previous, run, random);
+      run = next === previous ? run + 1 : 1;
+      previous = next;
+      counts[next] += 1;
+    }
+    expect(counts.every((count) => count > 0)).toBe(true);
+    const focusShare = (counts[2] + counts[3] + counts[4]) / 10_000;
+    expect(focusShare).toBeGreaterThan(0.55); // 6 parts in 10, less a little for the no-three-in-a-row rule
+    expect(focusShare).toBeLessThan(0.65);
+  });
+
+  it('never asks the same interval three times running, yet allows it twice', () => {
+    const weights = [2, 2, 2];
+    const random = seeded(11);
+    let previous: number | null = null;
+    let run = 0;
+    let longest = 0;
+    for (let i = 0; i < 5000; i++) {
+      const next = drawEar(weights, previous, run, random);
+      run = next === previous ? run + 1 : 1;
+      previous = next;
+      longest = Math.max(longest, run);
+    }
+    expect(longest).toBe(2);
+  });
+
+  it('always lands inside the pool, at either end of the draw', () => {
+    expect(drawEar([1, 2, 1], null, 0, () => 0)).toBe(0);
+    expect(drawEar([1, 2, 1], null, 0, () => 0.999999)).toBe(2);
+    expect(drawEar([1, 2, 1], 2, 2, () => 0.999999)).toBe(1);
+    expect(drawEar([3], 0, 5, () => 0.5)).toBe(0);
+  });
+});
+
+describe('a dealt ear round', () => {
+  const seeded = (seed: number) => () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+  const countOf = (round: number[], size: number) => Array.from({ length: size }, (_, i) => round.filter((pick) => pick === i).length);
+
+  it('asks each of three intervals three or four times in ten, never leaving one out', () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const round = earRound([2, 2, 2], 10, seeded(seed));
+      expect(round).toHaveLength(10);
+      expect(countOf(round, 3).sort()).toEqual([3, 3, 4]);
+    }
+  });
+
+  it('asks every one of nine intervals, and one of the day\'s three twice', () => {
+    const weights = earWeights(earPool(EAR_TOP), [earPool(EAR_TOP)[0], earPool(EAR_TOP)[1], earPool(EAR_TOP)[2]]);
+    for (let seed = 1; seed <= 200; seed++) {
+      const counts = countOf(earRound(weights, 10, seeded(seed)), 9);
+      expect(counts.every((n) => n >= 1)).toBe(true);
+      expect(counts.slice(3)).toEqual([1, 1, 1, 1, 1, 1]);
+      expect(counts.slice(0, 3).sort()).toEqual([1, 1, 2]);
+    }
+  });
+
+  it('leans on the day\'s three among five intervals', () => {
+    const counts = countOf(earRound([1, 2, 2, 2, 1], 10, seeded(3)), 5);
+    expect(counts.reduce((sum, n) => sum + n, 0)).toBe(10);
+    expect(counts[0]).toBeGreaterThanOrEqual(1);
+    expect(counts[4]).toBeGreaterThanOrEqual(1);
+    expect(counts[1] + counts[2] + counts[3]).toBeGreaterThanOrEqual(7);
+  });
+
+  it('never deals the same interval three times running', () => {
+    for (let seed = 1; seed <= 300; seed++) {
+      const round = earRound([2, 2, 2], 10, seeded(seed));
+      expect(round.some((pick, i) => i >= 2 && pick === round[i - 1] && pick === round[i - 2])).toBe(false);
+    }
+  });
+
+  it('is empty when there is nothing to ask', () => {
+    expect(earRound([], 10)).toEqual([]);
+    expect(earRound([2, 2, 2], 0)).toEqual([]);
   });
 });

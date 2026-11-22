@@ -1,4 +1,4 @@
-// The day's practice plan: which box, which key, which three ear intervals,
+// The day's practice plan: which box, which key, which ear intervals,
 // and why. A pure function of the day and the saved history. The rules and the
 // evidence behind them are in docs/specs/E-adaptive-practice.md.
 import type { NoteName } from '../../types/music';
@@ -6,6 +6,16 @@ import { ALL_NOTES } from '../colors';
 import type { PracticeSessionData } from './session';
 
 export type KeyQuality = 'minor' | 'major';
+/**
+ * The key `by` places along from this one, in the order of the plan's key
+ * menu: the twelve minor keys from C, then the twelve major, and round again.
+ */
+export function stepKey(root: NoteName, quality: KeyQuality, by: number): [NoteName, KeyQuality] {
+  const count = ALL_NOTES.length * 2;
+  const from = ALL_NOTES.indexOf(root) + (quality === 'major' ? ALL_NOTES.length : 0);
+  const to = (((from + by) % count) + count) % count;
+  return [ALL_NOTES[to % ALL_NOTES.length], to < ALL_NOTES.length ? 'minor' : 'major'];
+}
 /**
  * Where the two cycles stand: the lap and the box in it (0 to 4), the finished
  * days already spent on that box, and the ear ladder's stage and window.
@@ -38,10 +48,11 @@ export const EAR_NAMES: Record<number, { short: string; name: string }> = {
   9: { short: '6', name: 'Major sixth' }, 10: { short: '♭7', name: 'Minor seventh' },
   11: { short: '7', name: 'Major seventh' },
 };
-const EAR_TOP = EAR_LADDER.length - EAR_SET_SIZE;
+/** The last stage of the ladder: every interval unlocked. */
+export const EAR_TOP = EAR_LADDER.length - EAR_SET_SIZE;
 /** Roots, Scale and Changes: the blocks played in the day's box. */
 const BOX_BLOCKS = [0, 1, 3];
-const BLOCK_NAMES = ['Roots', 'Scale', 'Ear', 'Changes'];
+const BLOCK_NAMES = ['Roots', 'Scale', 'Intervals', 'Solo'];
 
 const START: Track = { lap: 0, box: 0, streak: 0, stage: 0, offset: 0 };
 /** Sessions saved before plans existed: the old fixed drill, box unknown (0), at the start of both cycles. */
@@ -99,6 +110,60 @@ export function earSet(stage: number, offset: number): number[] {
 }
 function sameSet(a: number[], b: number[]): boolean { return a.length === b.length && a.every((n) => b.includes(n)); }
 
+/**
+ * The round's questions come from every unlocked interval, and the day's
+ * three (which hold the newest) come up twice as often as the rest.
+ */
+export function earWeights(pool: number[], focus: number[]): number[] {
+  return pool.map((interval) => (focus.includes(interval) ? 2 : 1));
+}
+
+/**
+ * The next question: an index into the pool, drawn by weight. A free draw,
+ * so the last answer says nothing about this one, but never the same
+ * interval three times running. `random` is Math.random or a stand-in.
+ */
+export function drawEar(weights: number[], previous: number | null, sameInARow: number, random: () => number = Math.random): number {
+  const open = weights.map((weight, index) => (index === previous && sameInARow >= 2 && weights.length > 1 ? 0 : weight));
+  const total = open.reduce((sum, weight) => sum + weight, 0);
+  let at = random() * total;
+  for (let index = 0; index < open.length; index += 1) {
+    at -= open[index];
+    if (at < 0) return index;
+  }
+  return open.findLastIndex((weight) => weight > 0);
+}
+
+/**
+ * A whole round, dealt rather than drawn: indexes into the pool, `count` of
+ * them. Every unlocked interval is asked at least once when there is room,
+ * the rest go by weight, and the order is shuffled with no interval three
+ * times running. A free draw could leave an interval out of a round of ten.
+ */
+export function earRound(weights: number[], count: number, random: () => number = Math.random): number[] {
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  if (total <= 0 || count <= 0) return [];
+  // Each interval's share of the round, whole questions first.
+  const shares = weights.map((weight) => (count * weight) / total);
+  const counts = shares.map((share) => Math.floor(share));
+  // The questions left over go to the largest remainders, ties broken by chance.
+  const order = shares
+    .map((share, index) => ({ index, rest: share - Math.floor(share), tie: random() }))
+    .sort((a, b) => b.rest - a.rest || a.tie - b.tie);
+  let left = count - counts.reduce((sum, n) => sum + n, 0);
+  for (let i = 0; left > 0; i = (i + 1) % order.length, left -= 1) counts[order[i].index] += 1;
+  const round = counts.flatMap((n, index) => Array.from({ length: n }, () => index));
+  const threeRunning = () => round.some((pick, i) => i >= 2 && pick === round[i - 1] && pick === round[i - 2]);
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    for (let i = round.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(random() * (i + 1));
+      [round[i], round[j]] = [round[j], round[i]];
+    }
+    if (!threeRunning()) break;
+  }
+  return round;
+}
+
 // ---- The two tracks ----
 export type BoxNote =
   | { kind: 'first' | 'unfinished' }
@@ -107,6 +172,8 @@ export type BoxNote =
   | { kind: 'away'; days: number };
 export type EarNote =
   | { kind: 'first' | 'rotate' | 'away' }
+  /** The player chose to start further up the ladder. */
+  | { kind: 'start'; count: number }
   | { kind: 'joins'; interval: number; correct: number; total: number }
   | { kind: 'same'; why: 'few' | 'rating' | 'score' | 'zone'; correct: number; total: number };
 interface State extends Track { boxNote: BoxNote; earNote: EarNote }
@@ -186,6 +253,7 @@ function earWhy(state: State): string {
     case 'first': return `Ear: ${earShorts(earSet(state.stage, state.offset))}, the minor 7th chord.`;
     case 'joins': return `Ear: the ${EAR_NAMES[note.interval].name.toLowerCase()} joins, after ${note.correct} of ${note.total}.`;
     case 'rotate': return `Ear: ${earShorts(earSet(state.stage, state.offset))}, next in the rotation.`;
+    case 'start': return `Ear: ${note.count} intervals, most often ${earShorts(earSet(state.stage, state.offset))}.`;
     case 'away': return 'Ear: the last set again.';
     case 'same': {
       const score = `after ${note.correct} of ${note.total}`;
@@ -210,6 +278,7 @@ function preview(state: State, name: KeyNamer): string {
   const e = state.earNote;
   const earPart = e.kind === 'joins' ? `The ${EAR_NAMES[e.interval].name.toLowerCase()} joins the ear set.`
     : e.kind === 'rotate' ? `The ear set moves to ${earShorts(earSet(state.stage, state.offset))}.`
+    : e.kind === 'start' ? `The ear round leans on ${earShorts(earSet(state.stage, state.offset))}.`
     : 'The same three intervals by ear.';
   return `Next time: ${boxPart}. ${earPart}`;
 }
@@ -222,6 +291,8 @@ export interface DayPlan extends PlanChoice {
   earNote: EarNote;
   /** Why this box and why these intervals, in one line. */
   line: string;
+  /** The ear half of `line` by itself: it holds whatever key is played. */
+  earLine: string;
   /** The same plan in the words of the finished screen: "Next time: …". */
   preview: string;
 }
@@ -230,8 +301,12 @@ export interface DayPlan extends PlanChoice {
  * The plan for `day`, from the last day practised before it: where the cycles
  * stood that day (saved with its sessions) and how its sessions went.
  * Sessions from `day` itself are ignored, so the plan is the same all day.
+ *
+ * `earStart` is the ladder stage the player asked to start from (0 is the
+ * first three intervals). It only ever raises the stage: a session saves the
+ * stage it used, so the ladder carries on from there.
  */
-export function planFor(day: string, history: PracticeSessionData[], name: KeyNamer = (n) => n): DayPlan {
+export function planFor(day: string, history: PracticeSessionData[], name: KeyNamer = (n) => n, earStart = 0): DayPlan {
   const past = history.filter((s) => s.finishedAt && localDay(s.startedAt) < day);
   let state: State = { ...START, boxNote: { kind: 'first' }, earNote: { kind: 'first' } };
   if (past.length > 0) {
@@ -244,8 +319,22 @@ export function planFor(day: string, history: PracticeSessionData[], name: KeyNa
       ? { ...before, boxNote: { kind: 'away', days }, earNote: { kind: 'away' } }
       : { ...before, ...boxStep(before, sessions), ...earStep(before, sessions) };
   }
+  const wanted = Math.min(EAR_TOP, Math.max(0, Math.round(earStart) || 0));
+  if (wanted > state.stage) {
+    // The old window is still inside the larger pool.
+    state = { ...state, stage: wanted, earNote: { kind: 'start', count: earPool(wanted).length } };
+  }
   const key = lapKey(state.lap);
   return { day, lap: state.lap, root: key.root, quality: key.quality, box: state.box + 1,
     ear: earSet(state.stage, state.offset), track: track(state), boxNote: state.boxNote, earNote: state.earNote,
-    line: `${boxWhy(state, name)} ${earWhy(state)}`, preview: preview(state, name) };
+    line: `${boxWhy(state, name)} ${earWhy(state)}`, earLine: earWhy(state), preview: preview(state, name) };
+}
+
+/**
+ * The plan's line when the app is in another key than the plan's: the box and
+ * the ear set stand, the key is the player's. `picked` is that key by name
+ * ("D minor"). The screen follows it with a way to take up the plan's key.
+ */
+export function pickedLine(plan: DayPlan, picked: string): string {
+  return `Box ${plan.box} in ${picked}. ${plan.earLine}`;
 }

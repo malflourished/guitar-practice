@@ -8,6 +8,7 @@ import type { AppTheme } from '../hooks/useAppTheme';
 import type { NotationPreference } from '../lib/music';
 import type { NoteName, StudyMode } from '../types/music';
 import type { TheoryReturn } from '../modes/theory/useTheoryState';
+import { NotesButton } from '../notes/NotesButton';
 import glass from '../styles/glass.module.css';
 
 interface AppStripProps {
@@ -33,7 +34,7 @@ interface AppStripProps {
   onToggleSettings: () => void;
 }
 
-/** The top strip: the wordmark (Home), mode tabs, the way back, Key, Theme, Panel and Settings. */
+/** The top strip: the wordmark (Home), mode tabs, the way back, Key, Theme, Panel, Notes and Settings. */
 export function AppStrip({
   studyMode,
   home,
@@ -101,15 +102,11 @@ export function AppStrip({
         )}
         <UiThemeSelector
           uiTheme={theme.uiTheme}
-          vibratoCanvas={theme.vibratoCanvas}
           onUiThemeChange={theme.selectUiTheme}
-          onCanvasChange={theme.selectCanvas}
           vibratoPanels={theme.vibratoPanels}
           onPanelsChange={theme.selectPanels}
           panelFill={theme.panelFill}
           onPanelFillChange={theme.selectPanelFill}
-          motion={theme.ambientMotion}
-          onMotionChange={theme.setAmbientMotion}
         />
         {hasSide && (
           <button
@@ -122,6 +119,7 @@ export function AppStrip({
             Panel
           </button>
         )}
+        <NotesButton />
         <button
           type="button"
           className={`${settingsOpen ? glass.pillSelected : glass.pill} settingsButton`}

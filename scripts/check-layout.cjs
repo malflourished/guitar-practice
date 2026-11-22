@@ -11,7 +11,7 @@
 //   ./node_modules/.bin/electron scripts/check-layout.cjs
 // Options:
 //   --sizes 1440x900,1280x720,960x640,1728x1080   window content sizes
-//   --themes dark,light,scholar                     Vibrato dark, Vibrato light, Scholar
+//   --themes dark,scholar                           Vibrato (always dark since 2026-11-21), Scholar
 //   --only scales,intervals-find                    state names (see STATES)
 //   --shots all | name,name                         save JPEG screenshots
 //   --out dir                                       results.json and screenshots
@@ -132,10 +132,10 @@ const STATES = [
   { name: 'practice-plan-ear', store: { ...mode('practice'), 'vibrato:practice-draft-v1': plannedDraft(2, lateDraft) } },
   { name: 'practice-plan-changes', store: { ...mode('practice'), 'vibrato:practice-draft-v1': plannedDraft(3, lateDraft) } },
   { name: 'practice-plan-finished', store: { ...mode('practice'), 'vibrato:practice-draft-v1': plannedDraft(3, { box: 1, quality: 'major', ear: [3, 7, 10], track: track(1, 0, 0, 0, 1) }), 'vibrato:practice-history-v1': weekHistory },
-    actions: [clickText('Finish early'), clickText('Save & finish')] },
+    actions: [clickText('End session')] },
   { name: 'practice-review', store: { ...mode('practice'), 'vibrato:practice-draft-v1': draft(3, true) } },
   { name: 'practice-finished', store: { ...mode('practice'), 'vibrato:practice-draft-v1': draft(3), 'vibrato:practice-history-v1': history },
-    actions: [clickText('Finish early'), clickText('Save & finish')] },
+    actions: [clickText('End session')] },
 ];
 
 const THEME_STORE = {
@@ -172,7 +172,12 @@ const MEASURE = `(() => {
     const r = el.getBoundingClientRect();
     if (r.width * r.height <= 1) continue;
     if (el.closest('[data-region="side"]')) continue;
-    if (getComputedStyle(el).position === 'fixed') continue;
+    const cs = getComputedStyle(el);
+    if (cs.position === 'fixed') continue;
+    // A hidden layer can sit past the edge and harm nothing: Theory's dial,
+    // turned 10 degrees while the neck is shown, reaches 4 px below a 1728 by
+    // 1080 window. Only what is drawn counts, as in the region check above.
+    if (cs.visibility === 'hidden' || cs.display === 'none') continue;
     if (r.bottom > innerHeight + 1 || r.right > innerWidth + 1) { clipped.push('window: ' + describe(el) + ' bottom ' + Math.round(r.bottom)); }
   }
   const side = document.querySelector('[data-region="side"]');

@@ -60,7 +60,6 @@ export function getEffectiveKeyMode(
   progressionKeyMode: KeyMode,
   keyMode: KeyMode,
 ): KeyMode {
-  if (studyMode === 'practice') return 'minor';
   if (studyMode === 'scales') {
     return MINOR_FAMILY_SCALES.has(scaleQuality) ? 'minor' : 'major';
   }

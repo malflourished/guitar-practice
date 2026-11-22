@@ -1,9 +1,10 @@
 import { APP_NAME } from '../lib/brand';
+import { WordmarkWave } from './WordmarkWave';
 import styles from './WordmarkButton.module.css';
 
 interface WordmarkButtonProps {
   onClick: () => void;
-  /** Home is showing, and has the wordmark large: this one stays put but steps aside. */
+  /** Home is showing, and has the wordmark large: this one stays in view, but is out of the tab order and unannounced. */
   onHome: boolean;
 }
 
@@ -27,10 +28,10 @@ export function WordmarkButton({ onClick, onHome }: WordmarkButtonProps) {
     >
       <span className="wordmark">
         {name}
-        <span className="wordmarkWave">{APP_NAME.at(-1)}</span>
+        <WordmarkWave />
       </span>
       <span className={`wordmark ${styles.short}`} aria-hidden="true">
-        <span className="wordmarkWave">{APP_NAME.at(-1)}</span>
+        <WordmarkWave />
       </span>
     </button>
   );

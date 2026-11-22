@@ -84,6 +84,8 @@ export class GuitarAudioEngine {
   private sources = new Set<Tone.ToneBufferSource>();
   private previews = new Set<Tone.ToneBufferSource>();
   private previewGeneration = 0;
+  /** Set while a pattern plays or loads: see `swapPattern`. */
+  private patternSwap: ((next: PracticePattern, at: (beat: number) => number) => void) | null = null;
   private strings = new Map<number, Tone.ToneBufferSource>();
   private output: Tone.Gain | null = null;
   private reverb: Tone.Reverb | null = null;
@@ -247,9 +249,23 @@ export class GuitarAudioEngine {
       if (interval) this.previews.add(interval);
     }
   }
+  /**
+   * Swap the pattern that is playing (or loading) for another, with no stop
+   * and no count-in. `at` says where the beat now due falls in the new
+   * pattern. Does nothing when no pattern plays.
+   */
+  swapPattern(next: PracticePattern, at: (beat: number) => number) { this.patternSwap?.(next, at); }
   async playPattern(pattern: PracticePattern, options: PlaybackOptions): Promise<boolean> {
     this.stopAll();
     const generation = this.generation;
+    /** The beat of the pattern that is due next, and how many times round it has been. */
+    let position = 0;
+    let pass = 0;
+    this.patternSwap = (next, at) => {
+      if (next.beats <= 0) return;
+      position = at(position) % next.beats;
+      pattern = next;
+    };
     if (!(await this.ensureLoaded()) || generation !== this.generation || pattern.beats <= 0) return false;
     const transport = Tone.getTransport();
     const countIn = options.countIn ?? 0;
@@ -270,20 +286,23 @@ export class GuitarAudioEngine {
         return;
       }
       const playedBeat = totalBeat - countIn;
-      const cycle = Math.floor(playedBeat / pattern.beats);
-      if (cycle > 0 && !options.loop) {
+      if (pass > 0 && !options.loop) {
         transport.stop(time);
         draw(time, () => options.onEnd?.());
         return;
       }
-      const beat = playedBeat % pattern.beats;
+      const cycle = (options.startCycle ?? 0) + pass;
+      const voiced = options.voicedPasses === undefined || pass < options.voicedPasses;
+      const beat = position;
+      position += 0.5;
+      if (position >= pattern.beats) { position -= pattern.beats; pass += 1; }
       const bpm = loopTempo(options.bpm, cycle, !!options.ramp);
       if (cycle !== previousCycle) { transport.bpm.value = bpm; previousCycle = cycle; }
       if (Number.isInteger(totalBeat)) {
         if (options.metronome) this.click?.triggerAttackRelease(playedBeat % 4 === 0 ? 1400 : 1000, 0.025, time, playedBeat % 4 === 0 ? 0.7 : 0.45);
         draw(time, () => options.onBeat?.(playedBeat, false, cycle, bpm));
       }
-      pattern.events.filter(event => event.beat === beat).forEach(event => {
+      if (voiced) pattern.events.filter(event => event.beat === beat).forEach(event => {
         if (event.positions.length > 1) this.chord(event.positions, time, event.duration * 60 / bpm, cycle % 2 === 1);
         else if (event.positions[0]) {
           const p = event.positions[0];
@@ -482,6 +501,7 @@ export class GuitarAudioEngine {
   }
   stopAll() {
     this.generation++;
+    this.patternSwap = null;
     this.jamRunning = false;
     this.pad?.stop();
     this.bass?.stop();

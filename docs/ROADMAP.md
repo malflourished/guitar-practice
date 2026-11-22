@@ -1,7 +1,7 @@
 # vibrato~ roadmap
 
 **Working branch:** `vibrato-next` (cut from `codex/practice-sessions` at `1a91f7c`)
-**Last updated:** 2026-11-14
+**Last updated:** 2026-11-21
 
 This file is the plan of record. It came out of a full review of the app on 2026-11-10 (teaching, layout, look) that the owner approved. It is written so that anyone, human or AI, can pick up a work package without having seen that conversation.
 
@@ -26,6 +26,7 @@ This file is the plan of record. It came out of a full review of the app on 2026
 | O | Practice: show the plan before Start | Done, merged 2026-11-12 | nothing | a capable model |
 | P | Progressions: the improvising workshop | P1 and P2 merged 2026-11-12, P2.1 (a real bass voice, chord lengths, measured levels) and P2.2 (mix faders, the form strip) 2026-11-13. P3's targets on the neck and P4 (one prompt per pass): spec written and built 2026-11-14 on `claude/progressions-p3-p4-1faf6f` (Fable 5.2), not merged; the owner's play-along and thirteen decisions are open. Not built: the neck showing every tone of the current chord, and the Whole neck, Region and One string lenses as a choice (proposed as P3.2) Merged into `vibrato-next` 2026-11-14; the owner's review is open. | J, L | the strongest model writes specs and reviews; a capable model builds |
 | Q | Home screen and resizable panel | Built 2026-11-14 on Sonnet 5.5, on `claude/home-q-9e6d7e`: waiting for the owner's review Merged into `vibrato-next` 2026-11-14; the owner's review is open. | J, K (both edit the frame) | a capable model |
+| R | Notes: the owner's comments and pen marks on the running app | Built 2026-11-21 on `vibrato-next`, not committed yet. The owner has not tried it in the installed app | nothing | the strongest model (it decides how feedback reaches whoever builds next) |
 | S | Sound: instruments we model ourselves | S1 (research, a modelled bass, a sound lab) merged 2026-11-13 and is now the jam loop's default. S2 (drums: three kits, four grooves, fills, a Drums fader) merged 2026-11-13. The owner compared the kits on 2026-11-14: a great first pass, but no kit impressed yet. S2.1 (better kits): three candidates, D rock room, E neon and F garage, are in the sound lab beside A, B and C on `claude/drums-s21-3e68a6`, measured but not yet heard by anyone; the jam's default kit is unchanged until the owner picks. More bass presets and organ later | P2.1 | Fable 5.2, at the owner's request |
 
 The owner's usage is limited, so the rule is: well-specified packages go to cheaper models, and the strongest model keeps the work that needs judgment (A, and reviewing what comes back).
@@ -291,6 +292,58 @@ Four parts:
 **Built 2026-11-14** on `claude/practice-e-63ba7d`. The rules, the evidence behind them and the decisions to check are in `docs/specs/E-adaptive-practice.md`.
 
 Research on musicians is small but points toward mixing material within a session over repeating one block (Carter and Grahn, 2016). The spec's evidence note covers interleaving, spacing, difficulty and why a rating alone should not promote anything.
+
+**From the owner's first notes, 2026-11-21** (left in the app with package R; all four in `PracticeSession.tsx` and `src/lib/practice/`).
+
+- [x] **Leave a block early.** "Skip to Scale" beside Finish early, in blocks 1 to 3. The side panel marks a skipped block with a dash.
+- [x] **Chord lengths in the last block.** Click a chord in the strip: 1, 2, 4 bars and round again, each chord its own, remembered (`vibrato:practice-changes-bars`). The owner asked for single beats (4, 5, 6, 7); bars were built instead because the count-in, the click and the beat dots are in 4/4, and a 5-beat chord moves the change off the count. A long chord is struck again every bar. Changing a length while playing is taken up where the loop is, with no stop and no count-in (`swapPattern` in the engine, `barsBeat` in `pattern.ts`); a change to the chord that is sounding lands at the next bar line.
+- [x] **Say who plays what.** The last block was "Make it musical" and the owner could not tell whether to copy the chords or improvise. It is now "Solo over the chords", and its instruction opens "The app plays the chords. You improvise over them".
+- [x] **The end of a block and of the session.** After any block: Next, or "Play this block again" (extra time, shown as `+0:42`, never logged). After the last: Finish session, Play this block again, or Discard, which leaves with nothing logged so a trial run does not move the plan on. Discard is also in the Finish early question. The Space hint and Finish early are hidden where they do nothing.
+
+**Block lengths and the ear round, 2026-11-21** (the owner, after the first pass: block lengths should be "variable depending on what it is"; the ear block "shouldn't be a timed thing", its running tally "just fills the time up", and "why just those three" intervals).
+
+- [x] **Each block's length is the player's.** On the plan, a card's "2 MIN" is a button: 1, 2, 3, 5 minutes and round again, remembered (`vibrato:practice-block-seconds`). While a block plays, "+1 min" adds a minute to it. A session saves its lengths (`seconds`), and is full when every block ran the length it was given; the added minute never raises that bar.
+- [x] **Ear is a round of ten questions**, not two minutes (`earGoal`). The deck shows "4 / 10" where the clock was. Each answer is still marked right or wrong at once, but the tally waits for the end ("Round complete: 8 of 10"). Ten because 9 in 10 brings in an interval and fewer than six answers do not count.
+- [x] **The round asks every unlocked interval**, the day's three twice as often (`earWeights`, `drawEar`), with one row of answers (short names only past five). Before, a day only ever asked its three.
+- [x] **Start further up the ladder.** "Ear intervals" on the plan: the plan's own count, or 5, 7 or all 9 (`vibrato:practice-ear-start`, `planFor`'s fourth argument). It only raises the stage; a session saves the stage it was played at, so the ladder carries on from there.
+- [x] **"Play this block again" logs its time** now (up to 15 minutes a block), since a session with its own lengths may run past them. Sessions saved before this keep the old limits.
+
+This settles the question of a skipped block: with lengths of one's own there is less reason to skip. A skipped block still makes a short session, which does not move the box on.
+
+**For the owner to check.** The defaults are unchanged (2, 3, 3 minutes, and ten questions). The headline counts the round as about a minute ("Nine minutes in A minor"). ♭2 and ♭6 are still not on the ear ladder. The spec's section 5 has the details.
+
+**From the owner's spoken walkthrough, 2026-11-21** (a recorded pass through one session, read from its transcript).
+
+Built:
+
+- [x] **The plan's headline is "Daily practice in A minor"**, and the key in it is the key menu (dotted underline). The line of minutes and questions above it is gone, and so is the Key menu in the deck.
+- [x] **Blocks are called what they are:** Root and fifth, Scale practice, Interval training, Solo over the chords (short names Roots, Scale, Intervals, Solo). The first card says "Find the root (A) and its fifth (E) between frets 5 and 8". The owner named three of the four; "Root and fifth" is mine, for "Find your bearings".
+- [x] **Less on the plan and the summary:** guitar, volume, room and mute are in Settings and in the session's side panel only.
+- [x] **The deck's controls are all buttons**, in two groups: Pause and Skip (or Next and Play again) on the left, "+1 min" and "End session" on the right. The underlined text links are gone.
+- [x] **End session goes straight to the summary.** No question first. The summary has "Keep practicing" (opens the session again where it stopped; `reopen` in the reducer) and "Discard this session" (takes it out of the log). The rule between the summary and its buttons is gone.
+- [x] **The app plays the notes once** (owner, 2026-11-21): Options has "App plays the notes": Once (the default), Every loop or Never, for Roots and Scale. Once: one time round with the notes, then the count, the click, the clock and the tempo ramp go on without them, and the main button becomes "▶ Hear it again" (a count-in, the notes once more; the loop count carries on) with Pause beside it. Saved as `vibrato:practice-guide`. Interval training is unchanged.
+- [x] **What the dots say:** Intervals, Notes or Fingers, under the board (`boxFingers` in `board.ts` gives the usual box fingering; a guitarist should check boxes 2 to 5).
+- [x] **Scroll through the keys** (owner, 2026-11-21): over the key in the plan's headline, a wheel click or a two-finger swipe (either axis) steps through the keys in the menu's order (`stepKey` in `plan.ts`); a click still opens the menu. One step per fresh movement, then one every 150 ms while the swipe has push (`KEY_STEP_*` in `PracticeSession.tsx`). Tuned on simulated events only: the owner should say how it feels. The focus box round the key is gone; keyboard focus turns the dotted underline solid.
+- [x] **One key for the whole app** (owner, 2026-11-21, after a discussion of where the key is set): Practice plays in the app's key (note and major/minor) and changing the key in Practice changes it everywhere (`onKeyChange`). The plan's key is a suggestion: off it, the plan's line ends "Use the plan's key, A minor", and the key menu keeps "Today's plan". A session under way follows a key change (`rekey` in the reducer) and plays the notes once more in the new key; a finished one keeps the key it was logged in. The Key button in the top strip shows in Practice and on Home (Home's reads "A minor"). Leaving Scales or Progressions carries their major/minor to the next mode (`useStudyModeSwitch`); coming into them changes nothing, so G major in Practice, a look at Scales on a minor pentatonic, and back gives G minor. This replaces the practice-only background key and the "picked for today" key of earlier the same day.
+- [x] **The Notes background moves through the selected notes** (owner, 2026-11-21): with two or more notes selected it rests about five seconds on each note's colour, in the order of the tiles (`getBackgroundKeyForMode`'s `turn`, `NOTES_COLOUR_MS` in `useAppTheme.ts`). Not under "reduce motion". Every recolour of the lava now turns by hue (`blendHue` in `keyPalette.ts`) instead of mixing the channels, so green to red goes by yellow, not brown.
+- [x] **The strip's wordmark stays on Home** (owner, 2026-11-21): it was hidden there because Home has the large one. It is drawn again; on Home it does nothing, is out of the tab order and is not announced.
+- [x] **The side panel as a drawer is frosted glass** (owner, 2026-11-21: "it's just dark"): in a narrow window the panel floats over the neck; it was a 97% dark sheet and is now a 15% tint (the owner's figure) over a 36 px blur of what is behind it, with the lava's text halo kept (`Frame.module.css`). Checked on the dark canvas in a yellow key, the brightest; the light canvas (72% paper tint) is not checked. Scholar keeps its solid paper. It slides in from the right edge (320 ms, most of the way in the first 100 ms, then settling) and out in 170 ms, where it used to fade (`drawerIn`, `drawerOut`); not under "reduce motion".
+- [x] **The menus are frosted glass too** (owner, 2026-11-21): Key, Theme and the Play options open from `Popover`, whose panel was a 96% dark sheet; it now has the drawer's 15% tint over a 36 px blur (`Popover.module.css`). On the light canvas and Scholar it stays a solid sheet.
+- [x] **A shorter Theme menu** (owner, 2026-11-21): Style, and for Vibrato Panels and Fill. Canvas is gone (Vibrato is always dark; Scholar is the light look; a saved Light is ignored and the light-canvas styles are left unused in the stylesheets), Texture is gone (always on; a saved Off is ignored; hold B still compares), Lava is gone (always Flow). Panels was checked and is wired: Outline draws the hairlines round the strip, the main area and the side column, Off removes them; on Practice the many lines inside the page are Practice's own, which is why the owner saw no change.
+- [x] **Scholar, a pass** (owner, 2026-11-21): Practice in Scholar used the old light canvas's green-black (a dark green Start button, green-grey type); it now uses Scholar's ink. The paper texture was one 300 px tile and read as large blotches; it is now a 200 px sheet under a fine 104 px tooth (`AnalogLab.css`). The correct answer in the ear round is marked in ink, not green, and the beat dot has no glow. The three rating buttons stay three across in a narrow side panel. Looked at in Scholar and found clean: Home, Notes, Chords, Scales, Progressions, Intervals, Theory, a Practice block, the ear card and the summary.
+- [x] **Layout check after the day's changes** (2026-11-21): `scripts/check-layout.cjs --themes dark,scholar`, 440 states over four window sizes. No page scrolls and nothing is cut off outside an open menu, Practice included at 960 by 640 with the Key button now in its strip. One flag turned out to be the check's own: with Theory's neck shown, the hidden dial layer (turned 10 degrees) reaches 4 px below a 1728 by 1080 window. Nothing drawn is cut off, so the check's window pass now skips hidden elements, as its region pass already did.
+- [x] **Interval training is flashcards** (owner, 2026-11-21): no count-in, no tempo line and no beat dots in that block.
+- [x] **The rating is in the side panel** (owner, 2026-11-21): "How does it feel?" and its three buttons moved from the deck to the foot of "This session", to clear the deck. With the panel closed the rating is out of sight.
+- [x] **Interval training moves on by itself** a beat after each answer (1.1 s when right, 2.2 s when wrong). The Next button is gone.
+- [x] **A round is dealt, not drawn** (`earRound`): every unlocked interval at least once, shares by weight. The owner had nine questions with no perfect fifth. And the ladder starts at five intervals unless changed (`vibrato:practice-ear-level`).
+
+Open, to talk through with the owner:
+
+- [ ] **The plan's line** ("Box 1 opens a lap of the five boxes in A minor. Ear: …") means nothing to the owner, who also does not use the word "box". It also names the plan's key when another key is picked. Needs new wording, and a word for box (position?).
+- [ ] **Theory inside a block:** the owner wants the why of what is being practised (root and fifth, and so on) on the screen while playing, not only a line on the plan.
+- [ ] **Moving on by itself after a block.** The owner looked right for Next and found it left; Next now sits beside Play again. Whether a finished block should go on without a click is undecided: the rest is where the rating and the ear score are.
+- [ ] **The chord strip in Solo:** the owner expected a click to pick a chord (and start from it) and a second click to change its length. One tile does one thing now.
+- [ ] **Hear the scale once, then play alone:** the switch is on or off for now.
 
 ---
 
@@ -677,6 +730,32 @@ Built 2026-11-14 on `claude/home-q-9e6d7e` (Sonnet 5.5). Not merged: the owner r
 
 **Measured.** No page scroll at 1440×900, 1280×720 and 960×640 in Home and in the panel at its widest and narrowest, on both Vibrato canvases and Scholar (`scripts/check-layout.cjs`, with the new states `home`, `scales-panel-wide`, `scales-panel-narrow`).
 
+## R. Notes: comments and pen marks on the app
+
+**Why.** The owner, 2026-11-21: "there's a lot of little tweaks that I think would be transformative", and asked for "a comment section so that I can leave thoughts directly in the modules/sections, so you can reference exactly what I'm refering to", perhaps with a way to annotate. Their example was a screenshot with a circle, an arrow and a block drawn on it in red.
+
+**What it is.** One layer over the whole window instead of a comment box per section, so a note can be about anything: a dot on the neck, an open menu, an empty corner.
+
+- The pencil in the top strip, or the **N** key, turns Notes on. The app underneath keeps running but cannot be clicked. Done, N or Esc leaves.
+- **Click** a thing to pin a note on it (it is outlined and numbered). **Drag** to draw: a circle, an arrow. Every stroke joins the note being written, so a circle, an arrow and a sentence are one note. Enter saves, Esc discards.
+- Each visit is a **sheet**: a screenshot of the window with the numbered marks, and a JSON file with each note's words, where it points, and what it is on (frame region, the labels around it, its CSS-module class names, which can be searched for in `src/`), plus the mode, window size and saved settings.
+- The Mac app writes sheets to `~/Library/Application Support/vibrato/notes/` (`<id>.json`, `<id>.jpg`, and a `README.txt` that explains the format). In a browser they stay in localStorage with no screenshot, and the list has Copy all.
+- The bar's "N open" button lists every note, with delete. **To answer a note**, set its `status` to `done` and add a short `reply` in the JSON: the list shows both.
+
+**Where the code is.** `src/notes/` (`Notes.tsx` is the key listener in the main bundle; `NotesOverlay.tsx` loads on first use; the pure parts are `describeTarget.ts`, `marks.ts` and `sheets.ts`, each with tests). The Mac app's half is `electron/preload.cjs` (the only bridge to the page: five calls), `electron/notesIpc.cjs` (captures the window) and `electron/notesFiles.cjs` (plain `fs`, tested from `src/notes/sheets.test.ts`).
+
+**Decided, for the owner to check.**
+
+- The pencil is hidden under 1000 px of window width, where the strip has no room for it beside Key (13 px short at 960). N still works.
+- A click on a second thing saves the note being written and starts the next. Marks with no words are kept as a note.
+- Screenshots are JPEG, at most 2400 px wide.
+
+**Not built.** Old notes are not drawn back onto the screen when you return to a mode (the layout may have changed since). Notes cannot be edited after saving: delete and rewrite.
+
+- [x] The layer: pin, pen, the note box, the list
+- [x] Files and a screenshot from the Mac app
+- [ ] The owner tries it in the installed app (`npm run app:install`)
+
 ## S. Sound: instruments we model ourselves
 
 The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little cheap … higher end music sounds would be nice and being able to synthesize them ourselves might be nice as well without having to rely on an external library". The guitar sounds good because it is recorded; the other instruments should come close by modelling the instrument itself.
@@ -777,3 +856,8 @@ The owner (2026-11-13), on the jam loop's synth bass: "the bass sounded a little
 - **2026-11-14.** E, Q, P3/P4 and C+M merged into `vibrato-next`. Conflicts were only in this file, `src/modes/README.md`, `src/lib/music/index.ts` (both sides' exports kept) and `scripts/check-layout.cjs` (both sides' states kept). Together: 770 tests and lint pass, and the no-scroll check passes 165 states at 1440×900, 1280×720 and 960×640 (dark canvas) with no scroll and no clipping outside open menus. The build is installed for the owner. Still open: the decisions in each spec (E: 10; P3: 13; Q and M in their sections), and S2.1's kits, which are still on their branch.
 - **2026-11-14.** S2.1: the first kits were measured piece by piece (`scripts/measure-drums.ts`; findings in `docs/sound/drums.md`, "Why the first kits fell short"). The owner named The Midnight, Jasper Tygner and Thrice, so the three candidates are a rock kit in a big room (D), gated 1980s drums (E) and tight garage drums (F), on a second engine: cymbals of over a thousand partials, a kick with a beater, snare wires as collisions, a denser room and a compressor on the bus. Written up in `docs/specs/S2-drums.md`, "S2.1". 619 tests. Played and metered in the running app, in the lab and in the jam. Found there: kit D raises the jam's peak by 0.7 dB over kit A (−1.8 against −2.5 dBFS) although its own peaks are 5 dB lower; the mix stays under full scale. Nobody has heard the kits yet: the owner's comparison in the lab is the next step, and the jam's default kit stays A until then.
 - **2026-11-14.** S2.1 merged at the owner's request so they can compare the kits in the installed app's sound lab. The jam's default kit is still A until the owner picks one.
+- **2026-11-21.** Package R, Notes: the owner can comment on anything in the running app (the pencil in the top strip, or N), by clicking it or drawing on the screen. The Mac app saves each sheet with a screenshot in `~/Library/Application Support/vibrato/notes/`, which is where to look for the owner's feedback before starting work. 880 tests. Found on the way, not fixed: a note's accessible name on the neck ignores the key's spelling (it says D# where the dot shows Eb in C minor).
+- **2026-11-21.** The owner's first three notes (read from the notes folder) and one request in conversation, all in Practice: skip to the next block, chord lengths of 1, 2 or 4 bars in the last block, the last block renamed "Solo over the chords", and an end of session with Finish, Play again and Discard. 892 tests. See the end of package E. Open: a skipped block makes a short session, which does not move the plan to the next box.
+- **2026-11-21.** Practice, after the owner's first pass: each block's length is the player's (1, 2, 3 or 5 minutes on the plan, "+1 min" while playing), the ear block is a round of ten questions with the tally at the end, the round draws from every unlocked interval, and the ladder can start at 5, 7 or 9 intervals. 908 tests; the no-scroll check passes the Practice states at 1440×900, 1280×720 and 960×640. See the end of package E and `docs/specs/E-adaptive-practice.md`, section 5.
+- **2026-11-21.** The owner recorded a spoken pass through a Practice session. Built from it: the key in the plan's headline, plain block names, End session straight to a summary that can be carried on or discarded, real buttons in the deck, a switch to play without the app's notes, dot labels as intervals, notes or fingers, interval questions that move on by themselves, and a dealt round of five intervals by default. Five points are open to talk through (end of package E). 921 tests; the no-scroll check passes all twelve Practice states at three sizes.
+- **2026-11-21.** Home, at the owner's request: the word "vibrato" is centred by itself, with the wave hanging off its end, and the ~ is no longer a glyph that wobbles but a drawn line with a wave travelling along it, held at both ends like a string (`components/WordmarkWave`, `lib/wordmarkWave.ts`; one trip takes 1.5 s). The strip's wordmark uses the same wave. Still in Scholar and under reduced motion. 926 tests.

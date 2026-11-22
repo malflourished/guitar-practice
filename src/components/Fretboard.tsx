@@ -62,7 +62,7 @@ interface FretboardProps {
    * Interval-trainer labeling: render every note as its interval (function or
    * scale-degree) above the given root, with function colors and shapes.
    */
-  intervalLabeling?: { root: NoteName; style: 'function' | 'degree'; colors?: boolean } | null;
+  intervalLabeling?: { root: NoteName; style: 'function' | 'degree'; colors?: boolean; /** `note` keeps the interval shapes but writes each dot's note name. */ text?: 'interval' | 'note' } | null;
   noteColors: Record<NoteName, string>;
   onPlayNote?: (position: FretPosition) => void;
   /**
@@ -213,7 +213,7 @@ export function Fretboard({
     if (showFingers && finger !== undefined) {
       return String(finger);
     }
-    if (intervalLabeling) {
+    if (intervalLabeling && intervalLabeling.text !== 'note') {
       return getIntervalMarker(intervalLabeling.root, note, intervalLabeling.style)
         .label;
     }

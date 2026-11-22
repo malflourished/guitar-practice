@@ -1,4 +1,5 @@
 import { APP_NAME } from '../lib/brand';
+import { WordmarkWave } from './WordmarkWave';
 import {
   HOME_CHOICES,
   continueLabel,
@@ -28,7 +29,7 @@ export function Home({ lastMode, explore, onContinue, onChoose }: HomeProps) {
     <main className={styles.home} data-region="home" aria-label="Home">
       <h1 className={`wordmark ${styles.mark}`} aria-label={APP_NAME.slice(0, -1)}>
         {APP_NAME.slice(0, -1)}
-        <span className="wordmarkWave">{APP_NAME.at(-1)}</span>
+        <WordmarkWave />
       </h1>
       <button type="button" className={styles.continue} onClick={onContinue} autoFocus>
         {continueLabel(lastMode)}

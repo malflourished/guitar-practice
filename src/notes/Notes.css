@@ -1,0 +1,401 @@
+/* Notes mode: a sheet over the whole window. See NotesOverlay.tsx.
+   Like the labs, it sits outside the theme root and carries its own colours,
+   so it reads the same on the lava, the light canvas and Scholar. */
+
+.notes-root {
+  --notes-ink: #ff3d2e;
+  --notes-panel: rgb(16 16 18 / 0.94);
+  --notes-text: #ecebe6;
+  --notes-dim: rgb(236 235 230 / 0.56);
+  --notes-line: rgb(255 255 255 / 0.18);
+
+  position: fixed;
+  inset: 0;
+  z-index: 2147483002;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  color: var(--notes-text);
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.35;
+}
+
+/* While the window is photographed only the saved marks stay. */
+.notes-root[data-capturing] .notes-chrome,
+.notes-root[data-capturing] .notes-draft {
+  visibility: hidden;
+}
+
+.notes-frame {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--notes-ink);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* ── Marks ─────────────────────────────────────────────────────────── */
+
+.notes-ink {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.notes-halo,
+.notes-stroke {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* A dark edge keeps the red legible on red and orange lava. */
+.notes-halo {
+  stroke: rgb(10 10 14 / 0.4);
+  stroke-width: 6;
+}
+
+.notes-stroke {
+  stroke: var(--notes-ink);
+  stroke-width: 2.5;
+}
+
+.notes-box {
+  fill: rgb(255 61 46 / 0.08);
+  stroke: var(--notes-ink);
+  stroke-width: 1.5;
+  paint-order: stroke;
+  filter: drop-shadow(0 0 1.5px rgb(10 10 14 / 0.55));
+}
+
+.notes-badge circle {
+  fill: var(--notes-ink);
+  stroke: rgb(10 10 14 / 0.45);
+  stroke-width: 1.5;
+}
+
+.notes-badge text {
+  fill: #fff;
+  font-size: 11px;
+  font-weight: 400;
+  text-anchor: middle;
+}
+
+/* ── What a click would land on ────────────────────────────────────── */
+
+.notes-hover {
+  position: absolute;
+  border: 1px dashed var(--notes-ink);
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgb(10 10 14 / 0.3);
+  pointer-events: none;
+}
+
+.notes-hover span {
+  position: absolute;
+  left: -1px;
+  bottom: calc(100% + 4px);
+  max-width: 420px;
+  overflow: hidden;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--notes-panel);
+  color: var(--notes-text);
+  font-size: 11px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* At the top of the window the name goes under the outline instead. */
+.notes-hover[data-low] span {
+  top: calc(100% + 4px);
+  bottom: auto;
+}
+
+.notes-root[data-drawing] .notes-hover {
+  display: none;
+}
+
+/* ── Panels: the bar, the note being written, the list ─────────────── */
+
+.notes-panel {
+  border: 1px solid var(--notes-line);
+  border-radius: 8px;
+  background: var(--notes-panel);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: default;
+}
+
+.notes-panel button {
+  border: 1px solid var(--notes-line);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  padding: 6px 9px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.notes-panel button:hover:not(:disabled) {
+  border-color: rgb(255 255 255 / 0.5);
+}
+
+.notes-panel button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.notes-panel button:focus-visible,
+.notes-composer textarea:focus-visible {
+  outline: 1px solid rgb(255 255 255 / 0.6);
+  outline-offset: 1px;
+}
+
+.notes-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 16px);
+  padding: 5px 6px 5px 4px;
+}
+
+.notes-grip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 4px 5px 8px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: grab;
+  touch-action: none;
+}
+
+.notes-grip::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--notes-ink);
+}
+
+.notes-grip:active {
+  cursor: grabbing;
+}
+
+.notes-hint {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--notes-dim);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notes-panel button.notes-done {
+  border-color: var(--notes-text);
+  background: var(--notes-text);
+  color: #101012;
+}
+
+.notes-composer {
+  position: absolute;
+  display: grid;
+  gap: 7px;
+  padding: 9px;
+}
+
+.notes-composer-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.notes-composer-head b,
+.notes-list li > b {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--notes-ink);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.notes-composer-head span {
+  overflow: hidden;
+  color: var(--notes-dim);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notes-composer textarea {
+  width: 100%;
+  min-height: 62px;
+  resize: none;
+  padding: 7px 8px;
+  border: 1px solid var(--notes-line);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--notes-text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.notes-composer textarea::placeholder {
+  color: var(--notes-dim);
+}
+
+.notes-composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--notes-dim);
+  font-size: 11px;
+}
+
+.notes-list {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  width: min(400px, calc(100vw - 16px));
+  max-height: min(56vh, 520px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+  padding: 10px 10px 0;
+}
+
+.notes-list[data-below] {
+  top: calc(100% + 8px);
+  bottom: auto;
+}
+
+.notes-list h3 {
+  margin: 0 0 6px;
+  color: var(--notes-dim);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.notes-list ul {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.notes-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 0;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.notes-list li > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.notes-list p {
+  margin: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.notes-list small {
+  display: block;
+  overflow: hidden;
+  color: var(--notes-dim);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notes-list small.notes-reply {
+  color: var(--notes-text);
+  white-space: normal;
+}
+
+.notes-list li[data-status='done'] > b {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--notes-line);
+  color: var(--notes-text);
+}
+
+.notes-list li[data-status='done'] p {
+  color: var(--notes-dim);
+}
+
+.notes-list li > button {
+  flex: none;
+  border: 0;
+  padding: 2px 5px;
+  color: var(--notes-dim);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+.notes-list li > button:hover {
+  color: var(--notes-text);
+}
+
+.notes-empty {
+  padding-bottom: 10px;
+  color: var(--notes-dim);
+}
+
+.notes-list footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 -10px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--notes-line);
+  background: rgb(16 16 18);
+  color: var(--notes-dim);
+  font-size: 11px;
+}
+
+.notes-list footer span {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .notes-hint {
+    display: none;
+  }
+}

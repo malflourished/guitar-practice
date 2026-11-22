@@ -20,6 +20,8 @@ export interface UseInstrument extends EngineState {
   strum: (positions: FretPosition[]) => void;
   playProgression: (chords: FretPosition[][], bpm: number, id: string, onStep?: (index: number) => void, loop?: boolean) => void;
   playPattern: (pattern: PracticePattern, options: PlaybackOptions, id?: string) => Promise<boolean>;
+  /** Change the pattern that is playing without a stop or a count-in (see the engine). */
+  swapPattern: (next: PracticePattern, at: (beat: number) => number) => void;
   /** The jam loop (see the engine): resolves false when nothing started. */
   playJam: (options: JamPlayOptions, id?: string) => Promise<boolean>;
   setJamTempo: (bpm: number) => void;
@@ -74,6 +76,7 @@ export function useInstrument(): UseInstrument {
     if (success) setPlayingId(id);
     return success;
   }, [engine]);
+  const swapPattern = useCallback((next: PracticePattern, at: (beat: number) => number) => engine.swapPattern(next, at), [engine]);
   const playJam = useCallback(async (options: JamPlayOptions, id = 'jam') => {
     const success = await engine.playJam({ ...options,
       onEnd: () => { setPlayingId(null); options.onEnd?.(); },
@@ -90,5 +93,5 @@ export function useInstrument(): UseInstrument {
     void playPattern(chordPattern(chords), { bpm, loop, onEvent: e => onStep?.(e.index) }, id);
   }, [playPattern]);
   return { ...state, playingPosition, playingId, setInstrument, setVolume, setMuted, setRoom,
-    playNote, hearInterval, playPosition, strum, playPattern, playSequence, playProgression, playJam, setJamTempo, setJamMix, stopAll };
+    playNote, hearInterval, playPosition, strum, playPattern, swapPattern, playSequence, playProgression, playJam, setJamTempo, setJamMix, stopAll };
 }

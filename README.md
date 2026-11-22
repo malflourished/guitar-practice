@@ -6,14 +6,14 @@ A guitar practice companion built with React, TypeScript, Tone.js, and Electron.
 
 ## Daily practice
 
-The Practice tab guides a ten-minute session in any of the twelve minor keys:
+The Practice tab guides a short session (about nine minutes unless you change the lengths) in any of the twelve minor keys:
 
-1. **Roots — 2 minutes:** find the root and fifth in a focused fretboard window.
-2. **Scale — 3 minutes:** play a minor pentatonic loop up and down in eighth notes.
-3. **Ear — 2 minutes:** distinguish the minor third, fifth, and minor seventh. Each question records one first answer.
-4. **Changes — 3 minutes:** play over i–iv–V, with one four-beat bar per chord.
+1. **Root and fifth — 2 minutes:** find the root and fifth in a focused fretboard window.
+2. **Scale practice — 3 minutes:** play a minor pentatonic loop up and down in eighth notes.
+3. **Interval training — 10 questions:** name the interval you hear. It starts with five intervals, and more join as you score well. Each question records one first answer.
+4. **Solo over the chords — 3 minutes:** improvise over i–iv–V while the app plays the chords. Click a chord to make it last 1, 2 or 4 bars.
 
-Choose a key, starting tempo, and guitar, then start. Each block has a four-beat count-in. Pause at any time, or use Space when focus is outside a form control. The clock counts active practice; count-ins, pauses, and rests between blocks do not consume the ten minutes. Leaving the tab pauses the session. At each break, assess how the block felt and continue when ready.
+Choose a key, starting tempo, and guitar, then start. Each block has a four-beat count-in. Pause at any time, or use Space when focus is outside a form control. The clock counts active practice; count-ins, pauses, and rests between blocks do not use up a block's time. Click a block's length on the plan to change it (1, 2, 3 or 5 minutes). Leaving the tab pauses the session. At each break, assess how the block felt and continue when ready.
 
 Pause to change guitar, metronome, or tempo-ramp settings. The optional scale ramp adds 4 BPM after every four loops, capped at 120 BPM. Volume, mute, and room ambience can change during playback.
 

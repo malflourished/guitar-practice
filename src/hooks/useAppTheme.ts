@@ -1,10 +1,12 @@
-import { useMemo, type CSSProperties } from 'react';
-import { AMBIENT_MOTION_KEY, isAmbientMotion, type AmbientMotion } from '../lib/ambientMotion';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import type { AmbientMotion } from '../lib/ambientMotion';
 import { getBackgroundKeyForMode, getKeyBackgroundStyle } from '../lib/keyPalette';
 import type { KeyMode, NoteName, StudyMode } from '../types/music';
 import { useDebugSettings } from './useDebugSettings';
-import { usePersistentState } from './usePersistentState';
 import { useUiTheme } from './useUiTheme';
+
+/** How long the Notes background rests on each selected note's colour. */
+const NOTES_COLOUR_MS = 5000;
 
 interface AppThemeInput {
   studyMode: StudyMode;
@@ -22,11 +24,8 @@ export function useAppTheme({
   effectiveKeyMode,
   noteColors,
 }: AppThemeInput) {
-  const [ambientMotion, setAmbientMotion] = usePersistentState<AmbientMotion>(
-    AMBIENT_MOTION_KEY,
-    'flow',
-    isAmbientMotion,
-  );
+  // The lava always flows: the owner dropped the choice of motion on 2026-11-21.
+  const ambientMotion: AmbientMotion = 'flow';
   const debug = useDebugSettings();
   const {
     uiTheme,
@@ -34,16 +33,24 @@ export function useAppTheme({
     vibratoPanels,
     panelFill,
     selectUiTheme,
-    selectCanvas,
     selectPanels,
     selectPanelFill,
   } = useUiTheme();
 
   // The ambient background tracks only the top-level key (center + mode), so
   // stepping through chords, positions, or progression steps never recolors it.
+  // Notes with several notes selected has no one key: the background moves
+  // from one note's colour to the next. Not for a player who asked for less motion.
+  const [turn, setTurn] = useState(0);
+  const cycling = studyMode === 'notes' && activeNotes.size > 1;
+  useEffect(() => {
+    if (!cycling || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const timer = window.setInterval(() => setTurn((n) => n + 1), NOTES_COLOUR_MS);
+    return () => window.clearInterval(timer);
+  }, [cycling]);
   const backgroundKey = useMemo(
-    () => getBackgroundKeyForMode(studyMode, activeNotes, keyCenter),
-    [studyMode, activeNotes, keyCenter],
+    () => getBackgroundKeyForMode(studyMode, activeNotes, keyCenter, turn),
+    [studyMode, activeNotes, keyCenter, turn],
   );
 
   const ambientStyle = useMemo(
@@ -67,11 +74,9 @@ export function useAppTheme({
     vibratoPanels,
     panelFill,
     selectUiTheme,
-    selectCanvas,
     selectPanels,
     selectPanelFill,
     ambientMotion,
-    setAmbientMotion,
     debug,
     ambientStyle,
     rootContrastMode,

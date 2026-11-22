@@ -109,13 +109,23 @@
 
 /* ── Ink on paper: Scholar, and Vibrato on its light canvas ──────────── */
 
-.analog:not([data-medium='tube']) .analog-grain {
-  background-size: 300px 300px;
+/* Two scales of paper. The body is the sheet's unevenness; it was drawn at
+   300 px a tile, which the owner found too large (2026-11-21), and is now
+   nearer the size of the dark theme's grain. The floor is the tooth of the
+   paper: the same tile much smaller, so it reads as fine grain. It is doubled
+   in brightness so only its darker half marks the page and the sheet as a
+   whole does not grey. */
+.analog:not([data-medium='tube']) .analog-grain-body {
+  background-size: 200px 200px;
+  mix-blend-mode: multiply;
+  opacity: calc(var(--a-grain) * 0.11);
 }
 
-.analog:not([data-medium='tube']) .analog-grain-body {
+.analog:not([data-medium='tube']) .analog-grain-floor {
+  background-size: 104px 104px;
   mix-blend-mode: multiply;
-  opacity: calc(var(--a-grain) * 0.14);
+  filter: brightness(2);
+  opacity: calc(var(--a-grain) * 0.17);
 }
 
 .analog:not([data-medium='tube']) .analog-fade {

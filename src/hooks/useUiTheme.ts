@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import type { UiTheme, VibratoCanvas, VibratoPanels } from '../types/ui';
 
 const THEME_STORAGE_KEY = 'guitar-practice-ui-theme';
-const CANVAS_STORAGE_KEY = 'guitar-practice-vibrato-canvas';
 // Saved only when the user picks one, so a later change of default still
 // reaches everyone who never chose. (An earlier key saved the default on every
 // launch; it is ignored.)
@@ -19,15 +18,12 @@ function loadUiTheme(): UiTheme {
   return 'vibrato';
 }
 
-function loadVibratoCanvas(): VibratoCanvas {
-  try {
-    const stored = localStorage.getItem(CANVAS_STORAGE_KEY);
-    if (stored === 'dark' || stored === 'light') return stored;
-  } catch {
-    // ignore storage read failures
-  }
-  return 'dark';
-}
+/**
+ * Vibrato's canvas is always dark: the owner dropped the choice on 2026-11-21
+ * (Scholar is the light look). A saved 'light' is ignored. The light-canvas
+ * styles are still in the stylesheets, unused.
+ */
+const VIBRATO_CANVAS: VibratoCanvas = 'dark';
 
 function loadVibratoPanels(): VibratoPanels {
   try {
@@ -54,19 +50,12 @@ function loadPanelFill(): number {
 
 export function useUiTheme() {
   const [uiTheme, setUiTheme] = useState<UiTheme>(loadUiTheme);
-  const [vibratoCanvas, setVibratoCanvas] =
-    useState<VibratoCanvas>(loadVibratoCanvas);
+  const vibratoCanvas = VIBRATO_CANVAS;
   const [vibratoPanels, setVibratoPanels] =
     useState<VibratoPanels>(loadVibratoPanels);
   const [panelFill, setPanelFill] = useState<number>(loadPanelFill);
 
-  // The canvas has its own control in the theme menu; picking Vibrato again
-  // no longer flips it (that was a hidden gesture).
   const selectUiTheme = useCallback((theme: UiTheme) => setUiTheme(theme), []);
-  const selectCanvas = useCallback(
-    (canvas: VibratoCanvas) => setVibratoCanvas(canvas),
-    [],
-  );
   const selectPanels = useCallback((panels: VibratoPanels) => {
     setVibratoPanels(panels);
     try {
@@ -87,11 +76,10 @@ export function useUiTheme() {
   useEffect(() => {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, uiTheme);
-      localStorage.setItem(CANVAS_STORAGE_KEY, vibratoCanvas);
     } catch {
       // ignore storage write failures
     }
-  }, [uiTheme, vibratoCanvas]);
+  }, [uiTheme]);
 
   return {
     uiTheme,
@@ -99,7 +87,6 @@ export function useUiTheme() {
     vibratoPanels,
     panelFill,
     selectUiTheme,
-    selectCanvas,
     selectPanels,
     selectPanelFill,
   };

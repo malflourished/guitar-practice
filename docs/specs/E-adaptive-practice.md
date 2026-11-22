@@ -50,7 +50,7 @@ Boxes are numbered by shape, 1 to 5, the usual minor-pentatonic numbering: box 1
 - Lap 1: A minor. Lap 2: its relative major, C major: **the same five shapes at the same frets, heard from a new home note**. The fingers repeat last lap's work; the roots, the ear and the changes are new. Lap 3: up a fourth to D minor. Lap 4: F major. And so on round the circle of fourths: 24 laps, 24 keys.
 - In a major key the boxes keep their minor numbers, so C major's box 1 is A minor's box 1.
 - The key changes about once a week, not every day. Inside a lap each new box shares a row of notes with the last one, in the same key, and that link is the point of learning the boxes in order. Changing key and box together would hide it.
-- The KEY menu defaults to "today's plan" and offers every minor and major key for today only. A different key still counts for the box.
+- Since 2026-11-21 the app has one key, and Practice plays in it: the plan's key is a suggestion. When the app is in another key, the plan's line offers "Use the plan's key", and the key menu in the headline keeps "Today's plan". Changing the key in Practice changes it for every mode. A different key still counts for the box.
 - In a major key the Changes block is I–IV–V. The hint about the V chord's 3rd holds in both: neither pentatonic has it.
 - Keys are named the way they are written: the sixth lap is B♭ major, not A# major, and its chords are B♭, E♭ and F.
 
@@ -70,6 +70,13 @@ If the last practice was 7 or more days ago, today repeats the last box and the 
 - So "Felt clean" with 6 of 10 does not move on, and "Revisit this" with 12 of 12 stays. The rating can hold a set back; only the score brings in something new.
 - The ear track has no three-day limit: there the difficulty is measured, not felt.
 - Fixed here: the drill never asked the same interval twice running, so after the first question the answer was one of two. It now draws freely, with at most two of the same in a row.
+
+**Changed on 2026-11-21, after the owner's first sessions.** Three things about the Ear block, and one about every block:
+
+- **A round, not a clock.** The block is ten first answers (`EAR_ROUND`), then it ends. The owner: two minutes "felt way too long", and a tally that keeps climbing "just fills the time up". Each answer is still marked at once, because the correction is what teaches; the score is shown at the end. Ten is the fewest where the rules above mean something: fewer than six answers do not count, and 9 in 10 is the score that brings in an interval.
+- **The round asks every unlocked interval.** "Today's set is three neighbours" stays, but as the three asked twice as often, not the only three. The owner found three choices "awfully repetitive". Neighbours still meet, since the newest interval and its neighbours are the favoured three.
+- **The ladder can start higher.** The player may open 5, 7 or all 9 intervals on the plan. The setting only raises the stage, and the session saves it, so the score rules carry on from there. A returning player should not need nine good days to be asked a major sixth.
+- **Lengths.** The three blocks on the clock can be 1, 2, 3 or 5 minutes, and a minute can be added while playing. A session is full when each block ran the length it was given and the round was answered. The box rule (rule 2) is unchanged: it moves on after a full session.
 
 ### 6. Changes: one window
 
@@ -99,7 +106,7 @@ The field is optional, so sessions saved before this package still load. They co
 
 1. **Practice days, not calendar days.** The brief said "deterministic by date". The plan is deterministic given the date and the history, but the cycle steps per practice day, so nothing is skipped by a missed day.
 2. **A key lasts a lap (about a week), then relative major, then up a fourth.** The alternative is a new key every day. I chose the lap because the boxes link to each other inside one key, and because the relative major gives a second pass over the same frets with new ears. Say if you would rather have parallel major (A minor then A major): same home note, new shapes.
-3. **Practice follows the plan's key, not the key set elsewhere in the app.** The menu overrides it for today only.
+3. **Practice follows the plan's key, not the key set elsewhere in the app.** The menu overrides it for today only. *Reversed by the owner on 2026-11-21:* the app has one key, Practice plays in it, and the plan's key is a suggestion ("Use the plan's key" on the plan page). The cost is that the weekly change of key now happens only when the player takes the suggestion.
 4. **"Getting there" moves on**, like "Felt clean". Only "Revisit this" brings a box back.
 5. **Three days on one box, then on.**
 6. **Ear thresholds:** 90% to bring in a new interval, under 70% to repeat, at least 6 answers to count. And the rating cannot promote.
