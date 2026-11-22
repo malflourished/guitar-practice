@@ -116,16 +116,18 @@
    in brightness so only its darker half marks the page and the sheet as a
    whole does not grey. */
 .analog:not([data-medium='tube']) .analog-grain-body {
-  background-size: 200px 200px;
+  background-size: 150px 150px;
   mix-blend-mode: multiply;
-  opacity: calc(var(--a-grain) * 0.11);
+  opacity: calc(var(--a-grain) * 0.06);
 }
 
+/* The floor is the grain that moves (AnalogLab.tsx). Second pass, the same
+   day: smaller and with less contrast, since it now shimmers. */
 .analog:not([data-medium='tube']) .analog-grain-floor {
-  background-size: 104px 104px;
+  background-size: 92px 92px;
   mix-blend-mode: multiply;
   filter: brightness(2);
-  opacity: calc(var(--a-grain) * 0.17);
+  opacity: calc(var(--a-grain) * 0.12);
 }
 
 .analog:not([data-medium='tube']) .analog-fade {

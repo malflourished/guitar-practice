@@ -16,14 +16,8 @@
   transition: color var(--duration-theme) var(--ease-calm);
 }
 
-/* Scholar is ink on paper: the wave is drawn, and holds still. */
-.themeRoot[data-ui-theme='scholar'] .wordmarkWaveMoving {
-  display: none;
-}
-
-.themeRoot[data-ui-theme='scholar'] .wordmarkWaveStill {
-  display: inline;
-}
+/* The wave moves in Scholar too. It held still there until 2026-11-21, when
+   the owner took that for a fault; only reduced motion stops it now. */
 
 .wordmark {
   flex: 0 0 auto;

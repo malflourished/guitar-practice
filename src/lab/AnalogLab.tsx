@@ -9,8 +9,8 @@ import { setTexture, useTexture } from './analogStore';
  *
  * Minimal interface, texture in the medium it is seen through. Vibrato is
  * emitted light (glow that bleeds, grain that moves) and uses the Subtle
- * levels; Scholar is ink on paper (fixed paper tooth, ink spread, warm stock)
- * and uses Print. The "Texture" switch in the theme dock turns it off.
+ * levels; Scholar is ink on paper (a still sheet under fine moving grain, ink
+ * spread, warm stock) and uses Print. It is always on.
  *
  * Hidden tuning tool: the backquote key (`) opens a panel whose presets and
  * dials override the theme's levels until the "theme" preset is picked.
@@ -157,7 +157,8 @@ export default function AnalogLab() {
     };
   }, [glowing, medium]);
 
-  // Grain moves at film cadence, not at the display's frame rate. Paper does not move at all.
+  // Grain moves at film cadence, not at the display's frame rate. On paper only the fine
+  // grain moves (the owner asked for it on 2026-11-21); the sheet under it holds still.
   useEffect(() => {
     if (!active) return;
     const layers = layersRef.current;
@@ -168,7 +169,8 @@ export default function AnalogLab() {
       grain.style.backgroundImage = tile;
     });
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const moving = !reduced && medium !== 'paper' && motion > 0;
+    const moving = !reduced && motion > 0;
+    const movers = medium === 'tube' ? grains : layers.querySelectorAll<HTMLElement>('.analog-grain-floor');
     if (!moving && !open) return;
     const interval = 1000 / (8 + (motion / 100) * 16);
     let frame = 0;
@@ -188,7 +190,7 @@ export default function AnalogLab() {
       if (!moving || now - lastStep < interval) return;
       lastStep = now;
       const position = `${Math.floor(Math.random() * 256)}px ${Math.floor(Math.random() * 256)}px`;
-      grains.forEach((grain) => {
+      movers.forEach((grain) => {
         grain.style.backgroundPosition = position;
       });
     };
@@ -313,7 +315,6 @@ export default function AnalogLab() {
                 min={0}
                 max={100}
                 value={levels[dial]}
-                disabled={dial === 'motion' && medium === 'paper'}
                 onChange={(event) => {
                   setDial(dial, Number(event.target.value));
                 }}

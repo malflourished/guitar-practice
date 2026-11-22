@@ -11,7 +11,8 @@ export const PRESETS: Record<string, Levels> = {
   subtle: { grain: 26, glow: 30, fade: 8, warmth: 30, vignette: 20, raster: 0, motion: 50 },
   film: { grain: 46, glow: 50, fade: 18, warmth: 70, vignette: 34, raster: 0, motion: 60 },
   tube: { grain: 20, glow: 72, fade: 12, warmth: 10, vignette: 46, raster: 36, motion: 85 },
-  print: { grain: 60, glow: 36, fade: 10, warmth: 50, vignette: 14, raster: 0, motion: 0 },
+  // motion 25 is about 12 steps a second: on paper it moves the fine grain only.
+  print: { grain: 60, glow: 36, fade: 10, warmth: 50, vignette: 14, raster: 0, motion: 25 },
 };
 
 /** The levels the owner chose: Subtle on Vibrato (dark and light), Print on Scholar. */

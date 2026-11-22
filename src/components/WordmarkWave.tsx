@@ -8,7 +8,7 @@ const TRIP_SECONDS = 1.5;
 /**
  * The ~ of the wordmark: a string held at both ends with a wave running along
  * it. Two lines are drawn and the stylesheet shows one: the moving one, or
- * the still one where motion is off (Scholar, and reduced motion).
+ * the still one where motion is off (reduced motion).
  */
 export function WordmarkWave() {
   return (
