@@ -18,6 +18,11 @@
   width: 5.5rem;
 }
 
+.slider:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .number {
   composes: pill from '../styles/glass.module.css';
   width: 3.4rem;

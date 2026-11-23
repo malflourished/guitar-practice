@@ -1,10 +1,8 @@
 import { Strip, StripEnd } from './Frame';
 import { KeySelector } from './KeySelector';
 import { Popover } from './Popover';
-import { UiThemeSelector } from './UiThemeSelector';
 import { StudyModeSelector } from './StudyModeControls';
 import { WordmarkButton } from './WordmarkButton';
-import type { AppTheme } from '../hooks/useAppTheme';
 import type { NotationPreference } from '../lib/music';
 import type { NoteName, StudyMode } from '../types/music';
 import type { TheoryReturn } from '../modes/theory/useTheoryState';
@@ -26,7 +24,6 @@ interface AppStripProps {
   notation: NotationPreference;
   onApplyKey: (note: NoteName, action: 'select' | 'deselect' | 'set') => void;
   onNotationChange: (notation: NotationPreference) => void;
-  theme: AppTheme;
   hasSide: boolean;
   sideShown: boolean;
   onToggleSide: () => void;
@@ -34,7 +31,7 @@ interface AppStripProps {
   onToggleSettings: () => void;
 }
 
-/** The top strip: the wordmark (Home), mode tabs, the way back, Key, Theme, Panel, Notes and Settings. */
+/** The top strip: the wordmark (Home), Practice, the Explore menu and Theory, the way back, Key, Panel, Notes and Settings. Theme is in Settings. */
 export function AppStrip({
   studyMode,
   home,
@@ -48,7 +45,6 @@ export function AppStrip({
   notation,
   onApplyKey,
   onNotationChange,
-  theme,
   hasSide,
   sideShown,
   onToggleSide,
@@ -100,14 +96,6 @@ export function AppStrip({
             )}
           </Popover>
         )}
-        <UiThemeSelector
-          uiTheme={theme.uiTheme}
-          onUiThemeChange={theme.selectUiTheme}
-          vibratoPanels={theme.vibratoPanels}
-          onPanelsChange={theme.selectPanels}
-          panelFill={theme.panelFill}
-          onPanelFillChange={theme.selectPanelFill}
-        />
         {hasSide && (
           <button
             type="button"
@@ -128,7 +116,7 @@ export function AppStrip({
           title={
             settingsOpen
               ? 'Close Settings (Esc)'
-              : 'Settings: sound, tempo, labels'
+              : 'Settings: sound, tempo, labels, theme'
           }
           onClick={onToggleSettings}
         >

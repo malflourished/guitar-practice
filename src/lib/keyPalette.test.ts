@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_NOTES, NOTE_COLORS } from './colors';
-import { blendHue, getBackgroundKeyForMode, getKeyBackgroundStyle } from './keyPalette';
+import { blendHue, getBackgroundKeyForMode, getHomeBackgroundKey, getKeyBackgroundStyle } from './keyPalette';
 
 describe('key colors', () => {
   it('gives every key its own dominant color and valid chromatic highlights', () => {
@@ -20,6 +20,18 @@ describe('the Notes background', () => {
     expect(getBackgroundKeyForMode('notes', new Set(), 'C', 2)).toBeNull();
     // Every other mode has one key, whatever the turn.
     expect(getBackgroundKeyForMode('chords', notes, 'C', 2)).toBe('C');
+  });
+});
+
+describe('the Home background', () => {
+  it('starts on the app\'s key and goes through all twelve, whatever that key is', () => {
+    for (const start of ALL_NOTES) {
+      const lap = Array.from({ length: 12 }, (_, turn) => getHomeBackgroundKey(start, turn));
+      expect(lap[0]).toBe(start);
+      expect(new Set(lap).size).toBe(12);
+      expect(getHomeBackgroundKey(start, 12)).toBe(start);
+    }
+    expect([0, 1, 2].map(turn => getHomeBackgroundKey('A#', turn))).toEqual(['A#', 'B', 'C']);
   });
 });
 

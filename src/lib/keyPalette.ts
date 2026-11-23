@@ -195,6 +195,17 @@ export function getBackgroundKeyForMode(
   return rootNote;
 }
 
+/**
+ * Home belongs to no key: its background goes through all twelve, a semitone
+ * at a time (the note colours run round the wheel in that order, so each step
+ * is a short one). It starts from the app's key, so arriving on Home never
+ * jumps, and `turn` says how many steps it has taken since.
+ */
+export function getHomeBackgroundKey(start: NoteName, turn = 0): NoteName {
+  const from = Math.max(0, ALL_NOTES.indexOf(start));
+  return ALL_NOTES[(from + Math.abs(Math.trunc(turn))) % ALL_NOTES.length];
+}
+
 export function getKeyBackgroundStyle(
   root: NoteName | null,
   quality: ChordQuality | ScaleQuality,

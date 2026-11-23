@@ -8,11 +8,7 @@ interface WordmarkButtonProps {
   onHome: boolean;
 }
 
-/**
- * The strip's wordmark, and the way Home. Below 1220 px the frame hides the
- * full wordmark to make room for the mode tabs (Frame.module.css), so its wave, the
- * ~, stands in for it: Home must stay one click away in every window.
- */
+/** The strip's wordmark, and the way Home: one click away in every window. */
 export function WordmarkButton({ onClick, onHome }: WordmarkButtonProps) {
   const name = APP_NAME.slice(0, -1);
   return (
@@ -28,9 +24,6 @@ export function WordmarkButton({ onClick, onHome }: WordmarkButtonProps) {
     >
       <span className="wordmark">
         {name}
-        <WordmarkWave />
-      </span>
-      <span className={`wordmark ${styles.short}`} aria-hidden="true">
         <WordmarkWave />
       </span>
     </button>

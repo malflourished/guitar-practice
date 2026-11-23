@@ -13,8 +13,72 @@
   composes: pillSelected from '../styles/glass.module.css';
 }
 
-:global(.themeRoot[data-ui-theme='scholar']) .modeButtonSelected {
+:global(.themeRoot[data-ui-theme='scholar']) .modeButtonSelected,
+:global(.themeRoot[data-ui-theme='scholar']) .toolButtonSelected {
   font-weight: 600;
+}
+
+/* The Explore menu's button: the tool's name, then a caret that turns over
+   while the menu is open. */
+.toolButton {
+  gap: 0.5rem;
+}
+
+.toolName {
+  display: inline-grid;
+  justify-items: start;
+}
+
+.toolName > span {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+
+.toolName > span[data-current] {
+  visibility: visible;
+}
+
+.caret {
+  flex: none;
+  transition: transform var(--duration-key) var(--ease-calm);
+}
+
+.toolButton[aria-expanded='true'] .caret {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    transition: none;
+  }
+}
+
+/* The menu: one tool to a row, each the width of the widest. */
+.toolMenu {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 10rem;
+}
+
+/* Doubled class, as for .numeralSelect below: the pill's own centring is
+   copied into stylesheets that load after this one. */
+.toolItem.toolItem {
+  justify-content: flex-start;
+}
+
+/* Intervals is drills: a rule sets it apart from the four tools above it. */
+.toolItem[data-apart] {
+  position: relative;
+  margin-top: 0.5rem;
+}
+
+.toolItem[data-apart]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(-0.45rem - 1px);
+  border-top: 1px solid var(--glass-border-subtle);
 }
 
 :global(.themeRoot[data-ui-theme='scholar']) .select {

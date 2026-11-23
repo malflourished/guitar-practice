@@ -162,15 +162,17 @@ function App() {
     progressions.activeProgression.keyMode,
     keyMode,
   );
+  // Home is a place in the frame, not a mode. The app opens on it every time
+  // (owner, 2026-11-23); Continue there goes back to the last mode.
+  const [onHome, setOnHome] = useState(true);
   const theme = useAppTheme({
+    home: onHome,
     studyMode,
     activeNotes,
     keyCenter,
     effectiveKeyMode,
     noteColors: display.noteColors,
   });
-  // Home is a place in the frame, not a mode: the app opens on the last mode.
-  const [onHome, setOnHome] = useState(false);
   const hasSide = studyMode !== 'notes' && !onHome;
   const frame = useFrameState(hasSide);
   const switchMode = useStudyModeSwitch(modes, audio);
@@ -234,7 +236,6 @@ function App() {
       notation={notation}
       onApplyKey={keyState.applyKey}
       onNotationChange={keyState.setNotation}
-      theme={theme}
       hasSide={hasSide}
       sideShown={frame.sideShown}
       onToggleSide={frame.toggleSide}
@@ -536,6 +537,7 @@ function App() {
             tempo={tempo}
             onTempoChange={setTempo}
             display={display}
+            theme={theme}
             section={frame.settingsSection}
           />
         }

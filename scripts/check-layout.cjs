@@ -83,8 +83,9 @@ const STATES = [
   { name: 'scales', store: { ...mode('scales'), 'vibrato:scale-quality': '"minorPentatonic"' } },
   { name: 'scales-major-caged', store: { ...mode('scales'), 'vibrato:scale-quality': '"major"', 'vibrato:scale-system': '"caged"' } },
   { name: 'chords', store: mode('chords') },
-  // Package Q: Home (the wordmark opens it), and the panel at its widest and narrowest.
-  { name: 'home', store: mode('scales'), actions: [clickLabel('Home')] },
+  // Package Q: Home (the app opens on it), and the panel at its widest and narrowest.
+  { name: 'home', store: mode('scales'), home: true },
+  { name: 'home-settings', store: mode('scales'), home: true, actions: [clickLabel('Settings')] },
   { name: 'scales-panel-wide', store: { ...mode('scales'), 'vibrato:side-width': '520' } },
   { name: 'scales-panel-narrow', store: { ...mode('scales'), 'vibrato:side-width': '280' } },
   { name: 'chords-extended', store: { ...mode('chords'), 'vibrato:chord-quality': '"dom11"' } },
@@ -119,8 +120,11 @@ const STATES = [
     actions: [clickLabel('Settings')] },
   { name: 'scales-panel-closed', store: { ...mode('scales'), 'vibrato:side-panel-open': 'false' } },
   { name: 'scales-drawer', store: mode('scales'), actions: [clickText('Panel')] },
-  { name: 'scales-theme-menu', store: mode('scales'), actions: [clickText('Theme')] },
   { name: 'scales-key-menu', store: mode('scales'), actions: [clickText('KeyC')] },
+  { name: 'scales-explore-menu', store: mode('scales'), actions: [clickLabel('Scales. Explore: choose another tool')] },
+  // The widest strip: a tool lit in the menu, the way back to Theory, Key and Panel.
+  { name: 'theory-back', store: { ...mode('theory'), 'vibrato:theory-topic': '"circle-of-fifths"' },
+    actions: [clickText('Practice this across the neck →')] },
   { name: 'scales-focus', store: mode('scales'), actions: [clickText('Focus')] },
   { name: 'practice-landing', store: { ...mode('practice'), 'vibrato:practice-history-v1': history } },
   ...[0, 1, 2, 3].map((block) => ({
@@ -225,7 +229,13 @@ async function run() {
         await wait(400);
         await win.loadURL(`${URL}?n=${++loads}`);
         await wait(700);
-        for (const action of state.actions || []) {
+        // The app opens on Home (2026-11-23): Continue goes to the saved mode.
+        const steps = state.home ? [] : [`(() => {
+          const el = document.querySelector('[data-region="home"] button');
+          if (!el) return 'missing: Continue on Home';
+          el.click(); return 'ok';
+        })()`];
+        for (const action of [...steps, ...(state.actions || [])]) {
           const res = await win.webContents.executeJavaScript(`try { ${action} } catch (e) { 'error: ' + e.message }`);
           if (res !== 'ok') console.error(state.name, res);
           await wait(350);

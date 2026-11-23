@@ -8,7 +8,7 @@ import { useMediaQuery } from './useMediaQuery';
 const SIDE_DRAWER_QUERY = '(max-width: 1099px), (max-height: 679px)';
 
 /** Where Settings opens to: the top, or one of its sections. */
-export type SettingsSectionId = 'sound' | 'tempo' | 'display';
+export type SettingsSectionId = 'sound' | 'tempo' | 'display' | 'theme';
 
 /**
  * The frame's own state: focus mode, the side panel and Settings. The panel is

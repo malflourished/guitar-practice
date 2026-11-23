@@ -30,8 +30,8 @@ function inTextField(target: EventTarget | null): boolean {
 }
 
 /**
- * Home is a place in the frame, not a study mode: the app still opens on the
- * last mode, and Home is one click (the wordmark) or Esc away. Leaving it by
+ * Home is a place in the frame, not a study mode: the app opens on it, and
+ * from a mode it is one click (the wordmark) or Esc away. Leaving it by
  * any route puts a study mode back. Explore's pick is made when Home opens and
  * shown on its card, so the card promises what the click opens.
  */

@@ -9,12 +9,24 @@ import {
   clampTempo,
 } from '../lib/audio/tempo';
 import { LABEL_MODES, LABEL_MODE_TEXT } from '../hooks/displayLabels';
+import type { AppTheme } from '../hooks/useAppTheme';
 import type { DisplaySettings } from '../hooks/useDisplaySettings';
 import type { SettingsSectionId } from '../hooks/useFrameState';
 import { ROOM_MAX } from '../hooks/soundSettings';
 import type { UseInstrument } from '../hooks/useInstrument';
+import type { UiTheme, VibratoPanels } from '../types/ui';
 import glass from '../styles/glass.module.css';
 import styles from './SettingsPanel.module.css';
+
+const UI_THEMES: { id: UiTheme; label: string }[] = [
+  { id: 'vibrato', label: 'Vibrato' },
+  { id: 'scholar', label: 'Scholar' },
+];
+
+const PANELS: { id: VibratoPanels; label: string }[] = [
+  { id: 'outline', label: 'Outline' },
+  { id: 'off', label: 'Off' },
+];
 
 /** A label in a fixed column, so every control starts at the same place. */
 function SettingsRow({
@@ -40,6 +52,7 @@ interface SettingsPanelProps {
   tempo: number;
   onTempoChange: (bpm: number) => void;
   display: DisplaySettings;
+  theme: AppTheme;
   /** Scroll to this section when the page opens. */
   section: SettingsSectionId | null;
 }
@@ -84,7 +97,8 @@ function TempoNumber({
 
 /**
  * Settings: one page in the side panel, the same in every mode. Sound,
- * tempo and the way the neck is drawn. What changes *what* is shown (Tones,
+ * tempo, the way the neck is drawn and, last, the theme (it had a menu of its
+ * own in the top strip until 2026-11-23; the owner seldom changes it). What changes *what* is shown (Tones,
  * Span, Focus) stays in the decks; Practice keeps its own key, tempo and
  * guitar on its start screen.
  */
@@ -93,8 +107,10 @@ export function SettingsPanel({
   tempo,
   onTempoChange,
   display,
+  theme,
   section,
 }: SettingsPanelProps) {
+  const fillPercent = Math.round(theme.panelFill * 100);
   useEffect(() => {
     if (!section) return;
     document
@@ -240,6 +256,65 @@ export function SettingsPanel({
           Solid dots draw every note at full strength, not only the roots.
           Interval colours tint the dots in the Intervals drills.
         </p>
+      </SettingsSection>
+
+      <SettingsSection title="Theme" id="settings-theme">
+        {/* Stacked, like Labels: the two names do not fit beside the label in a 280 px panel. */}
+        <SettingsRow label="Style" stack>
+          <div className={styles.choices} role="radiogroup" aria-label="Interface style">
+            {UI_THEMES.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={theme.uiTheme === id}
+                className={theme.uiTheme === id ? glass.pillSelected : glass.pill}
+                onClick={() => theme.selectUiTheme(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </SettingsRow>
+        {theme.uiTheme === 'vibrato' && (
+          <>
+            <SettingsRow label="Panels">
+              <div className={styles.choices} role="radiogroup" aria-label="Vibrato panels">
+                {PANELS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="radio"
+                    aria-checked={theme.vibratoPanels === id}
+                    className={theme.vibratoPanels === id ? glass.pillSelected : glass.pill}
+                    onClick={() => theme.selectPanels(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </SettingsRow>
+            <SettingsRow label="Fill">
+              {/* data-panel-fill lets the panels follow the thumb without
+                  their fade while it is dragged (Frame.module.css). */}
+              <input
+                className={`${glass.slider} ${styles.slider}`}
+                type="range"
+                min={0}
+                max={100}
+                value={fillPercent}
+                aria-label="Panel fill"
+                aria-valuetext={`${fillPercent}%`}
+                data-panel-fill=""
+                disabled={theme.vibratoPanels === 'off'}
+                onChange={(event) => theme.selectPanelFill(Number(event.target.value) / 100)}
+              />
+              <span className={styles.note}>
+                {theme.vibratoPanels === 'off' ? 'With Outline' : `${fillPercent}%`}
+              </span>
+            </SettingsRow>
+          </>
+        )}
       </SettingsSection>
     </SidePanel>
   );

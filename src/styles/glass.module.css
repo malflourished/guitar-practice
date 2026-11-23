@@ -3,8 +3,6 @@
   background: var(--glass-bg-strong);
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate))
     brightness(var(--glass-brightness));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate))
-    brightness(var(--glass-brightness));
   border: 1px solid var(--glass-border-subtle);
   border-radius: var(--radius-hero);
   box-shadow: var(--shadow-glass-float), var(--shadow-glass-rim);

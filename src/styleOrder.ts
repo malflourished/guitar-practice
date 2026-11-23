@@ -17,7 +17,6 @@ import './components/AmbientBackground';
 import './components/KeySelector';
 import './components/KeyContext';
 import './components/Popover';
-import './components/UiThemeSelector';
 import './components/Frame';
 import './components/PracticeSession';
 import './components/SettingsList';

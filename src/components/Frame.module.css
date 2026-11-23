@@ -146,42 +146,10 @@
   margin-left: auto;
 }
 
-/* Narrow windows: seven modes plus Key, Theme and Panel need about 1140 px.
-   The window title still names the app when the wordmark steps aside. */
-@media (max-width: 1219px) {
-  .strip {
-    gap: 0.5rem;
-    padding-left: 0.6rem;
-    padding-right: 0.6rem;
-  }
-
-  .strip :global(.wordmark) {
-    display: none;
-  }
-
-  /* The wordmark's wave (the ~) stays as the way Home (WordmarkButton), so the
-     pills give up a pixel and a half each side to make room for it. */
-  .strip button {
-    padding-left: 0.45rem;
-    padding-right: 0.45rem;
-  }
-
-  .strip [aria-label='Study mode'] {
-    gap: 0.25rem;
-  }
-
-  .stripEnd {
-    gap: 0.4rem;
-  }
-}
-
-/* At the smallest window the Notes pencil does not fit beside Key (13 px
-   short at 960). The N key still opens Notes there. */
-@media (max-width: 999px) {
-  .strip [aria-label='Notes'] {
-    display: none;
-  }
-}
+/* Until 2026-11-23 the strip held seven mode tabs and was full at 960 px:
+   below 1220 px it hid the wordmark, squeezed the pills and, below 1000 px,
+   dropped the Notes pencil. With Practice, one menu and Theory it has room at
+   every window size, so those rules are gone. */
 
 /* ---- Neck and deck share one surface, as the stage did before ---- */
 
@@ -450,7 +418,6 @@
    near-solid dark sheet, which read as a hole in the lava.) */
 .side[data-side='drawer'] {
   backdrop-filter: blur(36px) saturate(1.1);
-  -webkit-backdrop-filter: blur(36px) saturate(1.1);
 }
 
 :global(.themeRoot[data-ui-theme='vibrato'][data-vibrato-canvas='dark']) .side[data-side='drawer'] {

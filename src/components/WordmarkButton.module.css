@@ -29,22 +29,3 @@
 .button[data-on-home='true']:hover {
   opacity: 1;
 }
-
-/* Wide windows show the whole wordmark; narrow ones its wave (the ~). */
-.short {
-  display: none;
-}
-
-@media (max-width: 1219px) {
-  /* The frame hides `.wordmark` in the strip at this width; the wave needs to
-     stay, so it is shown again here, with a rule that outweighs that one. */
-  .button .short:global(.wordmark) {
-    display: inline-block;
-    font-size: 1rem;
-  }
-
-  /* The strip is full at 960 px: the mark takes as little room as it can. */
-  .button.button {
-    padding: 0.2rem 0.15rem;
-  }
-}

@@ -11,6 +11,8 @@ interface PopoverProps {
   align?: 'start' | 'end';
   /** Open upward, for a trigger at the bottom of the window (the deck). */
   above?: boolean;
+  /** Keep the trigger lit while the panel is closed: what it names is the current choice. */
+  selected?: boolean;
   /** Extra class on the trigger button. */
   buttonClassName?: string;
   /** Render prop so the content can close the popover after a choice. */
@@ -24,6 +26,7 @@ export function Popover({
   buttonLabel,
   align = 'end',
   above = false,
+  selected = false,
   buttonClassName,
   children,
 }: PopoverProps) {
@@ -56,7 +59,7 @@ export function Popover({
       <button
         ref={buttonRef}
         type="button"
-        className={`${open ? glass.pillSelected : glass.pill}${buttonClassName ? ` ${buttonClassName}` : ''}`}
+        className={`${open || selected ? glass.pillSelected : glass.pill}${buttonClassName ? ` ${buttonClassName}` : ''}`}
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={buttonLabel}
